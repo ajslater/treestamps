@@ -18,6 +18,7 @@ class Treestamps:
     @staticmethod
     def dirpath(path: Path):
         """Return a directory for a path."""
+        path = Path(path)
         return path if path.is_dir() else path.parent
 
     @staticmethod
@@ -254,6 +255,7 @@ class Treestamps:
         config_allowed_keys: Optional[set[str]] = None,
     ) -> None:
         """Initialize instance variables."""
+        dir = Path(dir)
         if not dir.is_dir():
             raise ValueError("'dir' argument must be a directory")
         self.dir = dir
