@@ -1,0 +1,24 @@
+version: "3.8"
+services:
+  treestamps-build-builder:
+    build:
+      context: .
+      dockerfile: build.Dockerfile
+    image: ajslater/treestamps-builder
+    container_name: treestamps-build-builder
+  treestamps-test:
+    image: ajslater/treestamps-builder
+    container_name: treestamps-test
+    volumes:
+      - ./test-results:/app/test-results:rw
+    command: ./test.sh
+  treestamps-lint:
+    image: ajslater/treestamps-builder
+    container_name: treestamps-lint
+    command: ./lint.sh
+  treestamps-build:
+    image: ajslater/treestamps-builder
+    container_name: treestamps-build
+    volumes:
+      - ./dist:/app/dist:rw
+    command: poetry build
