@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional, TextIO
 
 from ruamel.yaml import YAML
+from termcolor import cprint
 
 
 class Treestamps:
@@ -105,7 +106,10 @@ class Treestamps:
                 full_path = self.dir
             else:
                 if self._verbose:
-                    print(f"Timestamp {full_path} is not related to {self.dir}.")
+                    cprint(
+                        f"WARNING: Timestamp {full_path} is not related to {self.dir}.",
+                        "yellow",
+                    )
         return full_path
 
     def _load_timestamp_entry(self, root: Path, path_str: str, ts: float) -> None:
@@ -114,14 +118,18 @@ class Treestamps:
             full_path = self._to_absolute_path(root, Path(path_str))
             if full_path is None:
                 if self._verbose > 2:
-                    print(f"Irrelevant timestamp ignored: {path_str}: {ts}")
+                    cprint(
+                        f"Irrelevant timestamp ignored: {path_str}: {ts}",
+                        "white",
+                        attrs=["dark"],
+                    )
                 return
 
             old_ts = self.get(full_path)
             if full_path not in self._timestamps or old_ts is None or ts > old_ts:
                 self._timestamps[full_path] = ts
         except Exception as exc:
-            print(f"Invalid timestamp for {path_str}: {ts} {exc}")
+            cprint(f"WARNING: Invalid timestamp for {path_str}: {ts} {exc}", "yellow")
 
     def _load_timestamps_file(self, timestamps_path: Path) -> None:
         """Load timestamps from a file."""
@@ -160,26 +168,31 @@ class Treestamps:
             for path_str, ts in entries:
                 self._load_timestamp_entry(timestamps_path.parent, path_str, ts)
         except Exception as exc:
-            print(f"Error parsing timestamps file: {timestamps_path}")
-            print(exc)
+            cprint(f"ERROR: parsing timestamps file: {timestamps_path} {exc}", "red")
 
     def _consume_child_timestamps(self, path: Path) -> None:
         """Consume a child timestamp and add its values to our root."""
-        if not path.is_file():
-            return
-        self._load_timestamps_file(path)
-        self._consumed_paths.add(path)
-        if self._verbose:
-            print(f"Read timestamps from {path}")
+        try:
+            if not path.is_file():
+                return
+            self._load_timestamps_file(path)
+            self._consumed_paths.add(path)
+            if self._verbose:
+                print(f"Read timestamps from {path}")
+        except Exception as exc:
+            cprint(f"WARNING: reading child timestamps {exc}", "yellow")
 
     def _consume_all_child_timestamps(self, path: Path) -> None:
         """Recursively consume all timestamps and wal files."""
-        if not path.is_dir():
-            return
-        for name in (self._filename, self._wal_filename):
-            self._consume_child_timestamps(path / name)
-        for dir_entry in path.iterdir():
-            self._consume_all_child_timestamps(dir_entry)
+        try:
+            if not path.is_dir():
+                return
+            for name in (self._filename, self._wal_filename):
+                self._consume_child_timestamps(path / name)
+            for dir_entry in path.iterdir():
+                self._consume_all_child_timestamps(dir_entry)
+        except Exception as exc:
+            cprint(f"WARNING: reading all child timstamps {exc}", "yellow")
 
     def _load_parent_timestamps(self, path: Path) -> None:
         """Recursively load timestamps from all parents."""
@@ -332,5 +345,5 @@ class Treestamps:
                 try:
                     path.unlink(missing_ok=True)
                 except Exception as exc:
-                    print(exc)
+                    cprint(f"WARNING: removing old timestamp: {exc}", "yellow")
             self._consumed_paths = set()

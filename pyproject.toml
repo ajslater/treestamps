@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "treestamps"
-version = "0.1.1"
+version = "0.1.2"
 description = "Create timestamp records for recursive operations on directory trees."
 authors = ["AJ Slater <aj@slater.net>"]
 license = "GPL-3.0-only"
@@ -27,6 +27,7 @@ include = ["NEWS.md"]
 [tool.poetry.dependencies]
 python = "^3.9"
 "ruamel.yaml" = "^0.17.21"
+termcolor = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
 codespell = "^2.1.0"
