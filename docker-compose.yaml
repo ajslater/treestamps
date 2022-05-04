@@ -10,7 +10,7 @@ services:
     image: ajslater/treestamps-builder
     container_name: treestamps-test
     volumes:
-      - ./test-results:./test-results
+      - ./test-results:/app/test-results:rw
     command: ./test.sh
   treestamps-lint:
     image: ajslater/treestamps-builder
@@ -20,5 +20,5 @@ services:
     image: ajslater/treestamps-builder
     container_name: treestamps-build
     volumes:
-      - ./dist:./dist
+      - ./dist:/app/dist:rw
     command: poetry build
