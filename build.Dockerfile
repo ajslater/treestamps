@@ -1,4 +1,4 @@
-FROM cimg/python:3.10
+FROM cimg/python:3.10-node
 
 ENV DEBIAN_FRONTEND noninteractive
 
