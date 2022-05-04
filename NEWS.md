@@ -1,5 +1,15 @@
 # 📰 Treestamps News
 
+## v0.1.2
+
+- Features
+
+  - colored output.
+
+- Fixes
+
+  - Trap more errors when reading timestamps
+
 ## v0.1.1
 
 - Fixes
