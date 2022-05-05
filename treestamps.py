@@ -176,7 +176,8 @@ class Treestamps:
             if not path.is_file():
                 return
             self._load_timestamps_file(path)
-            self._consumed_paths.add(path)
+            if path != self._dump_path:
+                self._consumed_paths.add(path)
             if self._verbose:
                 print(f"Read timestamps from {path}")
         except Exception as exc:
@@ -338,9 +339,10 @@ class Treestamps:
         dumpable_timestamps = self._serialize_timestamps()
         yaml.update(dumpable_timestamps)
 
-        self._YAML.dump(yaml, self._dump_path)
         self._close_wal()
+        self._YAML.dump(yaml, self._dump_path)
         if self._consumed_paths:
+            self._consumed_paths.discard(self._dump_path)
             for path in self._consumed_paths:
                 try:
                     path.unlink(missing_ok=True)
