@@ -94,6 +94,13 @@ class Treestamps:
             )
         return map
 
+    def _is_path_ignored(self, path: Path) -> bool:
+        """Return if path is ignored."""
+        for ignore_glob in self._ignore:
+            if path.match(ignore_glob):
+                return True
+        return False
+
     def _to_absolute_path(self, root: Path, path: Path) -> Optional[Path]:
         """Convert paths to relevant absolute paths."""
         if path.is_absolute():
@@ -186,7 +193,7 @@ class Treestamps:
     def _consume_all_child_timestamps(self, path: Path) -> None:
         """Recursively consume all timestamps and wal files."""
         try:
-            if not path.is_dir():
+            if not path.is_dir() or self._is_path_ignored(path):
                 return
             for name in (self._filename, self._wal_filename):
                 self._consume_child_timestamps(path / name)
@@ -197,7 +204,7 @@ class Treestamps:
 
     def _load_parent_timestamps(self, path: Path) -> None:
         """Recursively load timestamps from all parents."""
-        if path.parent == path.parent.parent:
+        if path.parent == path.parent.parent or self._is_path_ignored(path):
             return
         parent = path.parent
         self._load_timestamps_file(parent / self._filename)
@@ -265,6 +272,7 @@ class Treestamps:
         program_name: str,
         dir: Path,
         verbose: int = 0,
+        ignore: Optional[list[str]] = None,
         config: Optional[dict] = None,
         config_allowed_keys: Optional[set[str]] = None,
     ) -> None:
@@ -274,6 +282,9 @@ class Treestamps:
             raise ValueError("'dir' argument must be a directory")
         self.dir = dir
         self._verbose = verbose
+        if ignore is None:
+            ignore = []
+        self._ignore = ignore
         self._YAML = YAML()
         self._YAML.allow_duplicate_keys = True
         self._filename = self._get_filename(program_name)
