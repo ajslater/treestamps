@@ -1,5 +1,11 @@
 # 📰 Treestamps News
 
+## v0.2.1
+
+- Fix
+
+  - Support ignore in factory
+
 ## v0.2.0
 
 - Features

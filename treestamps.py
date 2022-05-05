@@ -77,6 +77,7 @@ class Treestamps:
         paths: Iterable[Path],
         program_name: str,
         verbose: int = 0,
+        ignore: Optional[list[str]] = None,
         config: Optional[dict] = None,
         config_allowed_keys: Optional[set] = None,
     ):
@@ -90,7 +91,11 @@ class Treestamps:
             if top_path in map:
                 continue
             map[top_path] = Treestamps(
-                program_name, top_path, verbose=verbose, config=timestamps_config
+                program_name,
+                top_path,
+                verbose=verbose,
+                ignore=ignore,
+                config=timestamps_config,
             )
         return map
 
