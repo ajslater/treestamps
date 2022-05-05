@@ -1,5 +1,11 @@
 # 📰 Treestamps News
 
+## v0.1.3
+
+- Fixes
+
+  - Protect final dump yaml from child cleanup task.
+
 ## v0.1.2
 
 - Features
