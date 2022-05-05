@@ -1,5 +1,11 @@
 # 📰 Treestamps News
 
+## v0.2.0
+
+- Features
+
+  - Support ignore globs
+
 ## v0.1.3
 
 - Fixes
