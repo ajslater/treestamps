@@ -1,5 +1,16 @@
 # 📰 Treestamps News
 
+## v0.3.0
+
+- Fix
+
+  - Fix factory consuming child timestamps when given files not directories.
+  - Fix loading and dumping timestamps not related to the treestamp dir.
+
+- Features
+
+  - Ignore symlinks option.
+
 ## v0.2.1
 
 - Fix

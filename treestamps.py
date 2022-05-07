@@ -72,11 +72,12 @@ class Treestamps:
         return (cls._get_filename(program_name), cls._get_wal_filename(program_name))
 
     @classmethod
-    def path_to_treestamps_map_factory(
+    def map_factory(
         cls,
         paths: Iterable[Path],
         program_name: str,
         verbose: int = 0,
+        follow_links: bool = True,
         ignore: Optional[list[str]] = None,
         config: Optional[dict] = None,
         config_allowed_keys: Optional[set] = None,
@@ -85,18 +86,32 @@ class Treestamps:
         # prune config once.
         timestamps_config = cls.prune_dict(config, config_allowed_keys)
 
-        map = {}
+        dirs = []
+        files = []
+        #
+        # This order creates dir based treestamps before files
+        # So dirs get children recursed and files only don't.
         for path in paths:
-            top_path = Treestamps.dirpath(path)
-            if top_path in map:
+            if not follow_links and path.is_symlink():
                 continue
-            map[top_path] = Treestamps(
-                program_name,
-                top_path,
-                verbose=verbose,
-                ignore=ignore,
-                config=timestamps_config,
-            )
+            elif path.is_dir():
+                dirs.append(path)
+            else:
+                files.append(path)
+        ordered_paths = sorted(dirs) + sorted(files)
+
+        map = {}
+        for top_path in ordered_paths:
+            dirpath = cls.dirpath(top_path)
+            if dirpath not in map:
+                map[dirpath] = Treestamps(
+                    program_name,
+                    top_path,  # not dirpath, but actual file.
+                    verbose=verbose,
+                    follow_links=follow_links,
+                    ignore=ignore,
+                    config=timestamps_config,
+                )
         return map
 
     def _is_path_ignored(self, path: Path) -> bool:
@@ -119,9 +134,11 @@ class Treestamps:
             else:
                 if self._verbose:
                     cprint(
-                        f"WARNING: Timestamp {full_path} is not related to {self.dir}.",
-                        "yellow",
+                        f"Irrelevant timestamp ignored: {full_path}",
+                        "white",
+                        attrs=["dark"],
                     )
+                full_path = None
         return full_path
 
     def _load_timestamp_entry(self, root: Path, path_str: str, ts: float) -> None:
@@ -129,12 +146,6 @@ class Treestamps:
         try:
             full_path = self._to_absolute_path(root, Path(path_str))
             if full_path is None:
-                if self._verbose > 2:
-                    cprint(
-                        f"Irrelevant timestamp ignored: {path_str}: {ts}",
-                        "white",
-                        attrs=["dark"],
-                    )
                 return
 
             old_ts = self.get(full_path)
@@ -185,7 +196,7 @@ class Treestamps:
     def _consume_child_timestamps(self, path: Path) -> None:
         """Consume a child timestamp and add its values to our root."""
         try:
-            if not path.is_file():
+            if not path.is_file() or (not self._symlinks and path.is_symlink()):
                 return
             self._load_timestamps_file(path)
             if path != self._dump_path:
@@ -195,21 +206,30 @@ class Treestamps:
         except Exception as exc:
             cprint(f"WARNING: reading child timestamps {exc}", "yellow")
 
-    def _consume_all_child_timestamps(self, path: Path) -> None:
+    def consume_all_child_timestamps(self, path: Path, consume_children=True) -> None:
         """Recursively consume all timestamps and wal files."""
         try:
-            if not path.is_dir() or self._is_path_ignored(path):
+            if (
+                not path.is_dir()
+                or self._is_path_ignored(path)
+                or (not self._symlinks and path.is_symlink())
+            ):
                 return
             for name in (self._filename, self._wal_filename):
                 self._consume_child_timestamps(path / name)
-            for dir_entry in path.iterdir():
-                self._consume_all_child_timestamps(dir_entry)
+            if consume_children:
+                for dir_entry in path.iterdir():
+                    self.consume_all_child_timestamps(dir_entry)
         except Exception as exc:
             cprint(f"WARNING: reading all child timstamps {exc}", "yellow")
 
     def _load_parent_timestamps(self, path: Path) -> None:
         """Recursively load timestamps from all parents."""
-        if path.parent == path.parent.parent or self._is_path_ignored(path):
+        if (
+            path.parent == path.parent.parent
+            or self._is_path_ignored(path)
+            or (not self._symlinks and path.is_symlink())
+        ):
             return
         parent = path.parent
         self._load_timestamps_file(parent / self._filename)
@@ -244,8 +264,11 @@ class Treestamps:
         """Dumpable timestamp paths need to be strings."""
         dumpable_timestamps = {}
         for full_path, timestamp in self._timestamps.items():
-            path_str = self._get_relative_path_str(full_path)
-            dumpable_timestamps[path_str] = timestamp
+            try:
+                path_str = self._get_relative_path_str(full_path)
+                dumpable_timestamps[path_str] = timestamp
+            except ValueError:
+                pass
         return dumpable_timestamps
 
     def _set_dumpable_config(self, yaml: dict) -> None:
@@ -275,34 +298,42 @@ class Treestamps:
     def __init__(
         self,
         program_name: str,
-        dir: Path,
+        path: Path,
         verbose: int = 0,
+        follow_links: bool = True,
         ignore: Optional[list[str]] = None,
         config: Optional[dict] = None,
         config_allowed_keys: Optional[set[str]] = None,
     ) -> None:
         """Initialize instance variables."""
-        dir = Path(dir)
-        if not dir.is_dir():
-            raise ValueError("'dir' argument must be a directory")
+        # config
+        path = Path(path)
+        dir = self.dirpath(path)
         self.dir = dir
+        self._program_name = program_name
         self._verbose = verbose
         if ignore is None:
             ignore = []
         self._ignore = ignore
+        self._symlinks = follow_links
+        pruned_config = self.prune_dict(config, config_allowed_keys)
+        self._config: Optional[dict] = self._normalize_config(pruned_config)
+
+        # init
         self._YAML = YAML()
         self._YAML.allow_duplicate_keys = True
-        self._filename = self._get_filename(program_name)
-        self._wal_filename = self._get_wal_filename(program_name)
+        self._filename = self._get_filename(self._program_name)
+        self._wal_filename = self._get_wal_filename(self._program_name)
         self._dump_path = self.dir / self._filename
         self._wal_path = self.dir / self._wal_filename
         self._wal: Optional[TextIO] = None
         self._consumed_paths: set[Path] = set()
-        pruned_config = self.prune_dict(config, config_allowed_keys)
-        self._config: Optional[dict] = self._normalize_config(pruned_config)
         self._timestamps: dict[Path, float] = {}
-        self._consume_all_child_timestamps(self.dir)
+
+        # load timestamps
         self._load_parent_timestamps(self.dir)
+        consume_children = path == dir
+        self.consume_all_child_timestamps(self.dir, consume_children)
 
     def get(self, path: Path) -> Optional[float]:
         """
@@ -328,22 +359,25 @@ class Treestamps:
         # Get params
         full_path = self._to_absolute_path(self.dir, path)
         if full_path is None:
-            if self._verbose:
-                print(f"Timestamp {full_path} is not related to {self.dir}.")
             return None
+
+        # set timestamp
         if mtime is None:
             mtime = datetime.now().timestamp()
-
         old_mtime = self._timestamps.get(full_path)
         if old_mtime is not None and old_mtime > mtime:
             return None
-
         self._timestamps[full_path] = mtime
+
+        # compact
         if compact and full_path.is_dir():
             self._compact_timestamps_below(full_path)
+
+        # write to wal
         if not self._wal:
             self._init_wal()
         if self._wal:
+            # This could just be str(path)
             path_str = self._get_relative_path_str(full_path)
             self._wal.write(f"- {path_str}: {mtime}\n")
         return mtime
