@@ -275,6 +275,8 @@ class Treestamps:
 
     def _set_dumpable_program_config(self, yaml: dict) -> None:
         """Set the config tag in the yaml to be dumped."""
+        # NOTE: Treestamps symlinks & ignore options should be represented in
+        # the program config.
         if self._config.program_config is not None:
             yaml[self._CONFIG_TAG] = dict(sorted(self._config.program_config.items()))
 
