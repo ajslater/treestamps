@@ -91,7 +91,6 @@ class Treestamps:
 
         dirs = []
         files = []
-        #
         # This order creates dir based treestamps before files
         # So dirs get children recursed and files only don't.
         for path in paths:
