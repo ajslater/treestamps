@@ -1,4 +1,5 @@
 """Timestamp writer for keeping track of bulk optimizations."""
+from collections import namedtuple
 from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
@@ -34,27 +35,27 @@ class Treestamps:
         """Prune a dictionry to only the allowed keys."""
         if config is None or allowed_keys is None:
             return config
-        pruned_config = {}
+        pruned_program_config = {}
         for key in allowed_keys:
-            pruned_config[key] = config.get(key)
-        return pruned_config
+            pruned_program_config[key] = config.get(key)
+        return pruned_program_config
 
     @classmethod
     def _normalize_config(cls, config: Optional[dict]) -> Optional[dict]:
         """Recursively convert iterables into sorted unique lists."""
         if config is None:
             return None
-        new_config: dict = {}
+        new_program_config: dict = {}
         for key, value in config.items():
             if isinstance(value, (list, tuple, set)):
                 original_type = type(value)
-                new_config[key] = original_type(sorted(frozenset(value)))
+                new_program_config[key] = original_type(sorted(frozenset(value)))
             elif isinstance(value, dict):
-                new_config[key] = cls._normalize_config(value)
+                new_program_config[key] = cls._normalize_config(value)
             else:
-                new_config[key] = value
+                new_program_config[key] = value
 
-        return new_config
+        return new_program_config
 
     @classmethod
     def _get_filename(cls, program_name: str) -> str:
@@ -72,36 +73,52 @@ class Treestamps:
         return (cls._get_filename(program_name), cls._get_wal_filename(program_name))
 
     @classmethod
-    def path_to_treestamps_map_factory(
+    def map_factory(
         cls,
         paths: Iterable[Path],
         program_name: str,
         verbose: int = 0,
+        follow_links: bool = True,
         ignore: Optional[list[str]] = None,
-        config: Optional[dict] = None,
-        config_allowed_keys: Optional[set] = None,
+        program_config: Optional[dict] = None,
+        program_config_allowed_keys: Optional[Iterable] = None,
     ):
         """Create a map of paths to Treestamps."""
         # prune config once.
-        timestamps_config = cls.prune_dict(config, config_allowed_keys)
+        timestamps_program_config = cls.prune_dict(
+            program_config, program_config_allowed_keys
+        )
+
+        dirs = []
+        files = []
+        # This order creates dir based treestamps before files
+        # So dirs get children recursed and files only don't.
+        for path in paths:
+            if not follow_links and path.is_symlink():
+                continue
+            elif path.is_dir():
+                dirs.append(path)
+            else:
+                files.append(path)
+        ordered_paths = sorted(dirs) + sorted(files)
 
         map = {}
-        for path in paths:
-            top_path = Treestamps.dirpath(path)
-            if top_path in map:
-                continue
-            map[top_path] = Treestamps(
-                program_name,
-                top_path,
-                verbose=verbose,
-                ignore=ignore,
-                config=timestamps_config,
-            )
+        for top_path in ordered_paths:
+            dirpath = cls.dirpath(top_path)
+            if dirpath not in map:
+                map[dirpath] = Treestamps(
+                    program_name,
+                    top_path,  # not dirpath, but actual file.
+                    verbose=verbose,
+                    follow_links=follow_links,
+                    ignore=ignore,
+                    program_config=timestamps_program_config,
+                )
         return map
 
     def _is_path_ignored(self, path: Path) -> bool:
         """Return if path is ignored."""
-        for ignore_glob in self._ignore:
+        for ignore_glob in self._config.ignore:
             if path.match(ignore_glob):
                 return True
         return False
@@ -117,11 +134,13 @@ class Treestamps:
             if self.dir.is_relative_to(full_path):
                 full_path = self.dir
             else:
-                if self._verbose:
+                if self._config.verbose:
                     cprint(
-                        f"WARNING: Timestamp {full_path} is not related to {self.dir}.",
-                        "yellow",
+                        f"Irrelevant timestamp ignored: {full_path}",
+                        "white",
+                        attrs=["dark"],
                     )
+                full_path = None
         return full_path
 
     def _load_timestamp_entry(self, root: Path, path_str: str, ts: float) -> None:
@@ -129,12 +148,6 @@ class Treestamps:
         try:
             full_path = self._to_absolute_path(root, Path(path_str))
             if full_path is None:
-                if self._verbose > 2:
-                    cprint(
-                        f"Irrelevant timestamp ignored: {path_str}: {ts}",
-                        "white",
-                        attrs=["dark"],
-                    )
                 return
 
             old_ts = self.get(full_path)
@@ -155,11 +168,11 @@ class Treestamps:
 
             # Config
             try:
-                yaml_config = yaml.pop(self._CONFIG_TAG)
-                yaml_config = self._normalize_config(yaml_config)
+                yaml_program_config = yaml.pop(self._CONFIG_TAG)
+                yaml_program_config = self._normalize_config(yaml_program_config)
             except KeyError:
-                yaml_config = None
-            if self._config != yaml_config:
+                yaml_program_config = None
+            if self._config.program_config != yaml_program_config:
                 # Only load timestamps for comparable configs
                 return
 
@@ -185,31 +198,40 @@ class Treestamps:
     def _consume_child_timestamps(self, path: Path) -> None:
         """Consume a child timestamp and add its values to our root."""
         try:
-            if not path.is_file():
+            if not path.is_file() or (not self._config.symlinks and path.is_symlink()):
                 return
             self._load_timestamps_file(path)
             if path != self._dump_path:
                 self._consumed_paths.add(path)
-            if self._verbose:
+            if self._config.verbose:
                 print(f"Read timestamps from {path}")
         except Exception as exc:
             cprint(f"WARNING: reading child timestamps {exc}", "yellow")
 
-    def _consume_all_child_timestamps(self, path: Path) -> None:
+    def consume_all_child_timestamps(self, path: Path, consume_children=True) -> None:
         """Recursively consume all timestamps and wal files."""
         try:
-            if not path.is_dir() or self._is_path_ignored(path):
+            if (
+                not path.is_dir()
+                or self._is_path_ignored(path)
+                or (not self._config.symlinks and path.is_symlink())
+            ):
                 return
             for name in (self._filename, self._wal_filename):
                 self._consume_child_timestamps(path / name)
-            for dir_entry in path.iterdir():
-                self._consume_all_child_timestamps(dir_entry)
+            if consume_children:
+                for dir_entry in path.iterdir():
+                    self.consume_all_child_timestamps(dir_entry)
         except Exception as exc:
             cprint(f"WARNING: reading all child timstamps {exc}", "yellow")
 
     def _load_parent_timestamps(self, path: Path) -> None:
         """Recursively load timestamps from all parents."""
-        if path.parent == path.parent.parent or self._is_path_ignored(path):
+        if (
+            path.parent == path.parent.parent
+            or self._is_path_ignored(path)
+            or (not self._config.symlinks and path.is_symlink())
+        ):
             return
         parent = path.parent
         self._load_timestamps_file(parent / self._filename)
@@ -233,7 +255,7 @@ class Treestamps:
                 delete_keys.add(full_path)
         for del_path in delete_keys:
             del self._timestamps[del_path]
-        if self._verbose > 1:
+        if self._config.verbose > 1:
             print(f"Compacted timestamps: {full_root_path}: {root_timestamp}")
 
     def _get_relative_path_str(self, full_path: Path) -> str:
@@ -244,14 +266,17 @@ class Treestamps:
         """Dumpable timestamp paths need to be strings."""
         dumpable_timestamps = {}
         for full_path, timestamp in self._timestamps.items():
-            path_str = self._get_relative_path_str(full_path)
-            dumpable_timestamps[path_str] = timestamp
+            try:
+                path_str = self._get_relative_path_str(full_path)
+                dumpable_timestamps[path_str] = timestamp
+            except ValueError:
+                pass
         return dumpable_timestamps
 
-    def _set_dumpable_config(self, yaml: dict) -> None:
+    def _set_dumpable_program_config(self, yaml: dict) -> None:
         """Set the config tag in the yaml to be dumped."""
-        if self._config is not None:
-            yaml[self._CONFIG_TAG] = dict(sorted(self._config.items()))
+        if self._config.program_config is not None:
+            yaml[self._CONFIG_TAG] = dict(sorted(self._config.program_config.items()))
 
     def _close_wal(self) -> None:
         """Close the write ahead log."""
@@ -265,44 +290,82 @@ class Treestamps:
 
     def _init_wal(self) -> None:
         yaml: dict = {}
-        self._set_dumpable_config(yaml)
+        self._set_dumpable_program_config(yaml)
         self._close_wal()
         self._YAML.dump(yaml, self._wal_path)
         self._consumed_paths.add(self._wal_path)
         self._wal = self._wal_path.open("a")
         self._wal.write(self._WAL_TAG + ":\n")
 
+    def _init_config(
+        self,
+        program_name: str,
+        verbose: int,
+        follow_links: bool,
+        ignore: Optional[Iterable[str]],
+        program_config: Optional[dict],
+        program_config_allowed_keys: Optional[Iterable],
+    ):
+        """Initialize config."""
+        # Maybe this should be a confuse AttrDict if it grows larger.
+        if ignore is None:
+            ignore = frozenset([])
+        else:
+            ignore = frozenset(ignore)
+        pruned_program_config = self.prune_dict(
+            program_config, program_config_allowed_keys
+        )
+        pruned_program_config = self._normalize_config(pruned_program_config)
+        ConfigTuple = namedtuple(
+            "ConfigTuple",
+            ("program_name", "verbose", "ignore", "symlinks", "program_config"),
+        )
+        self._config = ConfigTuple(
+            program_name, verbose, ignore, follow_links, pruned_program_config
+        )
+
+    def _load(self, consume_children: bool) -> None:
+        """Load all timestamps."""
+        self._load_parent_timestamps(self.dir)
+        self.consume_all_child_timestamps(self.dir, consume_children)
+
     def __init__(
         self,
         program_name: str,
-        dir: Path,
+        path: Path,
         verbose: int = 0,
-        ignore: Optional[list[str]] = None,
-        config: Optional[dict] = None,
-        config_allowed_keys: Optional[set[str]] = None,
+        follow_links: bool = True,
+        ignore: Optional[Iterable[str]] = None,
+        program_config: Optional[dict] = None,
+        program_config_allowed_keys: Optional[set[str]] = None,
     ) -> None:
         """Initialize instance variables."""
-        dir = Path(dir)
-        if not dir.is_dir():
-            raise ValueError("'dir' argument must be a directory")
+        # config
+        path = Path(path)
+        dir = self.dirpath(path)
         self.dir = dir
-        self._verbose = verbose
-        if ignore is None:
-            ignore = []
-        self._ignore = ignore
+        self._init_config(
+            program_name,
+            verbose,
+            follow_links,
+            ignore,
+            program_config,
+            program_config_allowed_keys,
+        )
+
+        # init variables
         self._YAML = YAML()
         self._YAML.allow_duplicate_keys = True
-        self._filename = self._get_filename(program_name)
-        self._wal_filename = self._get_wal_filename(program_name)
+        self._filename = self._get_filename(self._config.program_name)
+        self._wal_filename = self._get_wal_filename(self._config.program_name)
         self._dump_path = self.dir / self._filename
         self._wal_path = self.dir / self._wal_filename
         self._wal: Optional[TextIO] = None
         self._consumed_paths: set[Path] = set()
-        pruned_config = self.prune_dict(config, config_allowed_keys)
-        self._config: Optional[dict] = self._normalize_config(pruned_config)
         self._timestamps: dict[Path, float] = {}
-        self._consume_all_child_timestamps(self.dir)
-        self._load_parent_timestamps(self.dir)
+
+        # load timestamps
+        self._load(path == dir)
 
     def get(self, path: Path) -> Optional[float]:
         """
@@ -328,22 +391,25 @@ class Treestamps:
         # Get params
         full_path = self._to_absolute_path(self.dir, path)
         if full_path is None:
-            if self._verbose:
-                print(f"Timestamp {full_path} is not related to {self.dir}.")
             return None
+
+        # set timestamp
         if mtime is None:
             mtime = datetime.now().timestamp()
-
         old_mtime = self._timestamps.get(full_path)
         if old_mtime is not None and old_mtime > mtime:
             return None
-
         self._timestamps[full_path] = mtime
+
+        # compact
         if compact and full_path.is_dir():
             self._compact_timestamps_below(full_path)
+
+        # write to wal
         if not self._wal:
             self._init_wal()
         if self._wal:
+            # This could just be str(path)
             path_str = self._get_relative_path_str(full_path)
             self._wal.write(f"- {path_str}: {mtime}\n")
         return mtime
@@ -351,7 +417,7 @@ class Treestamps:
     def dump(self) -> None:
         """Serialize timestamps and dump to file."""
         yaml: dict = {}
-        self._set_dumpable_config(yaml)
+        self._set_dumpable_program_config(yaml)
         dumpable_timestamps = self._serialize_timestamps()
         yaml.update(dumpable_timestamps)
 

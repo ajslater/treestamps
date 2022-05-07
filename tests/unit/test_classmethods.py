@@ -33,9 +33,7 @@ class TestClassMethodds:
 
         paths = (path_a, path_b, path_c)
 
-        program_name = "foo"
-
-        map = Treestamps.path_to_treestamps_map_factory(paths, program_name)
+        map = Treestamps.map_factory(paths, "foo")
 
         dirset = set([path_b, path_c])
         assert set(map.keys()) == dirset
