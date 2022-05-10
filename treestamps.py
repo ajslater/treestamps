@@ -94,6 +94,7 @@ class Treestamps:
         # This order creates dir based treestamps before files
         # So dirs get children recursed and files only don't.
         for path in paths:
+            path = Path(path)
             if not follow_links and path.is_symlink():
                 continue
             elif path.is_dir():
