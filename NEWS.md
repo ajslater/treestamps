@@ -1,5 +1,11 @@
 # 📰 Treestamps News
 
+## v0.3.1
+
+- Fix
+
+  - Fix factory passed strings instead of paths crash.
+
 ## v0.3.0
 
 - Fix
