@@ -32,7 +32,7 @@ class Treestamps:
     def prune_dict(
         config: Optional[dict], allowed_keys: Optional[Iterable]
     ) -> Optional[dict]:
-        """Prune a dictionry to only the allowed keys."""
+        """Prune a dictionary to only the allowed keys."""
         if config is None or allowed_keys is None:
             return config
         pruned_program_config = {}
