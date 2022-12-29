@@ -1,8 +1,16 @@
 # 📰 Treestamps News
 
+## v0.3.3
+
+- Features
+
+  - Update dependencies & poetry lockfile
+
 ## v0.3.2
 
-- Update dependencies
+- Features
+
+  - Update dependencies & poetry lockfile
 
 ## v0.3.1
 
