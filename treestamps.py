@@ -371,8 +371,7 @@ class Treestamps:
         self._load(path == dir)
 
     def get(self, path: Path) -> Optional[float]:
-        """
-        Get the timestamps up the directory tree. All the way to root.
+        """Get the timestamps up the directory tree. All the way to root.
 
         Because they affect every subdirectory.
         """
