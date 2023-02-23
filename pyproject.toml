@@ -115,7 +115,7 @@ reportMissingImports = true
 reportImportCycles = true
 
 [tool.ruff]
-extend-exclude = ["cache", "frontend", "typings"]
+extend-exclude = ["cache", "typings"]
 extend-ignore = ["S101", "D203", "D213"]
 extend-select = ["B", "B9", "C", "D", "I", "N", "S", "W"]
 # external = ["V101"]
