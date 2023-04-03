@@ -1,5 +1,11 @@
 # 📰 Treestamps News
 
+## v0.3.4
+
+- Dev
+
+  - Update dependencies.
+
 ## v0.3.3
 
 - Features
