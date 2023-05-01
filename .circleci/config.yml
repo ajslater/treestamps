@@ -8,7 +8,7 @@ jobs:
           command: docker-compose build treestamps-build-builder
           name: Install Build Dependencies
       - run:
-          command: ci/create-output-dirs.sh
+          command: bin/create-output-dirs.sh
           name: Create Output Dirs
       - run:
           command: docker-compose up --exit-code-from treestamps-test treestamps-test
@@ -40,7 +40,7 @@ jobs:
           command: pip install poetry
           name: Install poetry
       - run:
-          command: ci/publish-pypi.sh
+          command: bin/publish-pypi.sh
           name: Publish Package to PyPi
 version: 2.1
 workflows:
