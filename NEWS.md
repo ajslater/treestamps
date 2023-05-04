@@ -1,5 +1,10 @@
 # 📰 Treestamps News
 
+## v0.3.5
+
+- Dev
+  - Lint refactor.
+
 ## v0.3.4
 
 - Dev
@@ -23,6 +28,7 @@
 ## v0.3.0
 
 - Fix
+
   - Factory consuming child timestamps when given files not directories.
   - Loading and dumping timestamps not related to the treestamp dir.
 
@@ -35,6 +41,7 @@
   - Support ignore in factory
 
 ## v0.2.0
+
 - Features
   - Support ignore globs
 
@@ -46,6 +53,7 @@
 ## v0.1.2
 
 - Features
+
   - Colored output.
 
 - Fixes

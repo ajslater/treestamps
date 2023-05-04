@@ -18,8 +18,8 @@ class TestStaticMethods:
 
     def test_maxnone(self):
         """Test maxnone."""
-        assert Treestamps.max_none(1, 2) == 2
-        assert Treestamps.max_none(None, 2) == 2
+        assert Treestamps.max_none(1, 2) == 2  # noqa PLR2004
+        assert Treestamps.max_none(None, 2) == 2  # noqa PLR2004
         assert Treestamps.max_none(1, None) == 1
         assert Treestamps.max_none(None, None) is None
 
