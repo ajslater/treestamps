@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "treestamps"
-version = "0.3.4"
+version = "0.4.0"
 description = "Create timestamp records for recursive operations on directory trees."
 authors = ["AJ Slater <aj@slater.net>"]
 license = "GPL-3.0-only"
@@ -21,7 +21,7 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-packages = [{ include = "treestamps.py" }, { include = "tests", format = "sdist" }]
+packages = [{ include = "treestamps" }, { include = "tests", format = "sdist" }]
 include = ["NEWS.md"]
 
 [tool.poetry.dependencies]
@@ -39,7 +39,7 @@ pytest = "^7.0.0"
 pytest-cov = "^4.0"
 pytest-gitignore = "^1.3"
 radon = { version = "^6.0.1", extras = ["toml"]}
-ruff = "^0.0.260"
+ruff = "^0.0.265"
 vulture = "^2.1"
 
 [tool.poetry.urls]
@@ -108,6 +108,7 @@ exclude = [
   "package-lock.json",
   "poetry.lock",
   "test-results",
+  "treestamps/__init__.py",
   "typings",
   "vulture_whitelist.py"
 ]
@@ -121,17 +122,27 @@ exclude = "*~,.git/*,.mypy_cache/*,.pytest_cache/*,.venv/*,__pycache__/*,dist/*,
 [tool.ruff]
 extend-exclude = ["cache", "typings"]
 extend-ignore = ["S101", "D203", "D213"]
-extend-select = ["B", "B9", "C", "D", "I", "N", "S", "W"]
-# external = ["V101"]
+#extend-select = ["B", "B9", "C", "D", "I", "N", "S", "W"]
+extend-select = ["A", "ARG", "B", "B9", "C", "C4", "C90", "D", "DJ",
+  "DTZ", "E", "EM", "EXE", "F", "I", "ICN", "INP", "ISC", "PIE", "PL",
+  "PT", "PTH", "PYI", "Q", "N", "RET", "RSE", "RUF", "S", "SIM", "SLF",
+  "T10", "T20", "TCH", "TID", "TRY", "UP", "W", "YTT"
+  # "ANN", "ERA", "COM"
+]
+external = ["V101"]
 # format = "grouped"
 # show-source = true
 target-version = "py39"
 task-tags = ["TODO", "FIXME", "XXX", "http", "HACK"]
 
+[tool.ruff.per-file-ignores]
+"test_*" = ["SLF001"]
+"treestamps/__init__.py" = ["F401"]
+
 [tool.ruff.pycodestyle]
 ignore-overlong-task-comments = true
 
 [tool.vulture]
-exclude = [".git/", ".mypy_cache/", ".pytest_cache", ".venv", "*__pycache__*"]
+exclude = [".git/", ".mypy_cache/", ".pytest_cache", ".venv", "*__pycache__*", "treestamps/__init__.py"]
 min_confidence = 61
 sort_by_size = true

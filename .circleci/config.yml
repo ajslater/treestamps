@@ -8,7 +8,10 @@ jobs:
           command: docker-compose build treestamps-build-builder
           name: Install Build Dependencies
       - run:
-          command: ci/create-output-dirs.sh
+          command: docker-compose up --exit-code-from treestamps-lint treestamps-lint
+          name: Lint
+      - run:
+          command: bin/create-output-dirs.sh
           name: Create Output Dirs
       - run:
           command: docker-compose up --exit-code-from treestamps-test treestamps-test
@@ -18,21 +21,18 @@ jobs:
       - store_artifacts:
           path: test-results/coverage
       - run:
-          command: docker-compose up --exit-code-from treestamps-lint treestamps-lint
-          name: Lint
-      - run:
           command: docker-compose up --exit-code-from treestamps-build treestamps-build
           name: Build
       - persist_to_workspace:
           paths:
             - ./README.md
-            - ./ci
+            - ./bin
             - ./dist
             - ./pyproject.toml
           root: .
   deploy:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.11
     steps:
       - attach_workspace:
           at: .
@@ -40,7 +40,7 @@ jobs:
           command: pip install poetry
           name: Install poetry
       - run:
-          command: ci/publish-pypi.sh
+          command: bin/publish-pypi.sh
           name: Publish Package to PyPi
 version: 2.1
 workflows:

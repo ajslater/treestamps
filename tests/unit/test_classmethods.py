@@ -1,7 +1,9 @@
 """Test classmethods."""
 from pathlib import Path
 
-from treestamps import Treestamps
+from treestamps.config import CommonConfig
+from treestamps.grove import Grovestamps, GrovestampsConfig
+from treestamps.tree import Treestamps
 
 __all__ = ()
 
@@ -19,18 +21,32 @@ class TestClassMethodds:
 
     def test_normalize_config(self):
         """Test normalize config."""
-        assert Treestamps._normalize_config(None) is None
-        assert Treestamps._normalize_config({}) == {}
-        assert Treestamps._normalize_config({"a": 1}) == {"a": 1}
-        assert Treestamps._normalize_config({"a": 1, "b": [3, 2, 1, 2]}) == {
+        keys = frozenset(["a", "b"])
+        cc = CommonConfig("Dummy", program_config_keys=keys)
+        assert cc.program_config is None
+
+        cc = CommonConfig("Dummy", program_config_keys=keys, program_config={})
+        assert cc.program_config == {}
+
+        cc = CommonConfig("Dummy", program_config_keys=keys, program_config={"a": 1})
+        assert cc.program_config == {"a": 1}
+
+        cc = CommonConfig(
+            "Dummy",
+            program_config_keys=keys,
+            program_config={"a": 1, "b": [3, 2, 1, 2]},
+        )
+        assert cc.program_config == {
             "a": 1,
             "b": [1, 2, 3],
         }
-        assert Treestamps._normalize_config({"a": {"b": [2, 1, 3, 1]}}) == {
-            "a": {"b": [1, 2, 3]}
-        }
 
-    def test_factory(self):
+        cc = CommonConfig(
+            "Dummy", program_config_keys=keys, program_config={"a": {"b": [2, 1, 3, 1]}}
+        )
+        assert cc.program_config == {"a": {"b": [1, 2, 3]}}
+
+    def test_copse(self):
         """Test the factory."""
         path_a = Path(__file__).resolve()
         path_b = path_a.parent
@@ -38,9 +54,10 @@ class TestClassMethodds:
 
         paths = (path_a, path_b, path_c)
 
-        map = Treestamps.map_factory(paths, "foo")
+        config = GrovestampsConfig("Dummy", paths=paths)
+        cs = Grovestamps(config)
 
-        dirset = {path_b, path_c}
-        assert set(map.keys()) == dirset
-        dirs = {ts.dir for ts in map.values()}
+        dirset = {path_b.resolve(), path_c.resolve()}
+        assert set(cs.keys()) == dirset
+        dirs = {ts.root_dir for ts in cs.values()}
         assert dirs == dirset
