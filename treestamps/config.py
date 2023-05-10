@@ -19,10 +19,9 @@ def normalize_config(config: Optional[dict]) -> Optional[dict]:
 
     return new_config
 
-DEFAULT_CONFIG = normalize_config({
-    "ignore": frozenset(),
-    "symlinks": True
-})
+
+DEFAULT_CONFIG = normalize_config({"ignore": frozenset(), "symlinks": True})
+
 
 @dataclass
 class CommonConfig:
