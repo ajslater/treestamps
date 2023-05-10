@@ -1,7 +1,7 @@
 """Test static methods."""
 from pathlib import Path
 
-from treestamps import Treestamps
+from treestamps.tree import Treestamps
 
 __all__ = ()
 
@@ -9,12 +9,12 @@ __all__ = ()
 class TestStaticMethods:
     """Test static methods."""
 
-    def test_dirpath(self):
+    def test_get_dir(self):
         """Test dirpath."""
         file_path = Path(__file__).resolve()
         dir_path = file_path.parent
-        assert Treestamps.dirpath(dir_path) == dir_path
-        assert Treestamps.dirpath(file_path) == dir_path
+        assert Treestamps.get_dir(dir_path) == dir_path
+        assert Treestamps.get_dir(file_path) == dir_path
 
     def test_maxnone(self):
         """Test maxnone."""
@@ -22,9 +22,3 @@ class TestStaticMethods:
         assert Treestamps.max_none(None, 2) == 2  # noqa PLR2004
         assert Treestamps.max_none(1, None) == 1
         assert Treestamps.max_none(None, None) is None
-
-    def test_prune_dict(self):
-        """Test prune dict."""
-        assert Treestamps.prune_dict(None, ["a"]) is None
-        assert Treestamps.prune_dict({"a": 1, "b": 2}, None) == {"a": 1, "b": 2}
-        assert Treestamps.prune_dict({"a": 1, "b": 2}, ["a"]) == {"a": 1}

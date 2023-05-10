@@ -1,9 +1,11 @@
 # 📰 Treestamps News
 
-## v0.3.5
+## v0.4.0
 
+- Features
+  - Big API Changes see README
 - Dev
-  - Lint refactor.
+  - Refactor into different files.
 
 ## v0.3.4
 
