@@ -1,5 +1,11 @@
 # 📰 Treestamps News
 
+## v0.4.1
+
+- Fix
+  - Most paths generated improperly.
+  - check_config = False would crash.
+
 ## v0.4.0
 
 - Features
