@@ -1,7 +1,7 @@
 """Common methods."""
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, TextIO
+from typing import Optional, TextIO, Union
 
 from ruamel.yaml import YAML
 from termcolor import cprint
@@ -33,7 +33,7 @@ class CommonMixin:
     _WAL_FILENAME_TEMPLATE = ".{program_name}_treestamps.wal.yaml"
 
     @staticmethod
-    def get_dir(path: Path):
+    def get_dir(path: Union[Path, str]) -> Path:
         """Return a directory for a path."""
         path = Path(path)
         return path if path.is_dir() else path.parent
@@ -60,22 +60,30 @@ class CommonMixin:
             config[key] = getattr(self._config, key)
         return normalize_config(config)
 
-    def _to_absolute_path(self, root: Path, path: Path) -> Optional[Path]:
+    def _get_absolute_path(self, root: Path, path: Union[Path, str]) -> Optional[Path]:
         """Convert paths to relevant absolute paths."""
-        full_path = path if path.is_absolute() else root / path
+        path = Path(path)
+        abs_path = path if path.is_absolute() else (root / path).absolute()
+        # Do not normalize because symlinks behave weird.
+        # abs_path = normpath(full_path)
 
-        if not full_path.is_relative_to(self.root_dir):
-            if self.root_dir.is_relative_to(full_path):
-                full_path = self.root_dir
-            else:
-                if self._config.verbose:
-                    cprint(
-                        f"Irrelevant timestamp ignored: {full_path}",
-                        "white",
-                        attrs=["dark"],
-                    )
-                full_path = None
-        return full_path
+        if abs_path.is_relative_to(self.root_dir):
+            # abs_path is under the root_dir.
+            return abs_path
+
+        # if abs_path is not under the root dir like it should be
+        if self.root_dir.is_relative_to(abs_path):
+            # abs_path is above the root dir. use the root dir.
+            return self.root_dir
+
+        # abs_path is outside our jurisdiction.
+        if self._config.verbose:
+            cprint(
+                f"Timestamp outside {self.root_dir}'s tree, ignored: {abs_path}",
+                "white",
+                attrs=["dark"],
+            )
+        return None
 
     def __init__(self, config: TreestampsConfig) -> None:
         """Initialize instance variables."""
@@ -83,7 +91,10 @@ class CommonMixin:
         self._config = config
 
         # init variables
-        self.root_dir = self.get_dir(Path(self._config.path))
+        # Do not normalize root_dir because symlinks behave weird.
+        root_dir = self.get_dir(self._config.path).absolute()
+        # root_dir = normpath(root_dir)
+        self.root_dir = root_dir
         self._YAML = YAML()
         self._YAML.allow_duplicate_keys = True
         self._filename = self._get_filename(self._config.program_name)

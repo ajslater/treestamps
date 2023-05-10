@@ -3,6 +3,13 @@
 ## v0.4.2
 
 - Fix
+  - Ensure use of absolute paths internally, relative paths externally.
+- Features
+  - get() and set() now accept strings as well as paths.
+
+## v0.4.2
+
+- Fix
   - Make treestamp paths all relative again like 0.3.x for portability
   - Keep reading WAL if individual entries are corrupt.
 

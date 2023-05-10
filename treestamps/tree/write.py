@@ -16,9 +16,9 @@ class WriteMixin(CommonMixin):
             self._wal.close()
         self._wal = None
 
-    def _get_relative_path_str(self, full_path: Path) -> str:
-        """Get the relative path string."""
-        return str(full_path.relative_to(self.root_dir))
+    def _get_relative_path_str(self, abs_path: Path) -> str:
+        """Get the path string relative to the root_dir."""
+        return str(abs_path.relative_to(self.root_dir))
 
     def _get_dumpable_program_config(self) -> dict:
         """Set the config tag in the yaml to be dumped."""
@@ -30,7 +30,7 @@ class WriteMixin(CommonMixin):
         yaml[self._TREESTAMPS_CONFIG_TAG] = self._get_treestamps_config_dict()
         return yaml
 
-    def _dump(self, path, yaml):
+    def _dump_to_file(self, path, yaml):
         """Dump to file."""
         config_yaml = self._get_dumpable_program_config()
         yaml.update(config_yaml)
