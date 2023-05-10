@@ -35,7 +35,7 @@ class CommonMixin:
     @staticmethod
     def get_dir(path: Path):
         """Return a directory for a path."""
-        path = Path(path).resolve()
+        path = Path(path)
         return path if path.is_dir() else path.parent
 
     @classmethod
@@ -63,7 +63,6 @@ class CommonMixin:
     def _to_absolute_path(self, root: Path, path: Path) -> Optional[Path]:
         """Convert paths to relevant absolute paths."""
         full_path = path if path.is_absolute() else root / path
-        full_path = full_path.resolve()
 
         if not full_path.is_relative_to(self.root_dir):
             if self.root_dir.is_relative_to(full_path):
@@ -84,7 +83,7 @@ class CommonMixin:
         self._config = config
 
         # init variables
-        self.root_dir = self.get_dir(Path(self._config.path)).resolve()
+        self.root_dir = self.get_dir(Path(self._config.path))
         self._YAML = YAML()
         self._YAML.allow_duplicate_keys = True
         self._filename = self._get_filename(self._config.program_name)

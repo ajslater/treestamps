@@ -11,7 +11,7 @@ class TestStaticMethods:
 
     def test_get_dir(self):
         """Test dirpath."""
-        file_path = Path(__file__).resolve()
+        file_path = Path(__file__)
         dir_path = file_path.parent
         assert Treestamps.get_dir(dir_path) == dir_path
         assert Treestamps.get_dir(file_path) == dir_path
