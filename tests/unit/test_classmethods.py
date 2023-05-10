@@ -46,9 +46,9 @@ class TestClassMethodds:
         )
         assert cc.program_config == {"a": {"b": [1, 2, 3]}}
 
-    def test_copse(self):
+    def test_grove(self):
         """Test the factory."""
-        path_a = Path(__file__).resolve()
+        path_a = Path(__file__)
         path_b = path_a.parent
         path_c = Path("/tmp")  # noqa
 
@@ -57,7 +57,7 @@ class TestClassMethodds:
         config = GrovestampsConfig("Dummy", paths=paths)
         cs = Grovestamps(config)
 
-        dirset = {path_b.resolve(), path_c.resolve()}
+        dirset = {path_b.resolve(), path_c}
         assert set(cs.keys()) == dirset
         dirs = {ts.root_dir for ts in cs.values()}
         assert dirs == dirset

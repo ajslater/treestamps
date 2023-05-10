@@ -3,7 +3,8 @@
 ## v0.4.2
 
 - Fix
- - Keep reading WAL if individual entries are corrupt.
+  - Make treestamp paths all relative again like 0.3.x for portability
+  - Keep reading WAL if individual entries are corrupt.
 
 ## v0.4.1
 

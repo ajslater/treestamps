@@ -30,7 +30,7 @@ class Grovestamps(dict):
         dirs = set()
         files = set()
         for path_str in self._config.paths:
-            path = Path(path_str).resolve()
+            path = Path(path_str)
             if not self._config.symlinks and path.is_symlink():
                 continue
             if path.is_dir():
@@ -56,14 +56,6 @@ class Grovestamps(dict):
             ts = Treestamps(tree_config)
             self[root_dir] = ts
             ts.load()
-
-    def __getitem__(self, key):
-        """Resolve the path key before getting it."""
-        return super().__getitem__(key.resolve())
-
-    def __setitem__(self, key, val):
-        """Resolve the path key before setting it."""
-        return super().__setitem__(key.resolve(), val)
 
     def dump(self) -> None:
         """Dump all treestamps."""
