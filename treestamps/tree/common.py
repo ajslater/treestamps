@@ -63,7 +63,7 @@ class CommonMixin:
     def _to_absolute_path(self, root: Path, path: Path) -> Optional[Path]:
         """Convert paths to relevant absolute paths."""
         full_path = path if path.is_absolute() else root / path
-        full_path = path.resolve()
+        full_path = full_path.resolve()
 
         if not full_path.is_relative_to(self.root_dir):
             if self.root_dir.is_relative_to(full_path):

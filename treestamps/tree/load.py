@@ -3,7 +3,7 @@ from pathlib import Path
 
 from termcolor import cprint
 
-from treestamps.config import normalize_config
+from treestamps.config import DEFAULT_CONFIG, normalize_config
 from treestamps.tree.get import GetMixin
 
 
@@ -29,15 +29,15 @@ class LoadMixin(GetMixin):
 
     def _load_timestamps_file_config_matches(self, yaml):
         """Return if the configured and loaded configs match."""
+        yaml_ts_config = yaml.pop(self._TREESTAMPS_CONFIG_TAG, DEFAULT_CONFIG)
+        yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
         if not self._config.check_config:
             return True
 
-        yaml_ts_config = yaml.pop(self._TREESTAMPS_CONFIG_TAG, {})
         ts_config = self._get_treestamps_config_dict()
         if yaml_ts_config != ts_config:
             return False
 
-        yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
         yaml_program_config = normalize_config(yaml_program_config)
         if self._config.program_config != yaml_program_config:
             # Only load timestamps for comparable configs
