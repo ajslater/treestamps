@@ -1,5 +1,10 @@
 # 📰 Treestamps News
 
+## v0.4.2
+
+- Fix
+ - Keep reading WAL if individual entries are corrupt.
+
 ## v0.4.1
 
 - Fix
