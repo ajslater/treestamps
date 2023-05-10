@@ -6,16 +6,16 @@ services:
       dockerfile: build.Dockerfile
     image: ajslater/treestamps-builder
     container_name: treestamps-build-builder
+  treestamps-lint:
+    image: ajslater/treestamps-builder
+    container_name: treestamps-lint
+    command: make lint
   treestamps-test:
     image: ajslater/treestamps-builder
     container_name: treestamps-test
     volumes:
       - ./test-results:/app/test-results:rw
     command: make test
-  treestamps-lint:
-    image: ajslater/treestamps-builder
-    container_name: treestamps-lint
-    command: make lint
   treestamps-build:
     image: ajslater/treestamps-builder
     container_name: treestamps-build

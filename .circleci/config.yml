@@ -8,6 +8,9 @@ jobs:
           command: docker-compose build treestamps-build-builder
           name: Install Build Dependencies
       - run:
+          command: docker-compose up --exit-code-from treestamps-lint treestamps-lint
+          name: Lint
+      - run:
           command: bin/create-output-dirs.sh
           name: Create Output Dirs
       - run:
@@ -17,9 +20,6 @@ jobs:
           path: test-results/pytest
       - store_artifacts:
           path: test-results/coverage
-      - run:
-          command: docker-compose up --exit-code-from treestamps-lint treestamps-lint
-          name: Lint
       - run:
           command: docker-compose up --exit-code-from treestamps-build treestamps-build
           name: Build
