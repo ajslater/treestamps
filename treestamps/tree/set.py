@@ -1,7 +1,7 @@
 """Set Methods."""
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from termcolor import cprint
 
@@ -11,60 +11,66 @@ from treestamps.tree.write import WriteMixin
 class SetMixin(WriteMixin):
     """Set Methods."""
 
-    def _compact_timestamps_below(self, root_path: Path) -> None:
+    _WAL_HEADER = WriteMixin._WAL_TAG + ":\n"  # noqa SLF001
+
+    def _compact_timestamps_below(self, abs_root_path: Path) -> None:
         """Compact the timestamp cache below a particular path."""
-        full_root_path = self.root_dir / root_path
-        if not full_root_path.is_dir():
+        if not abs_root_path.is_dir():
             return
-        root_timestamp = self._timestamps.get(full_root_path)
+        root_timestamp = self._timestamps.get(abs_root_path)
         if root_timestamp is None:
             return
-        delete_keys = set()
-        for path, timestamp in self._timestamps.items():
-            full_path = self.root_dir / path
+        delete_paths = set()
+        for abs_path, timestamp in self._timestamps.items():
             if (
-                full_path.is_relative_to(full_root_path) and timestamp < root_timestamp
+                abs_path.is_relative_to(abs_root_path) and timestamp < root_timestamp
             ) or timestamp is None:
-                delete_keys.add(full_path)
-        for del_path in delete_keys:
+                delete_paths.add(abs_path)
+        for del_path in delete_paths:
             del self._timestamps[del_path]
         if self._config.verbose > 1:
-            cprint(f"Compacted timestamps: {full_root_path}: {root_timestamp}")
+            cprint(f"Compacted timestamps under: {abs_root_path}: {root_timestamp}")
 
-    def _init_wal(self) -> None:
-        """Dump wall and reinitialize."""
-        self._dump(self._wal_path, {})
+    def _write_ahead_log(self, abs_path, mtime):
+        """Write to the WAL."""
+        if not self._wal:
+            # init wall
+            self._dump_to_file(self._wal_path, {})
+            self._consumed_paths.add(self._wal_path)
+            self._wal = self._wal_path.open("a")
+            self._wal.write(self._WAL_HEADER)
 
-        self._consumed_paths.add(self._wal_path)
-        self._wal = self._wal_path.open("a")
-        self._wal.write(self._WAL_TAG + ":\n")
+        # Manually construct yaml dict list item.
+        path_str = self._get_relative_path_str(abs_path)
+        wal_entry = f"- {path_str}: {mtime}\n"
+
+        self._wal.write(wal_entry)
 
     def set(  # noqa A003
-        self, path: Path, mtime: Optional[float] = None, compact: bool = False
+        self,
+        path: Union[Path, str],
+        mtime: Optional[float] = None,
+        compact: bool = False,
     ) -> Optional[float]:
         """Record the timestamp."""
-        # Get params
-        full_path = self._to_absolute_path(self.root_dir, path)
-        if full_path is None:
+        abs_path = self._get_absolute_path(self.root_dir, path)
+        if not abs_path:
             return None
 
-        # set timestamp
+        # Should we do the set?
+        old_mtime = self._timestamps.get(abs_path)
         if mtime is None:
             mtime = datetime.now(tz=timezone.utc).timestamp()
-        old_mtime = self._timestamps.get(full_path)
-        if old_mtime is not None and old_mtime > mtime:
+        if old_mtime and old_mtime > mtime:
             return None
-        self._timestamps[full_path] = mtime
+
+        # Set timestamp
+        self._timestamps[abs_path] = mtime
 
         # compact
-        if compact and full_path.is_dir():
-            self._compact_timestamps_below(full_path)
+        if compact:
+            self._compact_timestamps_below(abs_path)
 
         # write to wal
-        if not self._wal:
-            self._init_wal()
-        if self._wal:
-            # This could just be str(path)
-            path_str = self._get_relative_path_str(full_path)
-            self._wal.write(f"- {path_str}: {mtime}\n")
+        self._write_ahead_log(abs_path, mtime)
         return mtime
