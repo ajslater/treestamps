@@ -1,5 +1,5 @@
 """Set Methods."""
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -50,7 +50,7 @@ class SetMixin(WriteMixin):
 
         # set timestamp
         if mtime is None:
-            mtime = datetime.now(tz=UTC).timestamp()
+            mtime = datetime.now(tz=timezone.utc).timestamp()
         old_mtime = self._timestamps.get(full_path)
         if old_mtime is not None and old_mtime > mtime:
             return None
