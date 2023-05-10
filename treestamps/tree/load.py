@@ -55,22 +55,23 @@ class LoadMixin(GetMixin):
             if not yaml:
                 return
 
+            # pops off config entries.
             if not self._load_timestamps_file_config_matches(yaml):
                 return
 
             # WAL
-            try:
-                wal = yaml.pop(self._WAL_TAG)
-            except KeyError:
-                wal = []
+            wal = yaml.pop(self._WAL_TAG, [])
 
-            # Timestamps
+            # What's left are timestamps
             entries = list(yaml.items())
 
             # Wal entries afterwards
             for entry in wal:
-                for path_str, ts in entry.items():
-                    entries += [(path_str, ts)]
+                try:
+                    for path_str, ts in entry.items():
+                        entries += [(path_str, ts)]
+                except Exception as exc:
+                    cprint(f"WAL entry read: {exc}", "yellow")
 
             for path_str, ts in entries:
                 self._load_timestamp_entry(timestamps_path.parent, path_str, ts)
