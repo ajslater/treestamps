@@ -17,7 +17,7 @@ used in those projects.
     config = GrovestampsConfig(
         "MyProgramName",
         paths=["/foo", "/bar"],
-        program_config={ "optionA": True, "optionB": False}
+        program_config={ "option_a": True, "option_b": False}
     )
     cs = Grovestamps(config)
 
