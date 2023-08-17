@@ -27,8 +27,8 @@ class Grovestamps(dict):
         This order creates dir based treestamps before files so dirs get children
         recursed and files only don't.
         """
-        dirs = set()
-        files = set()
+        dirs: set[Path] = set()
+        files: set[Path] = set()
         for path_str in self._config.paths:
             path = Path(path_str)
             if not self._config.symlinks and path.is_symlink():
