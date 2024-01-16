@@ -1,6 +1,11 @@
 # 📰 Treestamps News
 
-## v0.4.2
+## v0.4.4
+
+- Fix
+  - Dependency updates and linting.
+
+## v0.4.3
 
 - Fix
   - Ensure use of absolute paths internally, relative paths externally.

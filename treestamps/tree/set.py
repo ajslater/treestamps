@@ -46,7 +46,7 @@ class SetMixin(WriteMixin):
 
         self._wal.write(wal_entry)
 
-    def set(  # noqa A003
+    def set(
         self,
         path: Union[Path, str],
         mtime: Optional[float] = None,

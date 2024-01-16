@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "treestamps"
-version = "0.4.3"
+version = "0.4.4"
 description = "Create timestamp records for recursive operations on directory trees."
 authors = ["AJ Slater <aj@slater.net>"]
 license = "GPL-3.0-only"
@@ -26,11 +26,10 @@ include = ["NEWS.md"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-"ruamel.yaml" = "^0.17.21"
+"ruamel.yaml" = "^0.18.5"
 termcolor = "^2.0.1"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.3.0"
 codespell = "^2.1.0"
 coverage = { extras = ["toml"], version = "^7.0" }
 neovim = "^0.3.1"
@@ -39,15 +38,12 @@ pytest = "^7.0.0"
 pytest-cov = "^4.0"
 pytest-gitignore = "^1.3"
 radon = { version = "^6.0.1", extras = ["toml"]}
-ruff = ">=0.0.265"
+ruff = "^0.1.13"
 vulture = "^2.1"
 
 [tool.poetry.urls]
 "Source" = "https://github.com/ajslater/treestamps"
 "Issues" = "https://github.com/ajslater/treestamps/issues"
-
-[tool.black]
-exclude = "/(.git|.mypy_cache|.pytest_cache|.venv|__pycache__|dist|node_modules|test-results|typings)/"
 
 [tool.codespell]
 skip=".git,.mypy_cache,.pytest_cache,.venv,*~,./dist,./node_modules,./package-lock.json,./poetry.lock,./test-results"
@@ -121,7 +117,11 @@ exclude = "*~,.git/*,.mypy_cache/*,.pytest_cache/*,.venv/*,__pycache__/*,dist/*,
 
 [tool.ruff]
 extend-exclude = ["cache", "typings"]
-extend-ignore = ["S101", "D203", "D213"]
+extend-ignore = ["S101", "D203", "D213",
+  # Format ignores
+  "W191", "E501", "E111", "E114", "E117", "D206", "D300", "Q000", "Q001",
+  "Q002", "Q003", "COM812", "COM819", "ISC001", "ISC002"  
+]
 #extend-select = ["B", "B9", "C", "D", "I", "N", "S", "W"]
 extend-select = ["A", "ARG", "B", "B9", "C", "C4", "C90", "D", "DJ",
   "DTZ", "E", "EM", "EXE", "F", "I", "ICN", "INP", "ISC", "PIE", "PL",
