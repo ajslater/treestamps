@@ -115,7 +115,7 @@ reportMissingImports = true
 reportImportCycles = true
 
 [tool.radon]
-exclude = "*~,.git/*,.mypy_cache/*,.pytest_cache/*,.venv/*,__pycache__/*,dist/*,node_modules/*,test-results/*,typings/*"
+exclude = "*~,.git/*,.mypy_cache/*,.pytest_cache/*,.ruff_cache/*,.venv/*,__pycache__/*,dist/*,node_modules/*,test-results/*,typings/*"
 
 [tool.ruff]
 extend-exclude = ["cache", "typings"]
