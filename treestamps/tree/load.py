@@ -113,7 +113,7 @@ class LoadMixin(GetMixin):
                 for dir_entry in path.iterdir():
                     self._consume_all_child_timestamps(dir_entry)
         except Exception as exc:
-            cprint(f"WARNING: reading all child timstamps {exc}", "yellow")
+            cprint(f"WARNING: reading all child timestamps {exc}", "yellow")
 
     def _load_parent_timestamps(self, path: Path) -> None:
         """Recursively load timestamps from all parents."""

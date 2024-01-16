@@ -21,14 +21,14 @@ class GrovestampsConfig(CommonConfig):
 class Grovestamps(dict):
     """A path keyed dict of Treestamps."""
 
-    def _order_paths(self) -> tuple[Path]:
+    def _order_paths(self) -> tuple[Path, ...]:
         """Return ordered deduplicated list of paths.
 
         This order creates dir based treestamps before files so dirs get children
         recursed and files only don't.
         """
-        dirs = set()
-        files = set()
+        dirs: set[Path] = set()
+        files: set[Path] = set()
         for path_str in self._config.paths:
             path = Path(path_str)
             if not self._config.symlinks and path.is_symlink():

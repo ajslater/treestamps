@@ -2,7 +2,7 @@ module.exports = {
   root: true,
   env: {
     node: true,
-    es2021: true,
+    es2022: true,
   },
   extends: [
     "eslint:recommended",
@@ -71,6 +71,7 @@ module.exports = {
     "!.circleci",
     ".mypy_cache",
     ".pytest_cache",
+    ".ruff_cache",
     ".venv",
     "dist",
     "node_modules",
