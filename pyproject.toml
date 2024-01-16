@@ -46,7 +46,7 @@ vulture = "^2.1"
 "Issues" = "https://github.com/ajslater/treestamps/issues"
 
 [tool.codespell]
-skip=".git,.mypy_cache,.pytest_cache,.venv,*~,./dist,./node_modules,./package-lock.json,./poetry.lock,./test-results"
+skip=".git,.mypy_cache,.pytest_cache,.ruff_cache,.venv,*~,./dist,./node_modules,./package-lock.json,./poetry.lock,./test-results"
 builtin="clear,rare,code"
 check-hidden=true
 ignore-words-list="thead"
@@ -59,6 +59,7 @@ omit = [
   ".git/*",
   ".mypy_cache/*",
   ".pytest_cache/*",
+  ".ruff_cache/*",
   ".venv/*",
   "*__pycache__*",
   "dist/*",
@@ -99,6 +100,7 @@ exclude = [
   ".git",
   ".mypy_cache",
   ".pytest_cache",
+  ".ruff_cache",
   ".venv",
   "dist",
   "package-lock.json",
@@ -143,6 +145,6 @@ task-tags = ["TODO", "FIXME", "XXX", "http", "HACK"]
 ignore-overlong-task-comments = true
 
 [tool.vulture]
-exclude = [".git/", ".mypy_cache/", ".pytest_cache", ".venv", "*__pycache__*", "treestamps/__init__.py"]
+exclude = [".git/", ".mypy_cache/", ".pytest_cache", ".ruff_cache", ".venv", "*__pycache__*", "treestamps/__init__.py"]
 min_confidence = 61
 sort_by_size = true
