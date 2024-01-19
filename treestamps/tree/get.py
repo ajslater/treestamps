@@ -1,6 +1,5 @@
 """Get Methods."""
 from pathlib import Path
-from typing import Optional, Union
 
 from treestamps.tree.common import CommonMixin
 
@@ -9,13 +8,13 @@ class GetMixin(CommonMixin):
     """Get Methods."""
 
     @staticmethod
-    def max_none(a: Optional[float], b: Optional[float]) -> Optional[float]:
+    def max_none(a: float | None, b: float | None) -> float | None:
         """None aware max() function."""
         return max((x for x in (a, b) if x is not None), default=None)
 
-    def get(self, path: Union[Path, str]) -> Optional[float]:
+    def get(self, path: Path | str) -> float | None:
         """Get the timestamps up the directory tree. All the way to root."""
-        mtime: Optional[float] = None
+        mtime: float | None = None
         abs_path = self._get_absolute_path(self.root_dir, path)
         if not abs_path:
             return mtime

@@ -1,7 +1,6 @@
 """Set Methods."""
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Union
 
 from termcolor import cprint
 
@@ -48,10 +47,10 @@ class SetMixin(WriteMixin):
 
     def set(
         self,
-        path: Union[Path, str],
-        mtime: Optional[float] = None,
+        path: Path | str,
+        mtime: float | None = None,
         compact: bool = False,
-    ) -> Optional[float]:
+    ) -> float | None:
         """Record the timestamp."""
         abs_path = self._get_absolute_path(self.root_dir, path)
         if not abs_path:

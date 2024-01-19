@@ -1,16 +1,15 @@
 """Treestamps Config methods."""
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Optional
 
 
-def normalize_config(config: Optional[dict]) -> Optional[dict]:
+def normalize_config(config: dict | None) -> dict | None:
     """Recursively convert iterables into sorted unique lists."""
     if config is None:
         return None
     new_config: dict = {}
     for key, value in config.items():
-        if isinstance(value, (list, tuple, set, frozenset)):
+        if isinstance(value, list | tuple | set | frozenset):
             new_config[key] = sorted(frozenset(value))
         elif isinstance(value, dict):
             new_config[key] = normalize_config(value)
@@ -32,7 +31,7 @@ class CommonConfig:
     symlinks: bool = True
     ignore: Iterable[str] = frozenset()
     check_config: bool = True
-    program_config: Optional[dict] = None
+    program_config: dict | None = None
     program_config_keys: Iterable[str] = frozenset()
 
     def __post_init__(self):

@@ -2,7 +2,6 @@
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Union
 
 from termcolor import cprint
 
@@ -15,7 +14,7 @@ from treestamps.tree.common import TreestampsConfig
 class GrovestampsConfig(CommonConfig):
     """Grovestamps config."""
 
-    paths: Iterable[Union[str, Path]] = ()
+    paths: Iterable[str | Path] = ()
 
 
 class Grovestamps(dict):

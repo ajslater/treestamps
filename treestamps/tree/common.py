@@ -1,7 +1,7 @@
 """Common methods."""
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, TextIO, Union
+from typing import TextIO
 
 from ruamel.yaml import YAML
 from termcolor import cprint
@@ -33,7 +33,7 @@ class CommonMixin:
     _WAL_FILENAME_TEMPLATE = ".{program_name}_treestamps.wal.yaml"
 
     @staticmethod
-    def get_dir(path: Union[Path, str]) -> Path:
+    def get_dir(path: Path | str) -> Path:
         """Return a directory for a path."""
         path = Path(path)
         return path if path.is_dir() else path.parent
@@ -60,7 +60,7 @@ class CommonMixin:
             config[key] = getattr(self._config, key)
         return normalize_config(config)
 
-    def _get_absolute_path(self, root: Path, path: Union[Path, str]) -> Optional[Path]:
+    def _get_absolute_path(self, root: Path, path: Path | str) -> Path | None:
         """Convert paths to relevant absolute paths."""
         path = Path(path)
         abs_path = path if path.is_absolute() else (root / path).absolute()
@@ -101,6 +101,6 @@ class CommonMixin:
         self._wal_filename = self._get_wal_filename(self._config.program_name)
         self._dump_path = self.root_dir / self._filename
         self._wal_path = self.root_dir / self._wal_filename
-        self._wal: Optional[TextIO] = None
+        self._wal: TextIO | None = None
         self._consumed_paths: set[Path] = set()
         self._timestamps: dict[Path, float] = {}

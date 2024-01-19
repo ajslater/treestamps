@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+## v1.0.0
+
+- Require Python 3.10
+
 ## v0.4.4
 
 - Fix
