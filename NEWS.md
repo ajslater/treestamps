@@ -1,5 +1,10 @@
 # 📰 Treestamps News
 
+## v1.0.1
+
+- Quote yaml keys in wal to handle illegal characters.
+- Fixed incorrect, but still inadequate README docs.
+
 ## v1.0.0
 
 - Require Python 3.10
