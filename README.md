@@ -14,46 +14,42 @@ those projects.
 <!-- eslint-skip -->
 
 ```python
-    from treestamps import Copsestamps, CopsestampsConfig
+    from pathlib import Path
+    from treestamps import Grovestamps, GrovestampsConfig
 
     config = GrovestampsConfig(
         "MyProgramName",
-        paths=["/foo", "/bar"],
+        paths=("/foo", "/bar"),
         program_config={ "option_a": True, "option_b": False}
     )
-    cs = Grovestamps(config)
+    gs = Grovestamps(config)
 
-    timestamp = cs["/foo"].get()
-    cs["/foo"].set()
+    timestamp = gs[Path("/foo")].get()
+    assert None == timestamp.get("file_relative_to_foo.txt")
+    mtime = timestamp.set("file_relative_to_foo.txt")
+    # mtime ~= now()
+    # Also writes to `/foo/.MyProgramName_treestamps.wal.yaml`
 
-    cs["/foo"].dump()
-
-    cs.dump()
+    gs.dump()
 ```
 
-## Breaking Changes from 0.3.x
+Dumping removes `/foo/.MyProgramName_treestamps.wal.yaml` and writes to
+`/foo/.MyProgramName_treestamps.yaml` and `/bar/.MyProgramName_treestamps.yaml`
 
-### Renamed
+<!-- eslint-skip -->
 
-Treestamps.dirpath() -> Treestamps.get_dir() Treestamps.dir ->
-Treestamps.root_dir
+```python
+    # With similar config to above
+    gs = Grovestamps(config)
+    # Auto loads timestamps relevant to paths in config.
 
-### Made Private
+    timestamp_foo = gs[Path("/foo")].get()
+    mtime_b = timestamp_foo.get("file_relative_to_foo.txt")
+    mtime_a = timestamp_foo.get("another_file_relative_to_foo.txt")
+    # mtime will be the time gs.dump() you called above.
+    assert mtime_a == mtime_b
 
-Treestamps.prune_dict() -> Treestamps.\_prune_dict()
-Treestamps.consume_all_child_timestamps() ->
-Treestamps.\_consume_all_child_timestamps()
-
-### Added
-
-Treestamps.add_consumed_path(), for legacy treestamps importers to remove old
-files. Copsestamps() is the ubquitous dir of rootpaths to Treestamps.
-
-### Changed
-
-Grovestamps() and Treestamps() both require a GrovestampsConfig or
-TreestampsConfig respectively as their sole param.
-
-Treestamps now record the ignored and symlinks config options in the file and if
-they change the file is not loaded. This is optional with the `check_config`
-configuration option.
+    timestamp_bar = gs[Path("/bar")].get()
+    mtime_c = timestamp_foo.get("file_relative_to_bar.txt")
+    assert mtime_c == mtime_a
+```
