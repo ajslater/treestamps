@@ -41,6 +41,10 @@ class SetMixin(WriteMixin):
 
         # Manually construct yaml dict list item.
         path_str = self._get_relative_path_str(abs_path)
+        if ":" in path_str:
+            # Safe wal strings. Handled automatically by yaml dumper.
+            # https://github.com/commx/ruamel-yaml/blob/master/util.py#L211
+            path_str = "'" + path_str.replace("'", "''") + "'"
         wal_entry = f"- {path_str}: {mtime}\n"
 
         self._wal.write(wal_entry)
