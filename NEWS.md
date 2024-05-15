@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+## v1.0.2
+
+- Indent lists with an offset the way Prettier does.
+
 ## v1.0.1
 
 - Quote yaml keys in wal to handle illegal characters.
