@@ -97,6 +97,8 @@ class CommonMixin:
         self.root_dir = root_dir
         self._YAML = YAML()
         self._YAML.allow_duplicate_keys = True
+        # Conform to Prettier
+        self._YAML.indent(offset=2)
         self._filename = self._get_filename(self._config.program_name)
         self._wal_filename = self._get_wal_filename(self._config.program_name)
         self._dump_path = self.root_dir / self._filename
