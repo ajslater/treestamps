@@ -1,4 +1,5 @@
 """Treestamps Config methods."""
+
 from collections.abc import Iterable
 from dataclasses import dataclass
 

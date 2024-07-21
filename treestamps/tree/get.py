@@ -1,4 +1,5 @@
 """Get Methods."""
+
 from pathlib import Path
 
 from treestamps.tree.common import CommonMixin

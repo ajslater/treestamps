@@ -1,4 +1,5 @@
 """Load methods."""
+
 from pathlib import Path
 
 from termcolor import cprint
@@ -28,11 +29,8 @@ class LoadMixin(GetMixin):
             return False
 
         yaml_program_config = normalize_config(yaml_program_config)
-        if self._config.program_config != yaml_program_config:
-            # Only load timestamps for comparable configs
-            return False
-
-        return True
+        # Only load timestamps for comparable configs
+        return self._config.program_config == yaml_program_config
 
     def _get_absolute_entry_path(self, root: Path, path_str) -> Path:
         """Get the path from a timestamp file relative to this treestamp's root_dir."""

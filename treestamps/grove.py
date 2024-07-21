@@ -1,4 +1,5 @@
 """A dict of Treestamps."""
+
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path

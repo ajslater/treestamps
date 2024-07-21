@@ -1,4 +1,5 @@
 """Test static methods."""
+
 from pathlib import Path
 
 from treestamps.tree import Treestamps

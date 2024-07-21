@@ -1,4 +1,5 @@
 """Dump Methods."""
+
 from termcolor import cprint
 
 from treestamps.tree.write import WriteMixin

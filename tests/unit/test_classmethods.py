@@ -1,4 +1,5 @@
 """Test classmethods."""
+
 from pathlib import Path
 
 from treestamps.config import CommonConfig
