@@ -77,7 +77,7 @@ class LoadMixin(GetMixin):
                 try:
                     for path_str, ts in entry.items():
                         entries += [(path_str, ts)]
-                except Exception as exc:  # noqa: PERF203
+                except Exception as exc:
                     cprint(f"WAL entry read: {exc}", "yellow")
 
             for path_str, ts in entries:
