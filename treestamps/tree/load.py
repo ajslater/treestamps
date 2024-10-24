@@ -77,7 +77,7 @@ class LoadMixin(GetMixin):
                 try:
                     for path_str, ts in entry.items():
                         entries += [(path_str, ts)]
-                except Exception as exc:
+                except Exception as exc:  # noqa: PERF203
                     cprint(f"WAL entry read: {exc}", "yellow")
 
             for path_str, ts in entries:
@@ -99,7 +99,7 @@ class LoadMixin(GetMixin):
             cprint(f"WARNING: reading child timestamps {exc}", "yellow")
 
     def _consume_all_child_timestamps(
-        self, path: Path, do_consume_children=True
+        self, path: Path, do_consume_children: bool
     ) -> None:
         """Recursively consume all timestamps and wal files."""
         try:
@@ -109,7 +109,9 @@ class LoadMixin(GetMixin):
                 self._consume_child_timestamps(path / name)
             if do_consume_children:
                 for dir_entry in path.iterdir():
-                    self._consume_all_child_timestamps(dir_entry)
+                    self._consume_all_child_timestamps(
+                        dir_entry, do_consume_children=True
+                    )
         except Exception as exc:
             cprint(f"WARNING: reading all child timestamps {exc}", "yellow")
 

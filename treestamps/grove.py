@@ -22,7 +22,8 @@ class Grovestamps(dict):
     """A path keyed dict of Treestamps."""
 
     def _order_paths(self) -> tuple[Path, ...]:
-        """Return ordered deduplicated list of paths.
+        """
+        Return ordered deduplicated list of paths.
 
         This order creates dir based treestamps before files so dirs get children
         recursed and files only don't.

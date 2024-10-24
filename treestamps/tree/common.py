@@ -66,7 +66,6 @@ class CommonMixin:
         path = Path(path)
         abs_path = path if path.is_absolute() else (root / path).absolute()
         # Do not normalize because symlinks behave weird.
-        # abs_path = normpath(full_path)
 
         if abs_path.is_relative_to(self.root_dir):
             # abs_path is under the root_dir.
@@ -94,7 +93,6 @@ class CommonMixin:
         # init variables
         # Do not normalize root_dir because symlinks behave weird.
         root_dir = self.get_dir(self._config.path).absolute()
-        # root_dir = normpath(root_dir)
         self.root_dir = root_dir
         self._YAML = YAML()
         self._YAML.allow_duplicate_keys = True

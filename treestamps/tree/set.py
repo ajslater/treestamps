@@ -11,7 +11,7 @@ from treestamps.tree.write import WriteMixin
 class SetMixin(WriteMixin):
     """Set Methods."""
 
-    _WAL_HEADER = WriteMixin._WAL_TAG + ":\n"  # noqa SLF001
+    _WAL_HEADER = WriteMixin._WAL_TAG + ":\n"  # noqa: SLF001
 
     def _compact_timestamps_below(self, abs_root_path: Path) -> None:
         """Compact the timestamp cache below a particular path."""
@@ -54,7 +54,7 @@ class SetMixin(WriteMixin):
         self,
         path: Path | str,
         mtime: float | None = None,
-        compact: bool = False,
+        compact: bool = False,  # noqa: FBT002
     ) -> float | None:
         """Record the timestamp."""
         abs_path = self._get_absolute_path(self.root_dir, path)

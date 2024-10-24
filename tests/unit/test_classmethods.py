@@ -51,7 +51,7 @@ class TestClassMethodds:
         """Test the factory."""
         path_a = Path(__file__)
         path_b = path_a.parent
-        path_c = Path("/tmp")  # noqa
+        path_c = Path("/tmp")  # noqa: S108
 
         paths = (path_a, path_b, path_c)
 

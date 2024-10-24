@@ -15,7 +15,7 @@ class DumpMixin(WriteMixin):
             try:
                 rel_path_str = self._get_relative_path_str(abs_path)
                 dumpable_timestamps[rel_path_str] = timestamp
-            except Exception as exc:
+            except Exception as exc:  # noqa: PERF203
                 cprint(f"Serializing {abs_path}: {exc}", "yellow")
         return dumpable_timestamps
 
@@ -25,7 +25,7 @@ class DumpMixin(WriteMixin):
             for path in self._consumed_paths:
                 try:
                     path.unlink(missing_ok=True)
-                except Exception as exc:
+                except Exception as exc:  # noqa: PERF203
                     cprint(f"WARNING: removing old timestamp: {exc}", "yellow")
             self._consumed_paths = set()
 
