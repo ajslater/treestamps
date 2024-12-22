@@ -42,7 +42,7 @@ pyright = "^1.1.237"
 pytest-cov = "^6.0.0"
 pytest-gitignore = "^1.3"
 radon = { version = "^6.0.1", extras = ["toml"] }
-ruff = "^0.7.0"
+ruff = "^0.8.4"
 vulture = "^2.1"
 
 [tool.poetry.urls]
@@ -164,7 +164,7 @@ extend-select = [
   "FBT",
   "FIX",
   "FLY",
-  "FURB",
+  # "FURB",
   # "G",
   "I",
   "ICN",
@@ -192,6 +192,7 @@ extend-select = [
   "SLOT",
   "T10",
   "T20",
+  "TC",
   "TCH",
   # "TD",
   "TID",
