@@ -3,8 +3,8 @@
   "description": "linting for treestamps",
   "type": "module",
   "scripts": {
-    "fix": "eslint --cache --fix . && prettier --write .",
-    "lint": "eslint --cache . && prettier --check .",
+    "fix": "eslint_d --cache --fix . && prettier --write .",
+    "lint": "eslint_d --cache . && prettier --check .",
     "remark-check": "remark .",
     "remark-fix": "remark . --output"
   },
