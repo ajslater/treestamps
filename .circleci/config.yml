@@ -1,7 +1,7 @@
 jobs:
   build:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2404:current
     steps:
       - checkout
       - run:
@@ -32,13 +32,11 @@ jobs:
           root: .
   deploy:
     docker:
-      - image: cimg/python:3.12.1
+      - image: ghcr.io/astral-sh/uv:bookworm-slim
     steps:
       - attach_workspace:
           at: .
-      - run:
-          command: pip install poetry
-          name: Install poetry
+      - run: uv publish
       - run:
           command: bin/publish-pypi.sh
           name: Publish Package to PyPi

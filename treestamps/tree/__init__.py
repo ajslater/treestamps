@@ -1,8 +1,9 @@
 """Timestamp writer for keeping track of bulk optimizations."""
-from treestamps.tree.dump import DumpMixin
-from treestamps.tree.load import LoadMixin
-from treestamps.tree.set import SetMixin
+
+from treestamps.tree.dump import TreestampsDump
+from treestamps.tree.load import TreestampLoad
+from treestamps.tree.set import TreestampsSet
 
 
-class Treestamps(SetMixin, LoadMixin, DumpMixin):
+class Treestamps(TreestampsSet, TreestampLoad, TreestampsDump):
     """Treestamps object to hold settings and caches."""

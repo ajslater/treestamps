@@ -1,5 +1,12 @@
 # 📰 Treestamps News
 
+## v1.2.0
+
+- POTENTIALLY BREAKING CHANGE - Config elements are now converted to
+  MappingProxyTypes, Tuples and frozensets
+- Change build system to uv
+- Termcolor 3.0
+
 ## v1.0.2
 
 - Indent lists with an offset the way Prettier does.
@@ -52,12 +59,12 @@
 ## v0.3.3
 
 - Features
-  - Update dependencies & poetry lockfile
+  - Update dependencies & uv.lockfile
 
 ## v0.3.2
 
 - Features
-  - Update dependencies & poetry lockfile
+  - Update dependencies & uv.lockfile
 
 ## v0.3.1
 

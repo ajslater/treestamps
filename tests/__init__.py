@@ -1,11 +1,12 @@
 """Tests init."""
+
 import inspect
 from pathlib import Path
 
 PROGRAM = "treestamps"
 TEST_FILES_DIR = Path("tests/test_files")
 INVALID_DIR = TEST_FILES_DIR / "invalid"
-TMP_ROOT = "/tmp"  # noqa
+TMP_ROOT = "/tmp"  # noqa:S108
 
 
 def get_test_dir():

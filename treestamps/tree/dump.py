@@ -1,10 +1,11 @@
 """Dump Methods."""
+
 from termcolor import cprint
 
-from treestamps.tree.write import WriteMixin
+from treestamps.tree.write import TreestampsWrite
 
 
-class DumpMixin(WriteMixin):
+class TreestampsDump(TreestampsWrite):
     """Dump Methods."""
 
     def _serialize_timestamps(self):
@@ -15,7 +16,7 @@ class DumpMixin(WriteMixin):
                 rel_path_str = self._get_relative_path_str(abs_path)
                 dumpable_timestamps[rel_path_str] = timestamp
             except Exception as exc:
-                cprint(f"Serializing {abs_path}: {exc}", "yellow")
+                cprint(f"WARNING: Serializing {abs_path}: {exc}", "yellow")
         return dumpable_timestamps
 
     def _cleanup_old_timestamps(self):

@@ -1,13 +1,14 @@
 """Load methods."""
+
 from pathlib import Path
+from types import MappingProxyType
 
 from termcolor import cprint
 
-from treestamps.config import DEFAULT_CONFIG, normalize_config
-from treestamps.tree.get import GetMixin
+from treestamps.tree.get import TreestampsGet
 
 
-class LoadMixin(GetMixin):
+class TreestampLoad(TreestampsGet):
     """Load methods."""
 
     def _is_path_skipped(self, path: Path) -> bool:
@@ -16,23 +17,22 @@ class LoadMixin(GetMixin):
             not self._config.symlinks and path.is_symlink()
         )
 
-    def _load_timestamps_file_config_matches(self, yaml):
+    def _load_timestamps_file_pop_config_matches(self, yaml):
         """Return if the configured and loaded configs match."""
-        yaml_ts_config = yaml.pop(self._TREESTAMPS_CONFIG_TAG, DEFAULT_CONFIG)
-        yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
         if not self._config.check_config:
             return True
 
-        ts_config = self._get_treestamps_config_dict()
-        if yaml_ts_config != ts_config:
+        yaml_ts_config = yaml.pop(self._TREESTAMPS_CONFIG_TAG, {})
+        # convert to internal type
+        yaml_ts_config["ignore"] = frozenset(yaml_ts_config.get("ignore", []))
+        if self._config.get_config_dict() != yaml_ts_config:
             return False
 
-        yaml_program_config = normalize_config(yaml_program_config)
-        if self._config.program_config != yaml_program_config:
-            # Only load timestamps for comparable configs
-            return False
-
-        return True
+        yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
+        if yaml_program_config is not None:
+            # convert to internal type
+            yaml_program_config = MappingProxyType(yaml_program_config)
+        return self._config.program_config == yaml_program_config
 
     def _get_absolute_entry_path(self, root: Path, path_str) -> Path:
         """Get the path from a timestamp file relative to this treestamp's root_dir."""
@@ -64,25 +64,23 @@ class LoadMixin(GetMixin):
             if not yaml:
                 return
 
-            # pops off config entries.
-            if not self._load_timestamps_file_config_matches(yaml):
+            # Pop off config entries and compare.
+            if not self._load_timestamps_file_pop_config_matches(yaml):
                 return
-
-            # WAL
-            wal = yaml.pop(self._WAL_TAG, [])
+            # Pop off the WAL
+            wal = yaml.pop(self._WAL_TAG, ())
 
             # What's left are timestamps
-            entries = list(yaml.items())
+            entries = dict(yaml)
 
-            # Wal entries afterwards
-            for entry in wal:
+            # Update entries with WAL entries
+            for wal_entry in wal:
                 try:
-                    for path_str, ts in entry.items():
-                        entries += [(path_str, ts)]
+                    entries.update(wal_entry)
                 except Exception as exc:
-                    cprint(f"WAL entry read: {exc}", "yellow")
+                    cprint(f"WARNING: loading WAL entry: {wal_entry}: {exc}", "yellow")
 
-            for path_str, ts in entries:
+            for path_str, ts in entries.items():
                 self._load_timestamp_entry(timestamps_path.parent, path_str, ts)
         except Exception as exc:
             cprint(f"ERROR: parsing timestamps file: {timestamps_path} {exc}", "red")
@@ -101,7 +99,7 @@ class LoadMixin(GetMixin):
             cprint(f"WARNING: reading child timestamps {exc}", "yellow")
 
     def _consume_all_child_timestamps(
-        self, path: Path, do_consume_children=True
+        self, path: Path, do_consume_children: bool
     ) -> None:
         """Recursively consume all timestamps and wal files."""
         try:
@@ -111,7 +109,9 @@ class LoadMixin(GetMixin):
                 self._consume_child_timestamps(path / name)
             if do_consume_children:
                 for dir_entry in path.iterdir():
-                    self._consume_all_child_timestamps(dir_entry)
+                    self._consume_all_child_timestamps(
+                        dir_entry, do_consume_children=True
+                    )
         except Exception as exc:
             cprint(f"WARNING: reading all child timestamps {exc}", "yellow")
 

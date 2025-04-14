@@ -1,12 +1,12 @@
 """Base class for testing images."""
+
 import shutil
-from abc import ABC
 from pathlib import Path
 
 from tests import TEST_FILES_DIR, get_test_dir
 
 
-class BaseTestDir(ABC):
+class BaseTestDir:
     """Test images dir."""
 
     FNS: tuple = ()

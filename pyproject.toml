@@ -1,20 +1,12 @@
 [project]
 name = "treestamps"
-requires-python = ">=3.10"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry]
-name = "treestamps"
-version = "1.0.2"
+version = "1.2.0"
 description = "Create timestamp records for recursive operations on directory trees."
-authors = ["AJ Slater <aj@slater.net>"]
-license = "GPL-3.0-only"
+authors = [{ name = "AJ Slater", email = "aj@slater.net" }]
+#license = "GPL-3.0-only"
+license-files = ["LICENSE"]
 readme = "README.md"
-homepage = "https://github.com/ajslater/treestamps"
-documentation = "https://github.com/ajslater/treestamps"
+requires-python = "<4.0,>=3.10"
 keywords = ["timestamps", "library", "recursive", "directory"]
 classifiers = [
   "Environment :: Console",
@@ -26,31 +18,45 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+dependencies = ["ruamel.yaml~=0.18.5", "termcolor~=3.0.1"]
+# BUILD SYSTEM
 packages = [{ include = "treestamps" }, { include = "tests", format = "sdist" }]
 include = ["NEWS.md"]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-"ruamel.yaml" = "^0.18.5"
-termcolor = "^2.0.1"
+[project.urls]
+Homepage = "https://github.com/ajslater/treestamps"
+Documentation = "https://github.com/ajslater/treestamps"
+Source = "https://github.com/ajslater/treestamps"
+Issues = "https://github.com/ajslater/treestamps/issues"
+homepage = "https://github.com/ajslater/treestamps"
+documentation = "https://github.com/ajslater/treestamps"
 
-[tool.poetry.group.dev.dependencies]
-codespell = "^2.1.0"
-coverage = { extras = ["toml"], version = "^7.0" }
-neovim = "^0.3.1"
-pyright = "^1.1.237"
-pytest-cov = "^4.0"
-pytest-gitignore = "^1.3"
-radon = { version = "^6.0.1", extras = ["toml"] }
-ruff = "^0.2.1"
-vulture = "^2.1"
+[dependency-groups]
+dev = [
+  "codespell~=2.4.1",
+  "coverage[toml]<8.0,>=7.8",
+  "hatchling<2.0.0,>=1.27.0",
+  "icecream>=2.1.4",
+  "neovim<1.0.0,>=0.3.1",
+  "pyclean>=3.1.0",
+  "pyright~=1.1.394",
+  "pytest-cov~=6.0",
+  "pytest-gitignore~=1.3",
+  "radon[toml]~=6.0.1",
+  "ruff~=0.11.5",
+  "toml-cli<1.0.0,>=0.7.0",
+  "vulture~=2.14",
+]
 
-[tool.poetry.urls]
-"Source" = "https://github.com/ajslater/treestamps"
-"Issues" = "https://github.com/ajslater/treestamps/issues"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+include = ["treestamps", "tests", "NEWS.md"]
 
 [tool.codespell]
-skip = ".git,.mypy_cache,.pytest_cache,.ruff_cache,.venv,*~,./dist,./node_modules,./package-lock.json,./poetry.lock,./test-results"
+skip = ".git,.mypy_cache,.pytest_cache,.ruff_cache,.venv,*~,./dist,./node_modules,./package-lock.json,./uv.lock,./test-results"
 builtin = "clear,rare,code"
 check-hidden = true
 ignore-words-list = "thead"
@@ -87,6 +93,7 @@ addopts = """
 """
 junit_family = "xunit2"
 testpaths = "tests"
+pythonpath = ["."]
 
 [tool.pyright]
 exclude = [
@@ -99,7 +106,7 @@ exclude = [
   ".venv",
   "dist",
   "package-lock.json",
-  "poetry.lock",
+  "uv.lock",
   "test-results",
   "treestamps/__init__.py",
   "typings",
@@ -110,6 +117,8 @@ pythonPlatform = "All"
 reportImportCycles = true
 reportMissingImports = true
 useLibraryCodeForTypes = true
+venvPath = "."
+venv = ".venv"
 
 [tool.radon]
 exclude = "*~,.git/*,.mypy_cache/*,.pytest_cache/*,.ruff_cache/*,.venv/*,__pycache__/*,dist/*,node_modules/*,test-results/*,typings/*"
@@ -120,67 +129,86 @@ target-version = "py310"
 
 [tool.ruff.lint]
 extend-ignore = [
-  "S101",
-  "D203",
-  "D213",
-  # Format ignores
-  "W191",
-  "E501",
-  "E111",
-  "E114",
-  "E117",
-  "D206",
-  "D300",
-  "Q000",
-  "Q001",
-  "Q002",
-  "Q003",
-  "COM812",
-  "COM819",
-  "ISC001",
-  "ISC002",
+  "BLE001",  # catch bare exception
+  "COM812",  # missing trailing comma
+  "COM819",  # prohibit trailing comma
+  "D203",    # blank line before class docstring
+  "D206",    # formatted
+  "D212",    # first line multi line docstring.
+  "E111",    # formatted
+  "E114",    # formatted
+  "E117",    # over-indented
+  "E501",    # 88 char line
+  "FBT001",  # boolean params
+  "ISC001",  # formatted
+  "PERF203", # try block in loop
+  "S101",    # assert
+  "W191",    # formatted
 ]
 extend-select = [
   "A",
+  # "AIR",
+  # "ANN",
   "ARG",
+  "ASYNC",
   "B",
   "B9",
+  "BLE",
   "C",
   "C4",
   "C90",
+  "COM",
+  # "CPY",
   "D",
   "DJ",
+  # "DOC",
   "DTZ",
   "E",
   "EM",
+  "ERA",
   "EXE",
   "F",
+  "FA",
+  # "FAST",
+  "FBT",
+  "FIX",
+  "FLY",
+  # "FURB",
+  # "G",
   "I",
   "ICN",
   "INP",
+  "INT",
   "ISC",
+  "LOG",
+  # "PD",
+  "PERF",
+  "PGH",
   "PIE",
   "PL",
   "PT",
   "PTH",
   "PYI",
-  "Q",
+  # "Q", Formatted
   "N",
+  # NPY,
   "RET",
   "RSE",
   "RUF",
   "S",
   "SIM",
   "SLF",
+  "SLOT",
   "T10",
   "T20",
+  "TC",
   "TCH",
+  # "TD",
   "TID",
   "TRY",
   "UP",
   "W",
   "YTT",
-  # "ANN", "ERA", "COM"
 ]
 external = ["V101"]
 task-tags = ["TODO", "FIXME", "XXX", "http", "HACK"]
