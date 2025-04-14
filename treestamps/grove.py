@@ -1,7 +1,7 @@
 """A dict of Treestamps."""
 
 from collections.abc import Iterable
-from copy import deepcopy
+from copy import copy
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -40,10 +40,10 @@ class GrovestampsConfig(CommonConfig):
 
     def get_treestamps_config_dict(self):
         """Get a treestamps style config dict from this config."""
-        config_dict = deepcopy(self)
-        if config_dict.program_config is not None:
-            config_dict.program_config = dict(config_dict.program_config)
-        config_dict = asdict(self)
+        config = copy(self)
+        if config.program_config is not None:
+            config.program_config = dict(config.program_config)
+        config_dict = asdict(config)
         config_dict.pop("paths", None)
         return config_dict
 
