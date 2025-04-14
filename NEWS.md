@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+## v1.2.2
+
+- Actually fix copying grove config for treestamps config.
+
 ## v1.2.1
 
 - Fix copying grove config for treestamps config.
