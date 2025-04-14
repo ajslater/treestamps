@@ -52,12 +52,12 @@
 ## v0.3.3
 
 - Features
-  - Update dependencies & poetry lockfile
+  - Update dependencies & uv.lockfile
 
 ## v0.3.2
 
 - Features
-  - Update dependencies & poetry lockfile
+  - Update dependencies & uv.lockfile
 
 ## v0.3.1
 
