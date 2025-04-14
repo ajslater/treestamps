@@ -7,6 +7,8 @@ from termcolor import cprint
 
 from treestamps.tree.get import TreestampsGet
 
+_TUPLE_CONVERT_KEYS = ("convert_to", "formats", "ignore")
+
 
 class TreestampLoad(TreestampsGet):
     """Load methods."""
@@ -31,6 +33,8 @@ class TreestampLoad(TreestampsGet):
         yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
         if yaml_program_config is not None:
             # convert to internal type
+            for key in _TUPLE_CONVERT_KEYS:
+                yaml_program_config[key] = tuple(yaml_program_config.get(key, ()))
             yaml_program_config = MappingProxyType(yaml_program_config)
         return self._config.program_config == yaml_program_config
 
@@ -98,20 +102,15 @@ class TreestampLoad(TreestampsGet):
         except Exception as exc:
             cprint(f"WARNING: reading child timestamps {exc}", "yellow")
 
-    def _consume_all_child_timestamps(
-        self, path: Path, do_consume_children: bool
-    ) -> None:
+    def _consume_all_child_timestamps(self, path: Path) -> None:
         """Recursively consume all timestamps and wal files."""
         try:
             if not path.is_dir() or self._is_path_skipped(path):
                 return
             for name in (self._filename, self._wal_filename):
                 self._consume_child_timestamps(path / name)
-            if do_consume_children:
-                for dir_entry in path.iterdir():
-                    self._consume_all_child_timestamps(
-                        dir_entry, do_consume_children=True
-                    )
+            for dir_entry in path.iterdir():
+                self._consume_all_child_timestamps(dir_entry)
         except Exception as exc:
             cprint(f"WARNING: reading all child timestamps {exc}", "yellow")
 
@@ -127,5 +126,4 @@ class TreestampLoad(TreestampsGet):
     def load(self) -> None:
         """Load all timestamps."""
         self._load_parent_timestamps(self.root_dir)
-        do_consume_children = self._config.path.is_dir()
-        self._consume_all_child_timestamps(self.root_dir, do_consume_children)
+        self._consume_all_child_timestamps(self.root_dir)

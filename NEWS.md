@@ -1,6 +1,10 @@
 # 📰 Treestamps News
 
-## v1.2.2
+## v1.2.3
+
+- Type fixes for comparing loaded timestamps with current config
+
+## v1.2.3
 
 - Actually fix copying grove config for treestamps config.
 
