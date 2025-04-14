@@ -3,6 +3,7 @@
 ## v1.0.3
 
 - Change build system to uv
+- Termcolor 3.0
 
 ## v1.0.2
 
