@@ -1,7 +1,9 @@
 # 📰 Treestamps News
 
-## v1.0.3
+## v1.2.0
 
+- POTENTIALLY BREAKING CHANGE - Config elements are now converted to MappingProxyTypes,
+  Tuples and frozensets
 - Change build system to uv
 - Termcolor 3.0
 

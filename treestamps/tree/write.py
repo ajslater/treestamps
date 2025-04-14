@@ -27,8 +27,11 @@ class TreestampsWrite(TreestampsInit):
         # the program config.
         yaml = {}
         if self._config.program_config is not None:
-            yaml[self._CONFIG_TAG] = dict(sorted(self._config.program_config.items()))
-        yaml[self._TREESTAMPS_CONFIG_TAG] = self._get_treestamps_config_dict()
+            yaml[self._CONFIG_TAG] = dict(self._config.program_config)
+        yaml[self._TREESTAMPS_CONFIG_TAG] = {
+            "ignore": self._config.ignore,
+            "symlinks": self._config.symlinks,
+        }
         return yaml
 
     def _dump_to_file(self, path, yaml):

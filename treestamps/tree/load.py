@@ -1,10 +1,10 @@
 """Load methods."""
 
 from pathlib import Path
+from types import MappingProxyType
 
 from termcolor import cprint
 
-from treestamps.config import DEFAULT_CONFIG, normalize_config
 from treestamps.tree.get import TreestampsGet
 
 
@@ -19,17 +19,17 @@ class TreestampLoad(TreestampsGet):
 
     def _load_timestamps_file_config_matches(self, yaml):
         """Return if the configured and loaded configs match."""
-        yaml_ts_config = yaml.pop(self._TREESTAMPS_CONFIG_TAG, DEFAULT_CONFIG)
-        yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
         if not self._config.check_config:
             return True
 
-        ts_config = self._get_treestamps_config_dict()
-        if yaml_ts_config != ts_config:
+        yaml_ts_config = yaml.pop(self._TREESTAMPS_CONFIG_TAG, {})
+        yaml_ts_config["ignore"] = frozenset(yaml_ts_config.get("ignore", []))
+        if self._config.get_config_dict() != yaml_ts_config:
             return False
 
-        yaml_program_config = normalize_config(yaml_program_config)
-        # Only load timestamps for comparable configs
+        yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
+        if yaml_program_config is not None:
+            yaml_program_config = MappingProxyType(yaml_program_config)
         return self._config.program_config == yaml_program_config
 
     def _get_absolute_entry_path(self, root: Path, path_str) -> Path:

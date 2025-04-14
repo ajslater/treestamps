@@ -1,27 +1,14 @@
 """Common methods."""
 
-from dataclasses import dataclass
+from collections.abc import Mapping
 from pathlib import Path
 from typing import TextIO
 
 from ruamel.yaml import YAML
+from ruamel.yaml.representer import SafeRepresenter
 from termcolor import cprint
 
-from treestamps.config import CommonConfig, normalize_config
-
-CONFIG_KEYS = sorted(("ignore", "symlinks"))
-
-
-@dataclass
-class TreestampsConfig(CommonConfig):
-    """Config data."""
-
-    path: Path = Path()
-
-    def __post_init__(self):
-        """Fix types."""
-        super().__post_init__()
-        self.path = Path(self.path)
+from treestamps.tree.config import TreestampsConfig
 
 
 class TreestampsInit:
@@ -54,13 +41,6 @@ class TreestampsInit:
         """Get all filenames produced by treestamps."""
         return (cls._get_filename(program_name), cls._get_wal_filename(program_name))
 
-    def _get_treestamps_config_dict(self):
-        """Create dumpable version of treestamps config params."""
-        config = {}
-        for key in CONFIG_KEYS:
-            config[key] = getattr(self._config, key)
-        return normalize_config(config)
-
     def _get_absolute_path(self, root: Path, path: Path | str) -> Path | None:
         """Convert paths to relevant absolute paths."""
         path = Path(path)
@@ -85,6 +65,15 @@ class TreestampsInit:
             )
         return None
 
+    def _config_yaml(self):
+        self._YAML = YAML()
+        self._YAML.allow_duplicate_keys = True
+        self._YAML.indent(offset=2)  # Conform to Prettier
+        self._YAML.representer.add_representer(
+            frozenset, SafeRepresenter.represent_list
+        )
+        self._YAML.representer.add_representer(Mapping, SafeRepresenter.represent_dict)
+
     def __init__(self, config: TreestampsConfig) -> None:
         """Initialize instance variables."""
         # config
@@ -94,10 +83,7 @@ class TreestampsInit:
         # Do not normalize root_dir because symlinks behave weird.
         root_dir = self.get_dir(self._config.path).absolute()
         self.root_dir = root_dir
-        self._YAML = YAML()
-        self._YAML.allow_duplicate_keys = True
-        # Conform to Prettier
-        self._YAML.indent(offset=2)
+        self._config_yaml()
         self._filename = self._get_filename(self._config.program_name)
         self._wal_filename = self._get_wal_filename(self._config.program_name)
         self._dump_path = self.root_dir / self._filename

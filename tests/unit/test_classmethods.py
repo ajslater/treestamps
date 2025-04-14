@@ -1,6 +1,7 @@
 """Test classmethods."""
 
 from pathlib import Path
+from types import MappingProxyType
 
 from treestamps.config import CommonConfig
 from treestamps.grove import Grovestamps, GrovestampsConfig
@@ -27,25 +28,27 @@ class TestClassMethodds:
         assert cc.program_config is None
 
         cc = CommonConfig("Dummy", program_config_keys=keys, program_config={})
-        assert cc.program_config == {}
+        assert cc.program_config == MappingProxyType({})
 
         cc = CommonConfig("Dummy", program_config_keys=keys, program_config={"a": 1})
-        assert cc.program_config == {"a": 1}
+        assert cc.program_config == MappingProxyType({"a": 1})
 
         cc = CommonConfig(
             "Dummy",
             program_config_keys=keys,
             program_config={"a": 1, "b": [3, 2, 1, 2]},
         )
-        assert cc.program_config == {
-            "a": 1,
-            "b": [1, 2, 3],
-        }
+        assert cc.program_config == MappingProxyType(
+            {
+                "a": 1,
+                "b": (1, 2, 3),
+            }
+        )
 
         cc = CommonConfig(
             "Dummy", program_config_keys=keys, program_config={"a": {"b": [2, 1, 3, 1]}}
         )
-        assert cc.program_config == {"a": {"b": [1, 2, 3]}}
+        assert cc.program_config == MappingProxyType({"a": {"b": (1, 2, 3)}})
 
     def test_grove(self):
         """Test the factory."""

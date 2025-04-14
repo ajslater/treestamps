@@ -1,26 +1,8 @@
 """Treestamps Config methods."""
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-
-
-def normalize_config(config: dict | None) -> dict | None:
-    """Recursively convert iterables into sorted unique lists."""
-    if config is None:
-        return None
-    new_config: dict = {}
-    for key, value in config.items():
-        if isinstance(value, list | tuple | set | frozenset):
-            new_config[key] = sorted(frozenset(value))
-        elif isinstance(value, dict):
-            new_config[key] = normalize_config(value)
-        else:
-            new_config[key] = value
-
-    return new_config
-
-
-DEFAULT_CONFIG = normalize_config({"ignore": frozenset(), "symlinks": True})
+from types import MappingProxyType
 
 
 @dataclass
@@ -32,8 +14,27 @@ class CommonConfig:
     symlinks: bool = True
     ignore: Iterable[str] = frozenset()
     check_config: bool = True
-    program_config: dict | None = None
+    program_config: Mapping | None = None
     program_config_keys: Iterable[str] = frozenset()
+
+    @classmethod
+    def _normalize_config(cls, config: Mapping | None) -> MappingProxyType | None:
+        """Recursively convert iterables into sorted unique lists."""
+        if config is None:
+            return None
+        new_config: dict = {}
+        for key, value in config.items():
+            if isinstance(value, list | tuple | set | frozenset):
+                new_config[key] = tuple(sorted(frozenset(value)))
+            elif isinstance(value, Mapping):
+                normalized = cls._normalize_config(value)
+                if normalized is not None:
+                    normalized = MappingProxyType(dict(sorted(normalized.items())))
+                new_config[key] = normalized
+            else:
+                new_config[key] = value
+
+        return MappingProxyType(new_config)
 
     def __post_init__(self):
         """Fix types and normalize program config dict."""
@@ -48,4 +49,4 @@ class CommonConfig:
 
             self.program_config = dict(filter(filter_func, self.program_config.items()))
 
-        self.program_config = normalize_config(self.program_config)
+        self.program_config = self._normalize_config(self.program_config)
