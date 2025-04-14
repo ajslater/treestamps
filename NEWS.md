@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+## v1.0.3
+
+- Change build system to uv
+
 ## v1.0.2
 
 - Indent lists with an offset the way Prettier does.
