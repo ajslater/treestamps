@@ -236,4 +236,3 @@ exclude = [
 ]
 min_confidence = 61
 sort_by_size = true
-

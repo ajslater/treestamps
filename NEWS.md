@@ -2,8 +2,8 @@
 
 ## v1.2.0
 
-- POTENTIALLY BREAKING CHANGE - Config elements are now converted to MappingProxyTypes,
-  Tuples and frozensets
+- POTENTIALLY BREAKING CHANGE - Config elements are now converted to
+  MappingProxyTypes, Tuples and frozensets
 - Change build system to uv
 - Termcolor 3.0
 

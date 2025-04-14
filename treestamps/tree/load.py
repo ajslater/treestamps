@@ -17,18 +17,20 @@ class TreestampLoad(TreestampsGet):
             not self._config.symlinks and path.is_symlink()
         )
 
-    def _load_timestamps_file_config_matches(self, yaml):
+    def _load_timestamps_file_pop_config_matches(self, yaml):
         """Return if the configured and loaded configs match."""
         if not self._config.check_config:
             return True
 
         yaml_ts_config = yaml.pop(self._TREESTAMPS_CONFIG_TAG, {})
+        # convert to internal type
         yaml_ts_config["ignore"] = frozenset(yaml_ts_config.get("ignore", []))
         if self._config.get_config_dict() != yaml_ts_config:
             return False
 
         yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
         if yaml_program_config is not None:
+            # convert to internal type
             yaml_program_config = MappingProxyType(yaml_program_config)
         return self._config.program_config == yaml_program_config
 
@@ -63,24 +65,17 @@ class TreestampLoad(TreestampsGet):
                 return
 
             # pops off config entries.
-            if not self._load_timestamps_file_config_matches(yaml):
+            if not self._load_timestamps_file_pop_config_matches(yaml):
                 return
 
             # WAL
             wal = yaml.pop(self._WAL_TAG, [])
 
             # What's left are timestamps
-            entries = list(yaml.items())
+            entries = dict(yaml)
+            entries.update(wal)
 
-            # Wal entries afterwards
-            for entry in wal:
-                try:
-                    for path_str, ts in entry.items():
-                        entries += [(path_str, ts)]
-                except Exception as exc:
-                    cprint(f"WAL entry read: {exc}", "yellow")
-
-            for path_str, ts in entries:
+            for path_str, ts in entries.items():
                 self._load_timestamp_entry(timestamps_path.parent, path_str, ts)
         except Exception as exc:
             cprint(f"ERROR: parsing timestamps file: {timestamps_path} {exc}", "red")
