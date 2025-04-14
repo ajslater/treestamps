@@ -3,23 +3,19 @@ FROM nikolaik/python-nodejs:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-USER root
 # hadolint ignore=DL3008
 RUN apt-get update \
- && apt-get install -y --no-install-recommends \
+  && apt-get install -y --no-install-recommends \
   shellcheck \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-RUN chown circleci:circleci /app
-COPY --chown=circleci:circleci bin bin
 
-USER circleci
-COPY --chown=circleci:circleci pyproject.toml uv.lock package.json package-lock.json ./
+COPY pyproject.toml uv.lock package.json package-lock.json ./
 RUN npm install
 
-COPY --chown=circleci:circleci . .
+COPY . .
 RUN mkdir -p test-results dist
 
 # Install
