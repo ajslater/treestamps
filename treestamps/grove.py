@@ -1,6 +1,7 @@
 """A dict of Treestamps."""
 
 from collections.abc import Iterable
+from copy import deepcopy
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -37,6 +38,15 @@ class GrovestampsConfig(CommonConfig):
                 files.add(path)
         self.paths = tuple(sorted(dirs) + sorted(files))
 
+    def get_treestamps_config_dict(self):
+        """Get a treestamps style config dict from this config."""
+        config_dict = deepcopy(self)
+        if config_dict.program_config is not None:
+            config_dict.program_config = dict(config_dict.program_config)
+        config_dict = asdict(self)
+        config_dict.pop("paths", None)
+        return config_dict
+
 
 class Grovestamps(dict):
     """A path keyed dict of Treestamps."""
@@ -45,14 +55,15 @@ class Grovestamps(dict):
         """Create a dictionary of Treestamps keyed with paths."""
         self._config = config
 
-        config_dict = asdict(self._config)
-        config_dict.pop("paths", None)
+        treestamps_config_dict = self._config.get_treestamps_config_dict()
 
         for top_path in self._config.paths:
             root_dir = Treestamps.get_dir(top_path)
             if root_dir in self:
                 continue
-            tree_config = TreestampsConfig(**config_dict, path=Path(top_path))
+            tree_config = TreestampsConfig(
+                **treestamps_config_dict, path=Path(top_path)
+            )
             ts = Treestamps(tree_config)
             self[root_dir] = ts
             ts.load()
