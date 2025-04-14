@@ -64,16 +64,21 @@ class TreestampLoad(TreestampsGet):
             if not yaml:
                 return
 
-            # pops off config entries.
+            # Pop off config entries and compare.
             if not self._load_timestamps_file_pop_config_matches(yaml):
                 return
-
-            # WAL
-            wal = yaml.pop(self._WAL_TAG, [])
+            # Pop off the WAL
+            wal = yaml.pop(self._WAL_TAG, ())
 
             # What's left are timestamps
             entries = dict(yaml)
-            entries.update(wal)
+
+            # Update entries with WAL entries
+            for wal_entry in wal:
+                try:
+                    entries.update(wal_entry)
+                except Exception as exc:
+                    cprint(f"WARNING: loading WAL entry: {wal_entry}: {exc}", "yellow")
 
             for path_str, ts in entries.items():
                 self._load_timestamp_entry(timestamps_path.parent, path_str, ts)
