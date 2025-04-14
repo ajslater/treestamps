@@ -2,10 +2,10 @@
 
 from termcolor import cprint
 
-from treestamps.tree.write import WriteMixin
+from treestamps.tree.write import TreestampsWrite
 
 
-class DumpMixin(WriteMixin):
+class TreestampsDump(TreestampsWrite):
     """Dump Methods."""
 
     def _serialize_timestamps(self):

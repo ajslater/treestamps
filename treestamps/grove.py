@@ -8,7 +8,7 @@ from termcolor import cprint
 
 from treestamps.config import CommonConfig
 from treestamps.tree import Treestamps
-from treestamps.tree.common import TreestampsConfig
+from treestamps.tree.init import TreestampsConfig
 
 
 @dataclass

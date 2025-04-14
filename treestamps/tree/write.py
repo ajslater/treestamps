@@ -3,10 +3,10 @@
 from contextlib import suppress
 from pathlib import Path
 
-from treestamps.tree.common import CommonMixin
+from treestamps.tree.init import TreestampsInit
 
 
-class WriteMixin(CommonMixin):
+class TreestampsWrite(TreestampsInit):
     """Common Writing methods."""
 
     def _close_wal(self) -> None:

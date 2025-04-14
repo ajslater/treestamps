@@ -24,7 +24,7 @@ class TreestampsConfig(CommonConfig):
         self.path = Path(self.path)
 
 
-class CommonMixin:
+class TreestampsInit:
     """Common methods."""
 
     _CONFIG_TAG = "config"

@@ -5,13 +5,13 @@ from pathlib import Path
 
 from termcolor import cprint
 
-from treestamps.tree.write import WriteMixin
+from treestamps.tree.write import TreestampsWrite
 
 
-class SetMixin(WriteMixin):
+class TreestampsSet(TreestampsWrite):
     """Set Methods."""
 
-    _WAL_HEADER = WriteMixin._WAL_TAG + ":\n"  # noqa: SLF001
+    _WAL_HEADER = TreestampsWrite._WAL_TAG + ":\n"  # noqa: SLF001
 
     def _compact_timestamps_below(self, abs_root_path: Path) -> None:
         """Compact the timestamp cache below a particular path."""

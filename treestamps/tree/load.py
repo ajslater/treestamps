@@ -5,10 +5,10 @@ from pathlib import Path
 from termcolor import cprint
 
 from treestamps.config import DEFAULT_CONFIG, normalize_config
-from treestamps.tree.get import GetMixin
+from treestamps.tree.get import TreestampsGet
 
 
-class LoadMixin(GetMixin):
+class TreestampLoad(TreestampsGet):
     """Load methods."""
 
     def _is_path_skipped(self, path: Path) -> bool:

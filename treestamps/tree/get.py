@@ -2,10 +2,10 @@
 
 from pathlib import Path
 
-from treestamps.tree.common import CommonMixin
+from treestamps.tree.init import TreestampsInit
 
 
-class GetMixin(CommonMixin):
+class TreestampsGet(TreestampsInit):
     """Get Methods."""
 
     @staticmethod
