@@ -45,7 +45,6 @@ class TestCycle(BaseTestDir):
 
     def _load(self, config, subpaths, times):
         gs = Grovestamps(config)
-        #assert False
 
         for subpath in subpaths:
             ts = gs.get(subpath)

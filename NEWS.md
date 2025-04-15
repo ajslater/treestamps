@@ -1,14 +1,14 @@
 # 📰 Treestamps News
 
-## v1.2.4
+## v2.0.0
 
-- POTENTIALLY BREAKING CHANGE - Config elements are now converted to
-  MappingProxyTypes, Tuples and frozensets
+- CHANGES WILL CAUSE ALL TIMESTAMPS TO MISS:
+  - Config elements are now converted to MappingProxyTypes, Tuples and
+    frozensets
+  - Represent config id sets as sets in yaml
 - Fix absolute path resolution.
 - Change build system to uv
 - Termcolor 3.0
-- More comprehensive freezing of submitted proram_configs
-- Represent config id sets as sets in yaml
 
 ## v1.0.2
 

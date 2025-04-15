@@ -1,8 +1,8 @@
 config:
-  test_attr: [0,1,2,3,4]
+  test_attr: [0, 1, 2, 3, 4]
 treestamps_config:
   ignore: !!set {}
   symlinks: true
 wal:
-- foo: 1234
-- bar: 4678
+  - foo: 1234
+  - bar: 4678
