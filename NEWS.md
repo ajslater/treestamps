@@ -1,21 +1,10 @@
 # 📰 Treestamps News
 
-## v1.2.3
-
-- Type fixes for comparing loaded timestamps with current config
-
-## v1.2.3
-
-- Actually fix copying grove config for treestamps config.
-
-## v1.2.1
-
-- Fix copying grove config for treestamps config.
-
-## v1.2.0
+## v1.2.4
 
 - POTENTIALLY BREAKING CHANGE - Config elements are now converted to
   MappingProxyTypes, Tuples and frozensets
+- Fix absolute path resolution.
 - Change build system to uv
 - Termcolor 3.0
 

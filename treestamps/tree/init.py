@@ -43,9 +43,8 @@ class TreestampsInit:
 
     def _get_absolute_path(self, root: Path, path: Path | str) -> Path | None:
         """Convert paths to relevant absolute paths."""
-        path = Path(path)
-        abs_path = path if path.is_absolute() else (root / path).absolute()
-        # Do not normalize because symlinks behave weird.
+        # Do not normalize with resolve() because symlinks behave weird.
+        abs_path = Path(path).absolute()
 
         if abs_path.is_relative_to(self.root_dir):
             # abs_path is under the root_dir.
@@ -70,7 +69,7 @@ class TreestampsInit:
         self._YAML.allow_duplicate_keys = True
         self._YAML.indent(offset=2)  # Conform to Prettier
         self._YAML.representer.add_representer(
-            frozenset, SafeRepresenter.represent_list
+            frozenset, SafeRepresenter.represent_set
         )
         self._YAML.representer.add_representer(Mapping, SafeRepresenter.represent_dict)
 
