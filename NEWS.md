@@ -7,6 +7,8 @@
 - Fix absolute path resolution.
 - Change build system to uv
 - Termcolor 3.0
+- More comprehensive freezing of submitted proram_configs
+- Represent config id sets as sets in yaml
 
 ## v1.0.2
 

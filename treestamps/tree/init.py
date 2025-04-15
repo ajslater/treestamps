@@ -41,24 +41,27 @@ class TreestampsInit:
         """Get all filenames produced by treestamps."""
         return (cls._get_filename(program_name), cls._get_wal_filename(program_name))
 
-    def _get_absolute_path(self, root: Path, path: Path | str) -> Path | None:
+    def _get_absolute_path(self, root_dir: Path, path: Path | str) -> Path | None:
         """Convert paths to relevant absolute paths."""
-        # Do not normalize with resolve() because symlinks behave weird.
-        abs_path = Path(path).absolute()
+        # Do not normalize with resolve() to keep symlink paths.
+        path = Path(path)
 
-        if abs_path.is_relative_to(self.root_dir):
-            # abs_path is under the root_dir.
+        abs_path = path.absolute()
+        if abs_path.is_relative_to(root_dir):
+            # absolute path under the root, return the absolute path
             return abs_path
 
-        # if abs_path is not under the root dir like it should be
-        if self.root_dir.is_relative_to(abs_path):
-            # abs_path is above the root dir. use the root dir.
-            return self.root_dir
+        if not path.is_absolute():
+            return (root_dir / path).absolute()
 
-        # abs_path is outside our jurisdiction.
+        if root_dir.is_relative_to(path):
+            # path is above the root dir. use the root dir.
+            return root_dir
+
+        # path is outside our jurisdiction.
         if self._config.verbose:
             cprint(
-                f"Timestamp outside {self.root_dir}'s tree, ignored: {abs_path}",
+                f"Timestamp outside {root_dir}'s tree, ignored: {path}",
                 "white",
                 attrs=["dark"],
             )
@@ -68,9 +71,7 @@ class TreestampsInit:
         self._YAML = YAML()
         self._YAML.allow_duplicate_keys = True
         self._YAML.indent(offset=2)  # Conform to Prettier
-        self._YAML.representer.add_representer(
-            frozenset, SafeRepresenter.represent_set
-        )
+        self._YAML.representer.add_representer(frozenset, SafeRepresenter.represent_set)
         self._YAML.representer.add_representer(Mapping, SafeRepresenter.represent_dict)
 
     def __init__(self, config: TreestampsConfig) -> None:

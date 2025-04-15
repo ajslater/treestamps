@@ -1,13 +1,11 @@
 """Load methods."""
 
 from pathlib import Path
-from types import MappingProxyType
 
 from termcolor import cprint
 
+from treestamps.tree.config import TreestampsConfig
 from treestamps.tree.get import TreestampsGet
-
-_TUPLE_CONVERT_KEYS = ("convert_to", "formats", "ignore")
 
 
 class TreestampLoad(TreestampsGet):
@@ -19,42 +17,34 @@ class TreestampLoad(TreestampsGet):
             not self._config.symlinks and path.is_symlink()
         )
 
+    @classmethod
+    def _load_timestamps_file_pop_and_compare_config(cls, yaml_config, compare_config):
+        normalized_config = TreestampsConfig.normalize_config(yaml_config)
+        # Shallow equality!
+        return compare_config == normalized_config
+
     def _load_timestamps_file_pop_config_matches(self, yaml):
         """Return if the configured and loaded configs match."""
-        if not self._config.check_config:
-            return True
-
         yaml_ts_config = yaml.pop(self._TREESTAMPS_CONFIG_TAG, {})
-        # convert to internal type
-        yaml_ts_config["ignore"] = frozenset(yaml_ts_config.get("ignore", []))
-        if self._config.get_config_dict() != yaml_ts_config:
-            return False
-
         yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
-        if yaml_program_config is not None:
-            # convert to internal type
-            for key in _TUPLE_CONVERT_KEYS:
-                yaml_program_config[key] = tuple(yaml_program_config.get(key, ()))
-            yaml_program_config = MappingProxyType(yaml_program_config)
-        return self._config.program_config == yaml_program_config
+        return not self._config.check_config or (
+            self._load_timestamps_file_pop_and_compare_config(
+                yaml_ts_config, self._config.get_config_dict()
+            )
+            and self._load_timestamps_file_pop_and_compare_config(
+                yaml_program_config, self._config.program_config
+            )
+        )
 
-    def _get_absolute_entry_path(self, root: Path, path_str) -> Path:
-        """Get the path from a timestamp file relative to this treestamp's root_dir."""
-        abs_root = self._get_absolute_path(self.root_dir, root)
-        if not abs_root:
-            raise ValueError
-        abs_path = self._get_absolute_path(abs_root, path_str)
-        if not abs_path:
-            raise ValueError
-        return abs_path
-
-    def _load_timestamp_entry(self, root: Path, path_str: str, ts: float) -> None:
+    def _load_timestamp_entry(
+        self, timestamps_root: Path, path_str: str, ts: float
+    ) -> None:
         """Load a single timestamp entry into the cache."""
         try:
-            abs_path = self._get_absolute_entry_path(root, path_str)
-            old_ts = self.get(abs_path)
-            if abs_path not in self._timestamps or old_ts is None or ts > old_ts:
-                self._timestamps[abs_path] = ts
+            if abs_path := self._get_absolute_path(timestamps_root, path_str):
+                old_ts = self.get(abs_path)
+                if old_ts is None or ts > old_ts:
+                    self._timestamps[abs_path] = ts
         except Exception as exc:
             cprint(f"WARNING: Invalid timestamp for {path_str}: {ts} {exc}", "yellow")
 
@@ -68,14 +58,14 @@ class TreestampLoad(TreestampsGet):
             if not yaml:
                 return
 
-            # Pop off config entries and compare.
+            # Pop off config entries and compare configs.
             if not self._load_timestamps_file_pop_config_matches(yaml):
                 return
             # Pop off the WAL
             wal = yaml.pop(self._WAL_TAG, ())
 
-            # What's left are timestamps
-            entries = dict(yaml)
+            # What's left are timestamp entries
+            entries = yaml
 
             # Update entries with WAL entries
             for wal_entry in wal:
@@ -86,19 +76,17 @@ class TreestampLoad(TreestampsGet):
 
             for path_str, ts in entries.items():
                 self._load_timestamp_entry(timestamps_path.parent, path_str, ts)
+            if self._config.verbose:
+                cprint(f"Read timestamps from {timestamps_path}")
         except Exception as exc:
             cprint(f"ERROR: parsing timestamps file: {timestamps_path} {exc}", "red")
 
     def _consume_child_timestamps(self, path: Path) -> None:
         """Consume a child timestamp and add its values to our root."""
         try:
-            if not path.is_file() or self._is_path_skipped(path):
-                return
             self._load_timestamps_file(path)
             if path != self._dump_path:
                 self._consumed_paths.add(path)
-            if self._config.verbose:
-                cprint(f"Read timestamps from {path}")
         except Exception as exc:
             cprint(f"WARNING: reading child timestamps {exc}", "yellow")
 
