@@ -65,8 +65,8 @@ class Grovestamps(dict):
                 **treestamps_config_dict, path=Path(top_path)
             )
             ts = Treestamps(tree_config)
-            self[root_dir] = ts
             ts.load()
+            self[root_dir] = ts
 
     def dump(self) -> None:
         """Dump all treestamps."""

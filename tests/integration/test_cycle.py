@@ -1,5 +1,8 @@
 """Test classmethods."""
 
+from pathlib import Path
+from shutil import copy
+
 from tests import PROGRAM
 from tests.integration.base_test import BaseTestDir
 from treestamps.grove import Grovestamps, GrovestampsConfig
@@ -7,6 +10,10 @@ from treestamps.grove import Grovestamps, GrovestampsConfig
 __all__ = ()
 
 PROGRAM_NAME = f"{PROGRAM}-tests"
+
+TS_FN = f".{PROGRAM_NAME}_treestamps.yaml"
+
+TS_FILE_SOURCE = Path(__file__).parent / "test_timestamp.yaml"
 
 
 class TestCycle(BaseTestDir):
@@ -37,7 +44,6 @@ class TestCycle(BaseTestDir):
         return times
 
     def _load(self, config, subpaths, times):
-        print(config)
         gs = Grovestamps(config)
 
         for subpath in subpaths:
@@ -55,6 +61,10 @@ class TestCycle(BaseTestDir):
                     print(path, "ts._timestamps", ts._timestamps)
                 assert stamp == loaded_stamp
 
+        for path, ts in gs.items():
+            ts.set(path, compact=True)
+        # untested :/
+
     def test_set_dump_load_get(self):
         """Test it all."""
         # Make subdirs
@@ -65,12 +75,18 @@ class TestCycle(BaseTestDir):
             subpath.mkdir()
             subpaths.append(subpath)
 
-        config = GrovestampsConfig(PROGRAM_NAME, paths=subpaths, verbose=10)
+        program_config = {"test_attr": (0, 1, 2, 3, 4)}
+        config = GrovestampsConfig(
+            PROGRAM_NAME, paths=subpaths, verbose=10, program_config=program_config
+        )
 
         times = self._dump(config, subpaths)
-
         for subpath in subpaths:
-            stamp_path = subpath / f".{PROGRAM_NAME}_treestamps.yaml"
+            stamp_path = subpath / TS_FN
             assert stamp_path.exists()
 
+        root_ts_path = self.TMP_ROOT / TS_FN
+        copy(TS_FILE_SOURCE, root_ts_path)
+        print("XXXXXXX")
+        print(root_ts_path.read_text())
         self._load(config, subpaths, times)

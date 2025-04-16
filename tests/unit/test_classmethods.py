@@ -41,14 +41,14 @@ class TestClassMethodds:
         assert cc.program_config == MappingProxyType(
             {
                 "a": 1,
-                "b": (1, 2, 3),
+                "b": (1, 2, 2, 3),
             }
         )
 
         cc = CommonConfig(
             "Dummy", program_config_keys=keys, program_config={"a": {"b": [2, 1, 3, 1]}}
         )
-        assert cc.program_config == MappingProxyType({"a": {"b": (1, 2, 3)}})
+        assert cc.program_config == MappingProxyType({"a": {"b": (1, 1, 2, 3)}})
 
     def test_grove(self):
         """Test the factory."""

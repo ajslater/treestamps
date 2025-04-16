@@ -1,12 +1,15 @@
 """Treestamps Config methods."""
 
+from abc import ABC
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from ruamel.yaml.comments import CommentedMap, CommentedSet
+
 
 @dataclass
-class CommonConfig:
+class CommonConfig(ABC):
     """Common Config meant to be subclassed."""
 
     program_name: str
@@ -18,23 +21,22 @@ class CommonConfig:
     program_config_keys: Iterable[str] = frozenset()
 
     @classmethod
-    def _normalize_config(cls, config: Mapping | None) -> MappingProxyType | None:
-        """Recursively convert iterables into sorted unique lists."""
-        if config is None:
-            return None
-        new_config: dict = {}
-        for key, value in config.items():
-            if isinstance(value, list | tuple | set | frozenset):
-                new_config[key] = tuple(sorted(frozenset(value)))
-            elif isinstance(value, Mapping):
-                normalized = cls._normalize_config(value)
-                if normalized is not None:
-                    normalized = MappingProxyType(dict(sorted(normalized.items())))
-                new_config[key] = normalized
-            else:
-                new_config[key] = value
-
-        return MappingProxyType(new_config)
+    def normalize_config(cls, value):
+        """Recursively convert iterables into frozen sorted unique lists."""
+        if isinstance(value, Mapping | CommentedMap):
+            value = MappingProxyType(
+                dict(
+                    sorted(
+                        (key, cls.normalize_config(sub_value))
+                        for key, sub_value in value.items()
+                    )
+                )
+            )
+        if isinstance(value, list | tuple):
+            value = tuple(sorted(cls.normalize_config(e) for e in value))
+        if isinstance(value, set | CommentedSet):
+            value = frozenset(cls.normalize_config(e) for e in value)
+        return value
 
     def __post_init__(self):
         """Fix types and normalize program config dict."""
@@ -47,6 +49,11 @@ class CommonConfig:
             def filter_func(pair):
                 return pair[0] in self.program_config_keys
 
-            self.program_config = dict(filter(filter_func, self.program_config.items()))
+            program_config = (
+                dict(filter(filter_func, self.program_config.items()))
+                if self.program_config_keys
+                else self.program_config
+            )
+            self.program_config = program_config
 
-        self.program_config = self._normalize_config(self.program_config)
+        self.program_config = self.normalize_config(self.program_config)

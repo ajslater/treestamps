@@ -1,6 +1,6 @@
 [project]
 name = "treestamps"
-version = "1.2.3"
+version = "2.0.0"
 description = "Create timestamp records for recursive operations on directory trees."
 authors = [{ name = "AJ Slater", email = "aj@slater.net" }]
 #license = "GPL-3.0-only"
