@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import TextIO
 
 from ruamel.yaml import YAML
@@ -73,6 +74,7 @@ class TreestampsInit:
         self._YAML.indent(offset=2)  # Conform to Prettier
         self._YAML.representer.add_representer(frozenset, SafeRepresenter.represent_set)
         self._YAML.representer.add_representer(Mapping, SafeRepresenter.represent_dict)
+        self._YAML.representer.add_representer(MappingProxyType, SafeRepresenter.represent_dict)
 
     def __init__(self, config: TreestampsConfig) -> None:
         """Initialize instance variables."""
