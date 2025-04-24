@@ -1,5 +1,10 @@
 # 📰 Treestamps News
 
+## v2.1.1
+
+- Fix dumps() method to take no arguments.
+- Expose get_filename() method.
+
 ## v2.1.0
 
 - Add dumpf() and dumps() methods. Old dump() method is an alias for dumpf().

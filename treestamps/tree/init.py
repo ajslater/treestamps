@@ -28,7 +28,7 @@ class TreestampsInit:
         return path if path.is_dir() else path.parent
 
     @classmethod
-    def _get_filename(cls, program_name: str) -> str:
+    def get_filename(cls, program_name: str) -> str:
         """Return the timestamps filename for a program."""
         return cls._FILENAME_TEMPLATE.format(program_name=program_name)
 
@@ -40,7 +40,7 @@ class TreestampsInit:
     @classmethod
     def get_filenames(cls, program_name):
         """Get all filenames produced by treestamps."""
-        return (cls._get_filename(program_name), cls._get_wal_filename(program_name))
+        return (cls.get_filename(program_name), cls._get_wal_filename(program_name))
 
     def _get_absolute_path(self, root_dir: Path, path: Path | str) -> Path | None:
         """Convert paths to relevant absolute paths."""
@@ -88,7 +88,7 @@ class TreestampsInit:
         root_dir = self.get_dir(self._config.path).absolute()
         self.root_dir = root_dir
         self._config_yaml()
-        self._filename = self._get_filename(self._config.program_name)
+        self._filename = self.get_filename(self._config.program_name)
         self._wal_filename = self._get_wal_filename(self._config.program_name)
         self._dump_path = self.root_dir / self._filename
         self._wal_path = self.root_dir / self._wal_filename
