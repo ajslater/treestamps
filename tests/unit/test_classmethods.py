@@ -15,7 +15,7 @@ class TestClassMethodds:
 
     def test_get_filename(self):
         """Test get filename."""
-        assert Treestamps._get_filename("foo") == ".foo_treestamps.yaml"
+        assert Treestamps.get_filename("foo") == ".foo_treestamps.yaml"
 
     def test_get_wal_filename(self):
         """Test get wal filename."""
