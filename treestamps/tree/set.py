@@ -5,13 +5,13 @@ from pathlib import Path
 
 from termcolor import cprint
 
-from treestamps.tree.write import TreestampsWrite
+from treestamps.tree.dump import TreestampsDump
 
 
-class TreestampsSet(TreestampsWrite):
+class TreestampsSet(TreestampsDump):
     """Set Methods."""
 
-    _WAL_HEADER = TreestampsWrite._WAL_TAG + ":\n"  # noqa: SLF001
+    _WAL_HEADER = TreestampsDump._WAL_TAG + ":\n"  # noqa: SLF001
 
     def _compact_timestamps_below(self, abs_root_path: Path) -> None:
         """Compact the timestamp cache below a particular path."""
@@ -35,7 +35,7 @@ class TreestampsSet(TreestampsWrite):
         """Write to the WAL."""
         if not self._wal:
             # init wall
-            self._dump_to_file(self._wal_path, {})
+            self._dumpf({}, self._wal_path)
             self._consumed_paths.add(self._wal_path)
             self._wal = self._wal_path.open("a")
             self._wal.write(self._WAL_HEADER)
