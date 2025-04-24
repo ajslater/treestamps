@@ -1,5 +1,11 @@
 # 📰 Treestamps News
 
+## v2.1.0
+
+- Add dumpf() and dumps() methods. Old dump() method is an alias for dumpf().
+  dumpf() calls cleanup_old_timestamps() automatically. dumps() must call it
+  manually.
+
 ## v2.0.0
 
 - CHANGES WILL CAUSE ALL TIMESTAMPS TO MISS:
