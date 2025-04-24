@@ -33,14 +33,14 @@ class TreestampsInit:
         return cls._FILENAME_TEMPLATE.format(program_name=program_name)
 
     @classmethod
-    def _get_wal_filename(cls, program_name: str) -> str:
+    def get_wal_filename(cls, program_name: str) -> str:
         """Return the write ahead log filename for the program."""
         return cls._WAL_FILENAME_TEMPLATE.format(program_name=program_name)
 
     @classmethod
     def get_filenames(cls, program_name):
         """Get all filenames produced by treestamps."""
-        return (cls.get_filename(program_name), cls._get_wal_filename(program_name))
+        return (cls.get_filename(program_name), cls.get_wal_filename(program_name))
 
     def _get_absolute_path(self, root_dir: Path, path: Path | str) -> Path | None:
         """Convert paths to relevant absolute paths."""
@@ -78,7 +78,7 @@ class TreestampsInit:
             MappingProxyType, SafeRepresenter.represent_dict
         )
 
-    def __init__(self, config: TreestampsConfig) -> None:
+    def __init__(self, config: TreestampsConfig):
         """Initialize instance variables."""
         # config
         self._config = config
@@ -89,7 +89,7 @@ class TreestampsInit:
         self.root_dir = root_dir
         self._config_yaml()
         self._filename = self.get_filename(self._config.program_name)
-        self._wal_filename = self._get_wal_filename(self._config.program_name)
+        self._wal_filename = self.get_wal_filename(self._config.program_name)
         self._dump_path = self.root_dir / self._filename
         self._wal_path = self.root_dir / self._wal_filename
         self._wal: TextIO | None = None

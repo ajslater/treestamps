@@ -19,7 +19,7 @@ class TestClassMethodds:
 
     def test_get_wal_filename(self):
         """Test get wal filename."""
-        assert Treestamps._get_wal_filename("foo") == ".foo_treestamps.wal.yaml"
+        assert Treestamps.get_wal_filename("foo") == ".foo_treestamps.wal.yaml"
 
     def test_normalize_config(self):
         """Test normalize config."""

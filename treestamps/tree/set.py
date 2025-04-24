@@ -34,8 +34,8 @@ class TreestampsSet(TreestampsDump):
     def _write_ahead_log(self, abs_path, mtime):
         """Write to the WAL."""
         if not self._wal:
-            # init wall
-            self._dumpf({}, self._wal_path)
+            # Init wall
+            self._dumpf_init_wal()
             self._consumed_paths.add(self._wal_path)
             self._wal = self._wal_path.open("a")
             self._wal.write(self._WAL_HEADER)

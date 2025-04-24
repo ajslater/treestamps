@@ -1,5 +1,17 @@
 # 📰 Treestamps News
 
+## v2.2.0
+
+- Added:
+  - Grovestamps.loads(), .loadf(), .load_map(), .dump_dict(), .dumps(), .dumpf()
+    methods
+  - Treestamps.loads(), .loadf(), .load_map(), .loadf_tree(), .dump_dict(),
+    .dumps(), .dumpf() methods.
+  - Grovestamps.filename and Grovestamps.wal_filename properties
+- Deprecate Grovestamps.dump(), use .dumpf()
+- Deprecate Treestamps.load(), use .loadf_tree()
+- Deprecate Treestamps.dump(), use .dumpf()
+
 ## v2.1.1
 
 - Fix dumps() method to take no arguments.

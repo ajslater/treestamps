@@ -1,9 +1,10 @@
 """A dict of Treestamps."""
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from copy import copy
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from warnings import warn
 
 from termcolor import cprint
 
@@ -65,12 +66,63 @@ class Grovestamps(dict):
                 **treestamps_config_dict, path=Path(top_path)
             )
             ts = Treestamps(tree_config)
-            ts.load()
+            ts.loadf_tree()
             self[root_dir] = ts
 
-    def dump(self) -> None:
+        self.filename = Treestamps.get_filename(self._config.program_name)
+        self.wal_filename = Treestamps.get_wal_filename(self._config.program_name)
+
+    def load(self, path: str | Path, yaml: Mapping | str | bytes | Path):
+        """Load a timestamp yaml dict into the correct treestamps."""
+        path = Path(path)
+        if not path.is_dir():
+            path = path.parent
+        for top_path in self.keys():
+            if path.is_relative_to(top_path):
+                treestamps = self[top_path]
+                if isinstance(yaml, Mapping):
+                    treestamps.load_dict(yaml)
+                elif isinstance(yaml, str | bytes):
+                    treestamps.loads(path, yaml)
+                elif isinstance(yaml, Path):
+                    treestamps.loadf(path)
+                break
+        else:
+            reason = f"load dict to {path} is not relative to any Grovetamps path: {tuple(self.keys())}"
+            raise ValueError(reason)
+
+    def load_map(self, grove: Mapping[Path, Mapping | str | bytes | Path]):
+        """Load a grove of treestamps from a mapping."""
+        for path, yaml in grove.items():
+            self.load(path, yaml)
+
+    def loads(self, path: str | Path, yaml_str: str):
+        """Load a timestamp yaml string into the correct treestamps."""
+        self.load(path, yaml_str)
+
+    def loadf(self, path: str | Path) -> None:
+        """Load a timestamp file into the correct treestamps."""
+        path = Path(path)
+        self.load(path.parent, path)
+
+    def dumpf(self) -> None:
         """Dump all treestamps."""
         for top_path, treestamps in self.items():
             if self._config.verbose:
                 cprint(f"Saving timestamps for {top_path}")
-            treestamps.dump()
+            treestamps.dumpf()
+
+    def dumps(self) -> dict[Path, str]:
+        """Dump all treestamps to dict as strings."""
+        return {top_path: treestamps.dumps() for top_path, treestamps in self.items()}
+
+    def dump_dict(self) -> dict[Path, dict]:
+        """Dump all treestamps to dict."""
+        return {
+            top_path: treestamps.dump_dict() for top_path, treestamps in self.items()
+        }
+
+    def dump(self) -> None:
+        """Alias for dumpf."""
+        warn("replaced by Grovestamps.dumpf()", PendingDeprecationWarning, stacklevel=2)
+        self.dumpf()
