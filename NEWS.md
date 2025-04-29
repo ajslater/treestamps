@@ -1,5 +1,11 @@
 # 📰 Treestamps News
 
+## v3.0.0
+
+- CHANGES WILL CAUSE ALL TIMESTAMPS TO MISS:
+- Config elements that were MappingProxyTypes are now dicts. MPTs don't pickle,
+  which seems unfriendly.
+
 ## v2.2.0
 
 - Added:
