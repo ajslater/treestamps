@@ -1,6 +1,6 @@
 [project]
 name = "treestamps"
-version = "2.2.0"
+version = "2.2.1"
 description = "Create timestamp records for recursive operations on directory trees."
 authors = [{ name = "AJ Slater", email = "aj@slater.net" }]
 #license = "GPL-3.0-only"
@@ -139,7 +139,6 @@ extend-ignore = [
   "E114",    # formatted
   "E117",    # over-indented
   "E501",    # 88 char line
-  "FBT001",  # boolean params
   "ISC001",  # formatted
   "PERF203", # try block in loop
   "S101",    # assert

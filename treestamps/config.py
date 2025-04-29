@@ -3,7 +3,6 @@
 from abc import ABC
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from types import MappingProxyType
 
 from ruamel.yaml.comments import CommentedMap, CommentedSet
 
@@ -24,12 +23,10 @@ class CommonConfig(ABC):
     def normalize_config(cls, value):
         """Recursively convert iterables into frozen sorted unique lists."""
         if isinstance(value, Mapping | CommentedMap):
-            value = MappingProxyType(
-                dict(
-                    sorted(
-                        (key, cls.normalize_config(sub_value))
-                        for key, sub_value in value.items()
-                    )
+            value = dict(
+                sorted(
+                    (key, cls.normalize_config(sub_value))
+                    for key, sub_value in value.items()
                 )
             )
         if isinstance(value, list | tuple):

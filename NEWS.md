@@ -1,5 +1,10 @@
 # 📰 Treestamps News
 
+## v2.2.1
+
+- Config elements that were MappingProxyTypes are now dicts. MPTs don't pickle,
+  which seems unfriendly.
+
 ## v2.2.0
 
 - Added:
