@@ -1,5 +1,10 @@
 # 📰 Treestamps News
 
+## v2.2.3
+
+- Fix error with printing saving timestamps
+- Change color of compacting timestamps
+
 ## v2.2.2
 
 - More consistent printing and colors. Less verbosity by config.
