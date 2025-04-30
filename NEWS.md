@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+## v2.2.4
+
+- Update termcolor
+
 ## v2.2.3
 
 - Fix error with printing saving timestamps

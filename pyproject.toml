@@ -1,6 +1,6 @@
 [project]
 name = "treestamps"
-version = "2.2.3"
+version = "2.2.4"
 description = "Create timestamp records for recursive operations on directory trees."
 authors = [{ name = "AJ Slater", email = "aj@slater.net" }]
 #license = "GPL-3.0-only"
@@ -18,7 +18,7 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = ["ruamel.yaml~=0.18.5", "termcolor~=3.0.1"]
+dependencies = ["ruamel.yaml~=0.18.5", "termcolor>=3.0.0"]
 # BUILD SYSTEM
 packages = [{ include = "treestamps" }, { include = "tests", format = "sdist" }]
 include = ["NEWS.md"]
