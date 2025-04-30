@@ -6,8 +6,8 @@ from typing import TextIO
 
 from ruamel.yaml import YAML
 from ruamel.yaml.representer import SafeRepresenter
-from termcolor import cprint
 
+from treestamps.printer import Printer
 from treestamps.tree.config import TreestampsConfig
 
 
@@ -59,12 +59,7 @@ class TreestampsInit:
             return root_dir
 
         # path is outside our jurisdiction.
-        if self._config.verbose:
-            cprint(
-                f"Timestamp outside {root_dir}'s tree, ignored: {path}",
-                "white",
-                attrs=["dark"],
-            )
+        self._printer.skip(f"Timestamp outside {root_dir}'s tree, ignored", path)
         return None
 
     def _config_yaml(self):
@@ -74,7 +69,7 @@ class TreestampsInit:
         self._YAML.representer.add_representer(frozenset, SafeRepresenter.represent_set)
         self._YAML.representer.add_representer(Mapping, SafeRepresenter.represent_dict)
 
-    def __init__(self, config: TreestampsConfig):
+    def __init__(self, config: TreestampsConfig, printer: Printer | None = None):
         """Initialize instance variables."""
         # config
         self._config = config
@@ -91,3 +86,4 @@ class TreestampsInit:
         self._wal: TextIO | None = None
         self._consumed_paths: set[Path] = set()
         self._timestamps: dict[Path, float] = {}
+        self._printer = printer if printer else Printer(config.verbose)

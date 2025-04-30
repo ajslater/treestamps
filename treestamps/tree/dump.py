@@ -5,7 +5,6 @@ from pathlib import Path
 from warnings import warn
 
 from ruamel.yaml import StringIO
-from termcolor import cprint
 
 from treestamps.tree.init import TreestampsInit
 
@@ -46,7 +45,7 @@ class TreestampsDump(TreestampsInit):
                 rel_path_str = self._get_relative_path_str(abs_path)
                 yaml[rel_path_str] = timestamp
             except Exception as exc:
-                cprint(f"WARNING: Serializing {abs_path}: {exc}", "yellow")
+                self._printer.warn(f"Serializing {abs_path}", exc)
         config_yaml = self._get_dumpable_program_config()
         yaml.update(config_yaml)
         self._close_wal()
@@ -61,7 +60,7 @@ class TreestampsDump(TreestampsInit):
             try:
                 path.unlink(missing_ok=True)
             except Exception as exc:
-                cprint(f"WARNING: removing old timestamp: {exc}", "yellow")
+                self._printer.warn(f"Removing old timestamp {path}", exc)
         self._consumed_paths = set()
 
     def dumps(self) -> str:

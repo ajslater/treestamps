@@ -4,8 +4,6 @@ from collections.abc import Mapping
 from pathlib import Path
 from warnings import warn
 
-from termcolor import cprint
-
 from treestamps.tree.config import TreestampsConfig
 from treestamps.tree.get import TreestampsGet
 
@@ -48,7 +46,7 @@ class TreestampLoad(TreestampsGet):
                 if old_ts is None or ts > old_ts:
                     self._timestamps[abs_path] = ts
         except Exception as exc:
-            cprint(f"WARNING: Invalid timestamp for {path_str}: {ts} {exc}", "yellow")
+            self._printer.warn(f"Invalid timestamp for {path_str}: {ts}", exc)
 
     def load_map(self, timestamps_root: Path, yaml: Mapping):
         """Load timestamps from a dict."""
@@ -70,7 +68,7 @@ class TreestampLoad(TreestampsGet):
             try:
                 entries.update(wal_entry)
             except Exception as exc:
-                cprint(f"WARNING: loading WAL entry: {wal_entry}: {exc}", "yellow")
+                self._printer.warn("loading WAL entry: {wal_entry}", exc)
 
         for path_str, ts in entries.items():
             self._load_timestamp_entry(timestamps_root, path_str, ts)
@@ -83,7 +81,7 @@ class TreestampLoad(TreestampsGet):
             yaml_dict = self._YAML.load(yaml)
             self.load_map(timestamps_root, yaml_dict)
         except Exception as exc:
-            cprint(f"ERROR: parsing timestamps yaml string: {exc}", "red")
+            self._printer.error("parsing timestamps yaml string", exc)
 
     def loadf(self, timestamps_path: Path | str) -> None:
         """Load timestamps from a file."""
@@ -91,10 +89,9 @@ class TreestampLoad(TreestampsGet):
             timestamps_path = Path(timestamps_path)
             yaml_dict = self._YAML.load(timestamps_path)
             self.load_map(timestamps_path.parent, yaml_dict)
-            if self._config.verbose:
-                cprint(f"Read timestamps from {timestamps_path}")
+            self._printer.load("Read timestamps from", timestamps_path)
         except Exception as exc:
-            cprint(f"ERROR: parsing timestamps file: {timestamps_path} {exc}", "red")
+            self._printer.error(f"Parsing timestamps file: {timestamps_path}", exc)
 
     def _consume_child_timestamps(self, path: Path) -> None:
         """Consume a child timestamp and add its values to our root."""
@@ -105,7 +102,7 @@ class TreestampLoad(TreestampsGet):
             if path != self._dump_path:
                 self._consumed_paths.add(path)
         except Exception as exc:
-            cprint(f"WARNING: reading child timestamps {exc}", "yellow")
+            self._printer.warn(f"Reading child timestamps from {path}", exc)
 
     def _consume_all_child_timestamps(self, path: Path) -> None:
         """Recursively consume all timestamps and wal files."""
@@ -117,7 +114,7 @@ class TreestampLoad(TreestampsGet):
             for dir_entry in path.iterdir():
                 self._consume_all_child_timestamps(dir_entry)
         except Exception as exc:
-            cprint(f"WARNING: reading all child timestamps {exc}", "yellow")
+            self._printer.warn("Reading all child timestamps", exc)
 
     def _load_parent_timestamps(self, path: Path) -> None:
         """Recursively load timestamps from all parents."""
