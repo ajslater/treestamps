@@ -3,8 +3,6 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from termcolor import cprint
-
 from treestamps.tree.dump import TreestampsDump
 
 
@@ -28,8 +26,9 @@ class TreestampsSet(TreestampsDump):
                 delete_paths.add(abs_path)
         for del_path in delete_paths:
             del self._timestamps[del_path]
-        if self._config.verbose > 1:
-            cprint(f"Compacted timestamps under: {abs_root_path}: {root_timestamp}")
+        self._printer.compact(
+            "Compacted timestamps under", abs_root_path, root_timestamp
+        )
 
     def _write_ahead_log(self, abs_path, mtime):
         """Write to the WAL."""

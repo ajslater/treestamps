@@ -6,9 +6,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from warnings import warn
 
-from termcolor import cprint
-
 from treestamps.config import CommonConfig
+from treestamps.printer import Printer
 from treestamps.tree import Treestamps
 from treestamps.tree.init import TreestampsConfig
 
@@ -55,6 +54,7 @@ class Grovestamps(dict):
     def __init__(self, config: GrovestampsConfig) -> None:
         """Create a dictionary of Treestamps keyed with paths."""
         self._config = config
+        self._printer = Printer(config.verbose)
 
         treestamps_config_dict = self._config.get_treestamps_config_dict()
 
@@ -65,7 +65,7 @@ class Grovestamps(dict):
             tree_config = TreestampsConfig(
                 **treestamps_config_dict, path=Path(top_path)
             )
-            ts = Treestamps(tree_config)
+            ts = Treestamps(tree_config, self._printer)
             ts.loadf_tree()
             self[root_dir] = ts
 
@@ -108,8 +108,7 @@ class Grovestamps(dict):
     def dumpf(self) -> None:
         """Dump all treestamps."""
         for top_path, treestamps in self.items():
-            if self._config.verbose:
-                cprint(f"Saving timestamps for {top_path}")
+            self._printer.save("Saving timestamps for", top_path)
             treestamps.dumpf()
 
     def dumps(self) -> dict[Path, str]:
