@@ -42,7 +42,7 @@ class Printer:
     def save(self, message, path):
         """Save timestamps."""
         message = f"{message} {path}"
-        self._message(message, color="cyan", attrs=["bold"])
+        self._message(message, color="green", attrs=["bold"])
 
     def compact(self, message, path, timestamp):
         """Compact timestamps."""
