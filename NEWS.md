@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+# v2.2.5
+
+- Update colors
+
 ## v2.2.4
 
 - Update termcolor

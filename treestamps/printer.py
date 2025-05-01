@@ -42,12 +42,12 @@ class Printer:
     def save(self, message, path):
         """Save timestamps."""
         message = f"{message} {path}"
-        self._message(message, color="cyan", attrs=["bold"])
+        self._message(message, color="green", attrs=["bold"])
 
     def compact(self, message, path, timestamp):
         """Compact timestamps."""
         message = ": ".join((message, str(path), str(timestamp)))
-        self._message(message, color="light_grey")
+        self._message(message, color="dark_grey", attrs=["dark"])
 
     def warn(self, message: str, exc: Exception | None = None):
         """Warning."""
