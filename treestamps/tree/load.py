@@ -68,7 +68,7 @@ class TreestampLoad(TreestampsGet):
             try:
                 entries.update(wal_entry)
             except Exception as exc:
-                self._printer.warn("loading WAL entry: {wal_entry}", exc)
+                self._printer.warn(f"loading WAL entry: {wal_entry}", exc)
 
         for path_str, ts in entries.items():
             self._load_timestamp_entry(timestamps_root, path_str, ts)
