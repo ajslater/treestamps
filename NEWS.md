@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+# v2.2.6
+
+- Fix wal loading error message.
+
 # v2.2.5
 
 - Update colors
