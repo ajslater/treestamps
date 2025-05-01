@@ -47,7 +47,7 @@ class Printer:
     def compact(self, message, path, timestamp):
         """Compact timestamps."""
         message = ": ".join((message, str(path), str(timestamp)))
-        self._message(message, color="light_grey")
+        self._message(message, color="dark_grey", attrs=["dark"])
 
     def warn(self, message: str, exc: Exception | None = None):
         """Warning."""
