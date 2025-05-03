@@ -1,7 +1,7 @@
 """Test classmethods."""
 
+import shutil
 from pathlib import Path
-from shutil import copy
 
 from tests import PROGRAM
 from tests.integration.base_test import BaseTestDir
@@ -86,7 +86,6 @@ class TestCycle(BaseTestDir):
             assert stamp_path.exists()
 
         root_ts_path = self.TMP_ROOT / TS_FN
-        copy(TS_FILE_SOURCE, root_ts_path)
-        print("XXXXXXX")
+        _ = shutil.copy(TS_FILE_SOURCE, root_ts_path)
         print(root_ts_path.read_text())
         self._load(config, subpaths, times)

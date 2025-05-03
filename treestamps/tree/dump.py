@@ -2,6 +2,7 @@
 
 from contextlib import suppress
 from pathlib import Path
+from typing import TextIO
 from warnings import warn
 
 from ruamel.yaml import StringIO
@@ -35,7 +36,7 @@ class TreestampsDump(TreestampsInit):
             return
         with suppress(AttributeError):
             self._wal.close()
-        self._wal = None
+        self._wal: None | TextIO = None
 
     def dump_dict(self) -> dict:
         """Seriailiez timestamps and dump to a dict."""
@@ -61,7 +62,7 @@ class TreestampsDump(TreestampsInit):
                 path.unlink(missing_ok=True)
             except Exception as exc:
                 self._printer.warn(f"Removing old timestamp {path}", exc)
-        self._consumed_paths = set()
+        self._consumed_paths: set[Path] = set()
 
     def dumps(self) -> str:
         """Dump to string."""

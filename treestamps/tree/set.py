@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TextIO
 
 from treestamps.tree.dump import TreestampsDump
 
@@ -9,7 +10,7 @@ from treestamps.tree.dump import TreestampsDump
 class TreestampsSet(TreestampsDump):
     """Set Methods."""
 
-    _WAL_HEADER = TreestampsDump._WAL_TAG + ":\n"  # noqa: SLF001
+    _WAL_HEADER: str = TreestampsDump._WAL_TAG + ":\n"  # noqa: SLF001
 
     def _compact_timestamps_below(self, abs_root_path: Path) -> None:
         """Compact the timestamp cache below a particular path."""
@@ -20,9 +21,7 @@ class TreestampsSet(TreestampsDump):
             return
         delete_paths = set()
         for abs_path, timestamp in self._timestamps.items():
-            if (
-                abs_path.is_relative_to(abs_root_path) and timestamp < root_timestamp
-            ) or timestamp is None:
+            if abs_path.is_relative_to(abs_root_path) and timestamp < root_timestamp:
                 delete_paths.add(abs_path)
         for del_path in delete_paths:
             del self._timestamps[del_path]
@@ -36,8 +35,8 @@ class TreestampsSet(TreestampsDump):
             # Init wall
             self._dumpf_init_wal()
             self._consumed_paths.add(self._wal_path)
-            self._wal = self._wal_path.open("a")
-            self._wal.write(self._WAL_HEADER)
+            self._wal: TextIO | None = self._wal_path.open("a")
+            _ = self._wal.write(self._WAL_HEADER)
 
         # Manually construct yaml dict list item.
         path_str = self._get_relative_path_str(abs_path)
@@ -47,7 +46,7 @@ class TreestampsSet(TreestampsDump):
             path_str = "'" + path_str.replace("'", "''") + "'"
         wal_entry = f"- {path_str}: {mtime}\n"
 
-        self._wal.write(wal_entry)
+        _ = self._wal.write(wal_entry)
 
     def set(
         self, path: Path | str, mtime: float | None = None, *, compact: bool = False

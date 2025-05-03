@@ -14,11 +14,11 @@ from treestamps.tree.config import TreestampsConfig
 class TreestampsInit:
     """Common methods."""
 
-    _CONFIG_TAG = "config"
-    _TREESTAMPS_CONFIG_TAG = "treestamps_config"
-    _WAL_TAG = "wal"
-    _FILENAME_TEMPLATE = ".{program_name}_treestamps.yaml"
-    _WAL_FILENAME_TEMPLATE = ".{program_name}_treestamps.wal.yaml"
+    _CONFIG_TAG: str = "config"
+    _TREESTAMPS_CONFIG_TAG: str = "treestamps_config"
+    _WAL_TAG: str = "wal"
+    _FILENAME_TEMPLATE: str = ".{program_name}_treestamps.yaml"
+    _WAL_FILENAME_TEMPLATE: str = ".{program_name}_treestamps.wal.yaml"
 
     @staticmethod
     def get_dir(path: Path | str) -> Path:
@@ -63,7 +63,7 @@ class TreestampsInit:
         return None
 
     def _config_yaml(self):
-        self._YAML = YAML()
+        self._YAML: YAML = YAML()
         self._YAML.allow_duplicate_keys = True
         self._YAML.indent(offset=2)  # Conform to Prettier
         self._YAML.representer.add_representer(frozenset, SafeRepresenter.represent_set)
@@ -72,18 +72,18 @@ class TreestampsInit:
     def __init__(self, config: TreestampsConfig, printer: Printer | None = None):
         """Initialize instance variables."""
         # config
-        self._config = config
+        self._config: TreestampsConfig = config
 
         # init variables
         # Do not normalize root_dir because symlinks behave weird.
         root_dir = self.get_dir(self._config.path).absolute()
-        self.root_dir = root_dir
+        self.root_dir: Path = root_dir
         self._config_yaml()
-        self._filename = self.get_filename(self._config.program_name)
-        self._wal_filename = self.get_wal_filename(self._config.program_name)
-        self._dump_path = self.root_dir / self._filename
-        self._wal_path = self.root_dir / self._wal_filename
+        self._filename: str = self.get_filename(self._config.program_name)
+        self._wal_filename: str = self.get_wal_filename(self._config.program_name)
+        self._dump_path: Path = self.root_dir / self._filename
+        self._wal_path: Path = self.root_dir / self._wal_filename
         self._wal: TextIO | None = None
         self._consumed_paths: set[Path] = set()
         self._timestamps: dict[Path, float] = {}
-        self._printer = printer if printer else Printer(config.verbose)
+        self._printer: Printer = printer if printer else Printer(config.verbose)
