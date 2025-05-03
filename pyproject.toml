@@ -76,6 +76,8 @@ reportUnknownArgumentType = false
 reportUnknownMemberType = false
 reportUnknownParameterType = false
 reportUnknownVariableType = false
+reportUnusedCallResult = false
+reportMissingTypeStubs = false
 
 [tool.codespell]
 skip = ".*,*~,./dist,./node_modules,./package.json,./package-lock.json,./uv.lock,./test-results"
@@ -88,7 +90,7 @@ source = ["treestamps"]
 branch = true
 concurrency = ["multiprocessing"]
 omit = [
-  ".*",
+  "*/.*",
   "*__pycache__*",
   "dist/*",
   "node_modules/*",
