@@ -18,7 +18,11 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = ["ruamel.yaml~=0.18.5", "termcolor>=3.0.0"]
+dependencies = [
+  "ruamel.yaml~=0.18.5",
+  "termcolor>=3.0.0",
+  "typing-extensions>=4.13.2",
+]
 # BUILD SYSTEM
 packages = [{ include = "treestamps" }, { include = "tests", format = "sdist" }]
 include = ["NEWS.md"]

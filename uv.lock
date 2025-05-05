@@ -717,6 +717,7 @@ source = { editable = "." }
 dependencies = [
     { name = "ruamel-yaml" },
     { name = "termcolor" },
+    { name = "typing-extensions" },
 ]
 
 [package.dev-dependencies]
@@ -740,6 +741,7 @@ dev = [
 requires-dist = [
     { name = "ruamel-yaml", specifier = "~=0.18.5" },
     { name = "termcolor", specifier = ">=3.0.0" },
+    { name = "typing-extensions", specifier = ">=4.13.2" },
 ]
 
 [package.metadata.requires-dev]
