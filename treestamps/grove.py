@@ -63,7 +63,7 @@ class Grovestamps(dict):
             root_dir = Treestamps.get_dir(top_path)
             if root_dir in self:
                 continue
-            tree_config = TreestampsConfig(
+            tree_config = TreestampsConfig( # ty: ignore[missing-argument]
                 **treestamps_config_dict, path=Path(top_path)
             )
             ts = Treestamps(tree_config, self._printer)
