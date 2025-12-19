@@ -15,7 +15,6 @@
   ],
   "prettier": {
     "plugins": [
-      "prettier-plugin-nginx",
       "prettier-plugin-packagejson",
       "prettier-plugin-sh",
       "prettier-plugin-toml"
