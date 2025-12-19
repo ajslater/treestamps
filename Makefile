@@ -141,13 +141,13 @@ news:
 ## Build doc site
 ## @category Docs
 docs:
-	uv run mkdocs build --strict
+	uv run --only-group docs --no-dev mkdocs build --strict
 
 .PHONY: docs-server
 ## Build doc site
 ## @category Docs
 docs-server:
-	uv run mkdocs serve --open --dirty
+	uv run --only-group docs --no-dev  mkdocs serve --open --dirty
 
 .PHONY: all
 
