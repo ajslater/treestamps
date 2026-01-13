@@ -11,9 +11,9 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-  "ruamel.yaml~=0.18.5",
-  "termcolor>=3.0.0",
-  "typing-extensions>=4.13.2",
+  "ruamel.yaml~=0.19",
+  "termcolor~=3.0",
+  "typing-extensions~=4.13",
 ]
 description = "Create timestamp records for recursive operations on directory trees."
 keywords = ["timestamps", "library", "recursive", "directory"]
