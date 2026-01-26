@@ -3,6 +3,7 @@
 from abc import ABC
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from typing import Any
 
 from ruamel.yaml.comments import CommentedMap, CommentedSet
 
@@ -16,7 +17,7 @@ class CommonConfig(ABC):
     symlinks: bool = True
     ignore: Iterable[str] = frozenset()
     check_config: bool = True
-    program_config: Mapping | None = None
+    program_config: Mapping[str, Any] | None = None
     program_config_keys: Iterable[str] = frozenset()
 
     @classmethod

@@ -79,12 +79,24 @@ fix: fix-backend
 ## Static typecheck
 ## @category Lint
 typecheck:
-	uv run pyright .
+	uv run --group lint basedpyright .
+
+.PHONY: ty
+## Static typecheck with ty
+## @category Lint
+ty:
+	uv run --group lint ty check .
 
 .PHONY: lint
 ## Lint front and back end
 ## @category Lint
 lint: lint-backend
+
+.PHONY: complexity
+## Lint backend complexity
+## @category Lint
+complexity:
+	./bin/lint-backend-complexity.sh
 
 .PHONY: lint-backend
 ## Lint the backend
@@ -124,6 +136,18 @@ dev-server:
 ## @category Deploy
 news:
 	head -40 NEWS.md
+
+.PHONY: docs
+## Build doc site
+## @category Docs
+docs:
+	uv run --only-group docs --no-dev mkdocs build --strict
+
+.PHONY: docs-server
+## Build doc site
+## @category Docs
+docs-server:
+	uv run --only-group docs --no-dev  mkdocs serve --open --dirty
 
 .PHONY: all
 

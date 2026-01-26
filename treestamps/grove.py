@@ -9,7 +9,7 @@ from warnings import warn
 from treestamps.config import CommonConfig
 from treestamps.printer import Printer
 from treestamps.tree import Treestamps
-from treestamps.tree.init import TreestampsConfig
+from treestamps.tree.config import TreestampsConfig
 
 
 @dataclass
@@ -53,8 +53,9 @@ class Grovestamps(dict):
 
     def __init__(self, config: GrovestampsConfig) -> None:
         """Create a dictionary of Treestamps keyed with paths."""
-        self._config = config
-        self._printer = Printer(config.verbose)
+        super().__init__()
+        self._config: GrovestampsConfig = config
+        self._printer: Printer = Printer(config.verbose)
 
         treestamps_config_dict = self._config.get_treestamps_config_dict()
 
@@ -69,8 +70,8 @@ class Grovestamps(dict):
             ts.loadf_tree()
             self[root_dir] = ts
 
-        self.filename = Treestamps.get_filename(self._config.program_name)
-        self.wal_filename = Treestamps.get_wal_filename(self._config.program_name)
+        self.filename: str = Treestamps.get_filename(self._config.program_name)
+        self.wal_filename: str = Treestamps.get_wal_filename(self._config.program_name)
 
     def load(self, path: str | Path, yaml: Mapping | str | bytes | Path):
         """Load a timestamp yaml dict into the correct treestamps."""
@@ -84,7 +85,7 @@ class Grovestamps(dict):
                     treestamps.load_dict(yaml)
                 elif isinstance(yaml, str | bytes):
                     treestamps.loads(path, yaml)
-                elif isinstance(yaml, Path):
+                elif isinstance(yaml, Path):  # pyright: ignore[reportUnnecessaryIsInstance]
                     treestamps.loadf(path)
                 break
         else:

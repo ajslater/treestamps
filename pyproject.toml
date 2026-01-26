@@ -1,76 +1,121 @@
 [project]
-name = "treestamps"
-version = "2.2.6"
-description = "Create timestamp records for recursive operations on directory trees."
 authors = [{ name = "AJ Slater", email = "aj@slater.net" }]
-#license = "GPL-3.0-only"
-license-files = ["LICENSE"]
-readme = "README.md"
-requires-python = "<4.0,>=3.10"
-keywords = ["timestamps", "library", "recursive", "directory"]
 classifiers = [
+  "Development Status :: 5 - Production/Stable",
   "Environment :: Console",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
   "Natural Language :: English",
   "Operating System :: OS Independent",
-  "Development Status :: 5 - Production/Stable",
   "Programming Language :: Python :: 3 :: Only",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = ["ruamel.yaml~=0.18.5", "termcolor>=3.0.0"]
-# BUILD SYSTEM
-packages = [{ include = "treestamps" }, { include = "tests", format = "sdist" }]
-include = ["NEWS.md"]
+dependencies = [
+  "ruamel.yaml>=0.19,<=1.0",
+  "termcolor~=3.0",
+  "typing-extensions~=4.13",
+]
+description = "Create timestamp records for recursive operations on directory trees."
+keywords = ["timestamps", "library", "recursive", "directory"]
+license = "GPL-3.0-only"
+name = "treestamps"
+readme = "README.md"
+requires-python = "<4.0,>=3.10"
+version = "2.2.7"
 
 [project.urls]
+News = "https://treestamps.readthedocs.io/NEWS/"
 Homepage = "https://github.com/ajslater/treestamps"
-Documentation = "https://github.com/ajslater/treestamps"
+Documentation = "https://treestamps.readthedocs.io/"
+"Issues" = "https://github.com/ajslater/treestamps/issues"
 Source = "https://github.com/ajslater/treestamps"
-Issues = "https://github.com/ajslater/treestamps/issues"
-homepage = "https://github.com/ajslater/treestamps"
-documentation = "https://github.com/ajslater/treestamps"
 
 [dependency-groups]
-dev = [
-  "codespell~=2.4.1",
-  "coverage[toml]<8.0,>=7.8",
-  "hatchling<2.0.0,>=1.27.0",
-  "icecream>=2.1.4",
-  "neovim<1.0.0,>=0.3.1",
-  "pyclean>=3.1.0",
-  "pyright~=1.1.394",
-  "pytest-cov~=6.0",
-  "pytest-gitignore~=1.3",
-  "radon[toml]~=6.0.1",
-  "ruff~=0.11.5",
-  "toml-cli<1.0.0,>=0.7.0",
-  "vulture~=2.14",
+dev = ["icecream~=2.1", "neovim~=0.3", "pyclean~=3.1", "toml-cli~=0.7"]
+lint = [
+  "basedpyright~=1.30",
+  "codespell~=2.4",
+  "complexipy~=5.1",
+  "djlint~=1.3.dev0",
+  "radon[toml]~=6.0",
+  "ruff~=0.13",
+  "ty~=0.0.4",
+  "types-python-dateutil~=2.9",
+  "vulture~=2.3",
 ]
+test = ["coverage[toml]~=7.0", "pytest-cov~=7.0", "pytest-gitignore~=1.3"]
+docs = ["mkapi~=4.4", "mkdocs~=1.6", "mkdocs-minify-plugin~=0.8"]
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build~=0.8.7"]
+build-backend = "uv_build"
 
-[tool.hatch.build.targets.sdist]
-include = ["treestamps", "tests", "NEWS.md"]
+[tool.uv.build-backend]
+module-root = ""
+source-include = [
+  ".circlci/**",
+  ".*ignore",
+  ".shellcheckrc",
+  "bin/**",
+  "eslint.config.js",
+  "frontend/**",
+  "Makefile",
+  "package-lock.json",
+  "package.json",
+  "tests/**",
+  "uv.lock",
+  "vulture_ignorelist.py",
+]
+source-exclude = ["**/*\\~", "**/.DS_Store"]
+wheel-exclude = []
+
+[tool.basedpyright]
+exclude = [
+  "**/.*",
+  "**/__pycache__",
+  "**/node_modules",
+  "dist",
+  "test-results",
+  "typings",
+  "vulture_ignorelist.py",
+]
+pythonVersion = "3.10"
+failOnWarnings = false
+reportAny = false
+reportExplicitAny = false
+reportImportCycles = true
+reportIncompatibleUnannotatedOverride = true
+reportMissingParameterType = false
+reportMissingTypeArgument = false
+reportMissingTypeStubs = false
+reportPrivateUsage = false # ruff does this
+reportUnannotatedClassAttribute = false
+reportUnknownArgumentType = false
+reportUnknownMemberType = false
+reportUnknownParameterType = false
+reportUnknownVariableType = false
+reportUnusedCallResult = false
+reportUnusedParameter = false # ruff does this
 
 [tool.codespell]
-skip = ".git,.mypy_cache,.pytest_cache,.ruff_cache,.venv,*~,./dist,./node_modules,./package-lock.json,./uv.lock,./test-results"
 builtin = "clear,rare,code"
 check-hidden = true
 ignore-words-list = "thead"
+skip = ".*,*~,./dist,./node_modules,./package.json,./package-lock.json,./uv.lock,./test-results"
+
+[tool.complexipy]
+failed = true
+paths = ["treestamps", "tests"]
+
+[tool.coverage.html]
+directory = "test-results/coverage"
 
 [tool.coverage.run]
 source = ["treestamps"]
 branch = true
 concurrency = ["multiprocessing"]
 omit = [
-  ".git/*",
-  ".mypy_cache/*",
-  ".pytest_cache/*",
-  ".ruff_cache/*",
-  ".venv/*",
+  "*/.*",
   "*__pycache__*",
   "dist/*",
   "node_modules/*",
@@ -78,13 +123,11 @@ omit = [
   "typings/*",
 ]
 
-[tool.coverage.html]
-directory = "test-results/coverage"
-
 [tool.pytest.ini_options]
 addopts = """
   --junitxml=test-results/pytest/junit.xml
   -ra
+  --strict-config
   --strict-markers
   --cov
   --cov-append
@@ -95,36 +138,18 @@ junit_family = "xunit2"
 testpaths = "tests"
 pythonpath = ["."]
 
-[tool.pyright]
-exclude = [
-  "**/__pycache__",
-  "**/node_modules",
-  ".git",
-  ".mypy_cache",
-  ".pytest_cache",
-  ".ruff_cache",
-  ".venv",
-  "dist",
-  "package-lock.json",
-  "uv.lock",
-  "test-results",
-  "treestamps/__init__.py",
-  "typings",
-  "vulture_whitelist.py",
-]
-pythonVersion = "3.10"
-pythonPlatform = "All"
-reportImportCycles = true
-reportMissingImports = true
-useLibraryCodeForTypes = true
-venvPath = "."
-venv = ".venv"
-
 [tool.radon]
-exclude = "*~,.git/*,.mypy_cache/*,.pytest_cache/*,.ruff_cache/*,.venv/*,__pycache__/*,dist/*,node_modules/*,test-results/*,typings/*"
+exclude = "*~,.*,.*/*,__pycache__/*,dist/*,node_modules/*,test-results/*,typings/*"
 
 [tool.ruff]
-extend-exclude = ["cache", "typings"]
+extend-exclude = [
+  "**/.*",
+  "**/__pycache__",
+  "dist",
+  "test-results",
+  "typings",
+  "vulture_ignorelist.py",
+]
 target-version = "py310"
 
 [tool.ruff.lint]
@@ -145,93 +170,107 @@ extend-ignore = [
   "W191",    # formatted
 ]
 extend-select = [
-  "A",
   # "AIR",
-  # "ANN",
-  "ARG",
-  "ASYNC",
-  "B",
-  "B9",
-  "BLE",
-  "C",
-  "C4",
-  "C90",
-  "COM",
-  # "CPY",
-  "D",
-  "DJ",
-  # "DOC",
-  "DTZ",
-  "E",
-  "EM",
   "ERA",
-  "EXE",
-  "F",
-  "FA",
   # "FAST",
+  # ########
+  # flake8 #
+  # ########
+  "YTT",
+  # "ANN",
+  "ASYNC",
+  "S",
+  "BLE",
   "FBT",
+  "B",
+  "A",
+  "COM",
+  "C4",
+  # "CPY",
+  "DTZ",
+  "T10",
+  "DJ",
+  "EM",
+  "EXE",
   "FIX",
-  "FLY",
-  # "FURB",
-  # "G",
-  "I",
-  "ICN",
-  "INP",
+  "FA",
   "INT",
   "ISC",
+  "ICN",
   "LOG",
-  # "PD",
-  "PERF",
-  "PGH",
+  # "G",
+  "INP",
   "PIE",
-  "PL",
-  "PT",
-  "PTH",
   "PYI",
-  # "Q", Formatted
-  "N",
-  # NPY,
-  "RET",
-  "RSE",
-  "RUF",
-  "S",
-  "SIM",
-  "SLF",
-  "SLOT",
-  "T10",
   "T20",
-  "TC",
-  "TCH",
-  # "TD",
+  "PT",
+  # "Q", Formatted
+  "RSE",
+  "RET",
+  "SLF",
+  "SIM",
+  "SLOT",
   "TID",
-  "TRY",
-  "UP",
+  # "TD",
+  "TC",
+  "ARG",
+  "PTH",
+  # ############
+  # end flake8 #
+  # ############
+  "FLY",
+  "I",
+  "C90",
+  # "NPY",
+  # "PD",
+  "N",
+  "PERF",
+  "E",
   "W",
-  "YTT",
+  # "DOC",
+  "D",
+  "F",
+  "PGH",
+  "PLE",
+  "PLR",
+  "PLW",
+  "UP",
+  "FURB",
+  "RUF",
+  "TRY",
 ]
 external = ["V101"]
 task-tags = ["TODO", "FIXME", "XXX", "http", "HACK"]
 
 [tool.ruff.lint.per-file-ignores]
 "test_*" = ["SLF001", "T201"]
-"treestamps/__init__.py" = ["F401"]
 
 [tool.ruff.lint.pycodestyle]
 ignore-overlong-task-comments = true
 
-[tool.vulture]
+[tool.ty.environment]
+python = "./.venv"
+python-version = "3.10"
+
+[tool.ty.src]
 exclude = [
-  ".git/",
-  ".mypy_cache/",
-  ".pytest_cache",
-  ".ruff_cache",
-  ".venv",
-  "*__pycache__*",
-  "dist/",
-  "node_modules",
+  "**/.*",
+  "**/__pycache__",
+  "**/node_modules",
+  "dist",
   "test-results",
   "typings",
-  "treestamps/__init__.py",
+  "vulture_ignorelist.py",
+]
+
+[tool.vulture]
+exclude = [
+  "*/.*",
+  "*/__pycache__*",
+  "*/node_modules*",
+  "dist/",
+  "test-results/",
+  "typings/",
 ]
 min_confidence = 61
 sort_by_size = true

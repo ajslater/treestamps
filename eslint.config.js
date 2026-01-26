@@ -1,11 +1,13 @@
 import eslintJs from "@eslint/js";
 import eslintJson from "@eslint/json";
 import eslintPluginComments from "@eslint-community/eslint-plugin-eslint-comments/configs";
+import eslintPluginStylistic from "@stylistic/eslint-plugin";
+import { defineConfig } from "eslint/config";
 import eslintConfigPrettier from "eslint-config-prettier";
 import eslintPluginArrayFunc from "eslint-plugin-array-func";
 import eslintPluginCompat from "eslint-plugin-compat";
 import eslintPluginDepend from "eslint-plugin-depend";
-import eslintPluginImport from "eslint-plugin-import";
+import eslintPluginImport from "eslint-plugin-import-x";
 import * as eslintPluginMdx from "eslint-plugin-mdx";
 import eslintPluginNoSecrets from "eslint-plugin-no-secrets";
 import eslintPluginNoUnsanitized from "eslint-plugin-no-unsanitized";
@@ -21,7 +23,6 @@ import eslintPluginYml from "eslint-plugin-yml";
 import globals from "globals";
 
 export const FLAT_ALL = "flat/all";
-export const FLAT_BASE = "flat/base";
 export const FLAT_RECOMMENDED = "flat/recommended";
 
 export const CONFIGS = {
@@ -31,12 +32,12 @@ export const CONFIGS = {
     ...eslintPluginComments.recommended,
     ...eslintPluginCompat.configs[FLAT_RECOMMENDED],
     ...eslintPluginDepend.configs[FLAT_RECOMMENDED],
-    ...eslintPluginImport.flatConfigs.recommended,
+    ...eslintPluginImport.flatConfigs.all,
     ...eslintPluginNoUnsanitized.configs.recommended,
-    ...eslintPluginPromise.configs[FLAT_RECOMMENDED],
-    ...eslintPluginRegexp.configs[FLAT_RECOMMENDED],
-    ...eslintPluginSonarjs.configs.recommended,
-    //...eslintPluginUnicorn.configs[FLAT_ALL],
+    ...eslintPluginPromise.configs[FLAT_ALL],
+    ...eslintPluginRegexp.configs.all,
+    ...eslintPluginSonarjs.configs.all,
+    ...eslintPluginUnicorn.configs.all,
     plugins: {
       depend: eslintPluginDepend,
       "no-secrets": eslintPluginNoSecrets,
@@ -49,14 +50,7 @@ export const CONFIGS = {
       ecmaVersion: "latest",
     },
     rules: {
-      "array-func/prefer-array-from": "off", // for modern browsers the spread operator, as preferred by unicorn, works fine.
-      "depend/ban-dependencies": [
-        "error",
-        {
-          // import-x doesn't work with eslint 9 yet
-          allowed: ["eslint-plugin-import"],
-        },
-      ],
+      "@stylistic/multiline-comment-style": "off", // Multiple bugs with this rule
       "max-params": ["warn", 4],
       "no-console": "warn",
       "no-debugger": "warn",
@@ -64,41 +58,34 @@ export const CONFIGS = {
       "security/detect-object-injection": "off",
       "simple-import-sort/exports": "warn",
       "simple-import-sort/imports": "warn",
-      "space-before-function-paren": "off",
-      ...eslintPluginUnicorn.configs[FLAT_RECOMMENDED].rules,
-      "unicorn/filename-case": [
-        "error",
-        { case: "kebabCase", ignore: [".*.md"] },
-      ],
-      "unicorn/prefer-node-protocol": "off",
-      "unicorn/prevent-abbreviations": "off",
-      "unicorn/switch-case-braces": ["warn", "avoid"],
     },
   },
 };
 Object.freeze(CONFIGS);
 
-export default [
+export default defineConfig([
   {
+    name: "globalIgnores",
     ignores: [
       "!.circleci",
-      "**/__pycache__/",
       "**/*min.css",
       "**/*min.js",
+      "**/__pycache__/",
+      "**/node_modules/",
+      "**/package-lock.json",
       "*~",
       ".git/",
       ".*cache/",
       ".venv/",
       "dist/",
-      "node_modules/",
-      "package-lock.json",
       "uv.lock",
       "test-results/",
       "typings/",
     ],
   },
-  eslintPluginPrettierRecommended,
   eslintPluginSecurity.configs.recommended,
+  eslintPluginStylistic.configs.all,
+  eslintPluginPrettierRecommended,
   {
     languageOptions: {
       globals: {
@@ -147,7 +134,7 @@ export default [
       "prettier/prettier": ["warn", { parser: "markdown" }],
     },
   },
-  ...eslintPluginToml.configs[FLAT_BASE],
+  ...eslintPluginToml.configs.recommended,
   {
     files: ["**/*.toml", "**/*.md/*.toml"],
     rules: {
@@ -155,12 +142,11 @@ export default [
       "prettier/prettier": ["error", { parser: "toml" }],
     },
   },
-  ...eslintPluginYml.configs[FLAT_BASE],
+  ...eslintPluginYml.configs.standard,
+  ...eslintPluginYml.configs.prettier,
   {
     files: ["**/*.yaml", "**/*.yml", "**/*.md/*.yaml"],
     rules: {
-      ...eslintPluginYml.configs[FLAT_RECOMMENDED].rules,
-      ...eslintPluginYml.configs["flat/prettier"].rules,
       "prettier/prettier": ["error", { parser: "yaml" }],
     },
   },
@@ -175,4 +161,4 @@ export default [
     },
   },
   eslintConfigPrettier, // Best if last
-];
+]);
