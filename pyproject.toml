@@ -11,7 +11,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-  "ruamel.yaml~=0.19",
+  "ruamel.yaml>=0.19,<=1.0",
   "termcolor~=3.0",
   "typing-extensions~=4.13",
 ]
