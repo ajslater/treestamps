@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+# v2.2.7
+
+- More flexible ruamel.yaml dependency.
+
 # v2.2.6
 
 - Fix wal loading error message.
