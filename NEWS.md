@@ -1,5 +1,10 @@
 # 📰 Treestamps News
 
+# v2.3.0
+
+- Represent frozensets as yaml sets instead of mappings. Represent any Mapping
+  type as mappings.
+
 # v2.2.7
 
 - More flexible ruamel.yaml dependency.

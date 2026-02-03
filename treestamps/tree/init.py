@@ -5,10 +5,20 @@ from pathlib import Path
 from typing import TextIO
 
 from ruamel.yaml import YAML
-from ruamel.yaml.representer import SafeRepresenter
+from ruamel.yaml.comments import CommentedOrderedMap, CommentedSet
 
 from treestamps.printer import Printer
 from treestamps.tree.config import TreestampsConfig
+
+
+def represent_frozenset(dumper, data: frozenset):
+    """Represent frozenset as a CommentedSet."""
+    return dumper.represent_set(CommentedSet(data))
+
+
+def represent_mapping(dumper, data: Mapping):
+    """Represent Mappings as Mappings."""
+    return dumper.represent_mapping(CommentedOrderedMap(data))
 
 
 class TreestampsInit:
@@ -63,11 +73,11 @@ class TreestampsInit:
         return None
 
     def _config_yaml(self):
-        self._YAML: YAML = YAML()
+        self._YAML: YAML = YAML(typ="rt")
         self._YAML.allow_duplicate_keys = True
         self._YAML.indent(offset=2)  # Conform to Prettier
-        self._YAML.representer.add_representer(frozenset, SafeRepresenter.represent_set)
-        self._YAML.representer.add_representer(Mapping, SafeRepresenter.represent_dict)
+        self._YAML.representer.add_representer(frozenset, represent_frozenset)
+        self._YAML.representer.add_representer(Mapping, represent_mapping)
 
     def __init__(self, config: TreestampsConfig, printer: Printer | None = None):
         """Initialize instance variables."""

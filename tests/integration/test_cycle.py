@@ -2,6 +2,7 @@
 
 import shutil
 from pathlib import Path
+from types import MappingProxyType
 
 from tests import PROGRAM
 from tests.integration.base_test import BaseTestDir
@@ -10,9 +11,7 @@ from treestamps.grove import Grovestamps, GrovestampsConfig
 __all__ = ()
 
 PROGRAM_NAME = f"{PROGRAM}-tests"
-
 TS_FN = f".{PROGRAM_NAME}_treestamps.yaml"
-
 TS_FILE_SOURCE = Path(__file__).parent / "test_timestamp.yaml"
 
 
@@ -40,7 +39,7 @@ class TestCycle(BaseTestDir):
                 path = subpath / name
                 times[path] = ts.set(path)
 
-        gs.dump()
+        gs.dumpf()
         return times
 
     def _load(self, config, subpaths, times):
@@ -75,7 +74,14 @@ class TestCycle(BaseTestDir):
             subpath.mkdir()
             subpaths.append(subpath)
 
-        program_config = {"test_attr": (0, 1, 2, 3, 4)}
+        program_config = {
+            "test_attr": (0, 1, 2, 3, 4),
+            "test_set": set({"a", "b"}),
+            "test_frozenset": frozenset({"a", "b"}),
+            "test_dict": {"a": 1},
+            "test_map": MappingProxyType({"a": 1}),
+            "test_str": "abc defg",
+        }
         config = GrovestampsConfig(
             PROGRAM_NAME, paths=subpaths, verbose=10, program_config=program_config
         )
@@ -84,6 +90,7 @@ class TestCycle(BaseTestDir):
         for subpath in subpaths:
             stamp_path = subpath / TS_FN
             assert stamp_path.exists()
+            # shutil.copy(stamp_path, "/tmp/") examine
 
         root_ts_path = self.TMP_ROOT / TS_FN
         _ = shutil.copy(TS_FILE_SOURCE, root_ts_path)
