@@ -96,4 +96,4 @@ class TreestampsInit:
         self._wal: TextIO | None = None
         self._consumed_paths: set[Path] = set()
         self._timestamps: dict[Path, float] = {}
-        self._printer: Printer = printer if printer else Printer(config.verbose)
+        self._printer: Printer = printer or Printer(config.verbose)
