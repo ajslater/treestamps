@@ -29,7 +29,7 @@ class TreestampsSet(TreestampsDump):
             "Compacted timestamps under", abs_root_path, root_timestamp
         )
 
-    def _write_ahead_log(self, abs_path, mtime):
+    def _write_ahead_log(self, abs_path, mtime) -> None:
         """Write to the WAL."""
         if not self._wal:
             # Init wall

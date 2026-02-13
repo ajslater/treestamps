@@ -48,7 +48,7 @@ class TreestampLoad(TreestampsGet):
         except Exception as exc:
             self._printer.warn(f"Invalid timestamp for {path_str}: {ts}", exc)
 
-    def load_map(self, timestamps_root: Path, yaml: Mapping):
+    def load_map(self, timestamps_root: Path, yaml: Mapping) -> None:
         """Load timestamps from a dict."""
         if not yaml:
             return
@@ -73,7 +73,7 @@ class TreestampLoad(TreestampsGet):
         for path_str, ts in entries.items():
             self._load_timestamp_entry(timestamps_root, path_str, ts)
 
-    def loads(self, timestamps_root: Path, yaml: str | bytes):
+    def loads(self, timestamps_root: Path, yaml: str | bytes) -> None:
         """Load timestamps from a string."""
         try:
             if isinstance(yaml, bytes):

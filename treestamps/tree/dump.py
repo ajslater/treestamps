@@ -52,7 +52,7 @@ class TreestampsDump(TreestampsInit):
         self._close_wal()
         return yaml
 
-    def cleanup_old_timestamps(self):
+    def cleanup_old_timestamps(self) -> None:
         """Cleanup old timestamps from the disk."""
         if not self._consumed_paths:
             return
@@ -72,7 +72,7 @@ class TreestampsDump(TreestampsInit):
             self._YAML.dump(yaml, buf)
             return buf.getvalue()
 
-    def _dumpf_init_wal(self):
+    def _dumpf_init_wal(self) -> None:
         """Write a new wal file to disk."""
         yaml = self.dump_dict()
         self._YAML.dump(yaml, self._wal_path)

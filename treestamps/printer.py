@@ -6,14 +6,20 @@ from termcolor import cprint
 class Printer:
     """Printing messages."""
 
-    def __init__(self, verbose: int):
+    def __init__(self, verbose: int) -> None:
         """Initialize verbosity and flags."""
         self._verbose: int = verbose
         self._after_newline: bool = True
 
     def _message(
-        self, reason, color="white", attrs=None, *, force_verbose=False, end="\n"
-    ):
+        self,
+        reason: str,
+        color: str = "white",
+        attrs=None,
+        *,
+        force_verbose: bool = False,
+        end: str = "\n",
+    ) -> None:
         """Print a dot or skip message."""
         if self._verbose < 1:
             return
@@ -28,28 +34,28 @@ class Printer:
         if end:
             self._after_newline = True
 
-    def skip(self, message, path):
+    def skip(self, message: str, path) -> None:
         """Skip Message."""
         parts = ["Skip", message, str(path)]
         message = ": ".join(parts)
         self._message(message, color="dark_grey")
 
-    def load(self, message, path):
+    def load(self, message: str, path) -> None:
         """Save timestamps."""
         message = f"{message} {path}"
         self._message(message, color="cyan")
 
-    def save(self, message, path):
+    def save(self, message: str, path) -> None:
         """Save timestamps."""
         message = f"{message} {path}"
         self._message(message, color="green", attrs=["bold"])
 
-    def compact(self, message, path, timestamp):
+    def compact(self, message: str, path, timestamp) -> None:
         """Compact timestamps."""
         message = ": ".join((message, str(path), str(timestamp)))
         self._message(message, color="dark_grey", attrs=["dark"])
 
-    def warn(self, message: str, exc: Exception | None = None):
+    def warn(self, message: str, exc: Exception | None = None) -> None:
         """Warning."""
         message = "WARNING: " + message
         if exc:
@@ -57,7 +63,7 @@ class Printer:
         self._after_newline = False
         self._message(message, color="light_yellow", force_verbose=True)
 
-    def error(self, message: str, exc: Exception | None = None):
+    def error(self, message: str, exc: Exception | None = None) -> None:
         """Error."""
         message = "ERROR: " + message
         if exc:

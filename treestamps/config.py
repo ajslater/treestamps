@@ -36,7 +36,7 @@ class CommonConfig(ABC):
             value = frozenset(cls.normalize_config(e) for e in value)
         return value
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Fix types and normalize program config dict."""
         self.ignore = frozenset(self.ignore)
         self.program_config_keys = frozenset(self.program_config_keys)

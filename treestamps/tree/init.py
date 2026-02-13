@@ -47,7 +47,7 @@ class TreestampsInit:
         return cls._WAL_FILENAME_TEMPLATE.format(program_name=program_name)
 
     @classmethod
-    def get_filenames(cls, program_name):
+    def get_filenames(cls, program_name) -> tuple[str, str]:
         """Get all filenames produced by treestamps."""
         return (cls.get_filename(program_name), cls.get_wal_filename(program_name))
 
@@ -72,14 +72,16 @@ class TreestampsInit:
         self._printer.skip(f"Timestamp outside {root_dir}'s tree, ignored", path)
         return None
 
-    def _config_yaml(self):
+    def _config_yaml(self) -> None:
         self._YAML: YAML = YAML(typ="rt")
         self._YAML.allow_duplicate_keys = True
         self._YAML.indent(offset=2)  # Conform to Prettier
         self._YAML.representer.add_representer(frozenset, represent_frozenset)
         self._YAML.representer.add_representer(Mapping, represent_mapping)
 
-    def __init__(self, config: TreestampsConfig, printer: Printer | None = None):
+    def __init__(
+        self, config: TreestampsConfig, printer: Printer | None = None
+    ) -> None:
         """Initialize instance variables."""
         # config
         self._config: TreestampsConfig = config
