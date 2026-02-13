@@ -18,7 +18,9 @@ TS_FILE_SOURCE = Path(__file__).parent / "test_timestamp.yaml"
 class TestCycle(BaseTestDir):
     """Test classmethods."""
 
-    def _dump(self, config, subpaths):
+    def _dump(
+        self, config: GrovestampsConfig, subpaths: list[Path]
+    ) -> dict[Path, float]:
         gs = Grovestamps(config)
 
         times = {}
@@ -42,7 +44,12 @@ class TestCycle(BaseTestDir):
         gs.dumpf()
         return times
 
-    def _load(self, config, subpaths, times):
+    def _load(
+        self,
+        config: GrovestampsConfig,
+        subpaths: list[Path],
+        times: dict[Path, float],
+    ) -> None:
         gs = Grovestamps(config)
 
         for subpath in subpaths:
@@ -64,7 +71,7 @@ class TestCycle(BaseTestDir):
             ts.set(path, compact=True)
         # untested :/
 
-    def test_set_dump_load_get(self):
+    def test_set_dump_load_get(self) -> None:
         """Test it all."""
         # Make subdirs
         subdirs = ("a", "b", "c")

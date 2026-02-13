@@ -9,7 +9,7 @@ INVALID_DIR = TEST_FILES_DIR / "invalid"
 TMP_ROOT = "/tmp"  # noqa:S108
 
 
-def get_test_dir():
+def get_test_dir() -> Path:
     """Return a module specific tmpdir."""
     frame = inspect.currentframe()
     if frame and frame.f_back:
