@@ -18,7 +18,7 @@ class TreestampLoad(TreestampsGet):
         )
 
     @classmethod
-    def _load_pop_and_compare_config(cls, yaml_config, compare_config):
+    def _load_pop_and_compare_config(cls, yaml_config, compare_config) -> bool:
         normalized_config = TreestampsConfig.normalize_config(yaml_config)
         # Shallow equality!
         return compare_config == normalized_config
