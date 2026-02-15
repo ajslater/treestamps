@@ -1,4 +1,4 @@
-SHELL := /usr/bin/env bash
+export MERGE_PYTHON=1
 
 .PHONY: install-deps-pip
 ## Update pip and install node packages
@@ -104,12 +104,6 @@ T :=
 ## @category Test
 test::
 	./bin/test-python.sh $(T)
-
-.PHONY: docs
-## Build doc site
-## @category Docs
-docs:
-	uv run --only-group docs --no-dev mkdocs build --strict --site-dir docs/site
 
 ## Show version. Use V variable to set version
 ## @category Update
