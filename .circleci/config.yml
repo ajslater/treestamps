@@ -23,10 +23,12 @@ jobs:
       - run:
           command: docker-compose up --exit-code-from treestamps-build treestamps-build
           name: Build
+      - run:
+          command: chown -R circlecli:circleci dist
+          name: chown dist
       - persist_to_workspace:
           paths:
             - ./README.md
-            - ./bin
             - ./dist
             - ./pyproject.toml
           root: .
