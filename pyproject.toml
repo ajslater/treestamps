@@ -3,7 +3,6 @@ classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Environment :: Console",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
@@ -17,7 +16,6 @@ dependencies = [
 description = "Create timestamp records for recursive operations on directory trees."
 keywords = ["directory", "library", "recursive", "timestamps"]
 readme = "README.md"
-license = "GPL-3.0-only"
 name = "treestamps"
 requires-python = "<4.0,>=3.10"
 version = "2.3.1"

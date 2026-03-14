@@ -31,6 +31,7 @@ __snapshots__
 .spyderproject
 .spyproject
 .tox/
+.uv-publish-env
 .venv
 .venv*
 .webassets-cache
