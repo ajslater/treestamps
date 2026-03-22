@@ -16,8 +16,8 @@ dependencies = [
 description = "Create timestamp records for recursive operations on directory trees."
 keywords = ["directory", "library", "recursive", "timestamps"]
 readme = "README.md"
+requires-python = ">=3.10"
 name = "treestamps"
-requires-python = "<4.0,>=3.10"
 version = "2.3.1"
 [[project.authors]]
 name = "AJ Slater"
