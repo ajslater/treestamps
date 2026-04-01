@@ -11,7 +11,7 @@ __all__ = ()
 class TestAbsolutePath:
     """Test absolute path resolution."""
 
-    def test_absolute_path_simple(self):
+    def test_absolute_path_simple(self) -> None:
         """Test absolute paths."""
         root = Path.cwd()
         config = TreestampsConfig(program_name="test", path=root)
@@ -20,7 +20,7 @@ class TestAbsolutePath:
         abs_path = treestamps._get_absolute_path(test_path, "subdir")
         assert abs_path == test_path / "subdir"
 
-    def test_absolute_path_subpath_absolute(self):
+    def test_absolute_path_subpath_absolute(self) -> None:
         """Test absolute paths."""
         root = Path("/tmp")  # noqa: S108
         config = TreestampsConfig(program_name="test", path=root)
@@ -29,7 +29,7 @@ class TestAbsolutePath:
         abs_path = treestamps._get_absolute_path(test_path, "/tmp/subdir")  # noqa: S108
         assert abs_path == test_path / "subdir"
 
-    def test_absolute_path_subpath_out_of_path(self):
+    def test_absolute_path_subpath_out_of_path(self) -> None:
         """Test absolute paths."""
         root = Path.cwd()
         config = TreestampsConfig(program_name="test", path=root, verbose=2)
@@ -38,7 +38,7 @@ class TestAbsolutePath:
         abs_path = treestamps._get_absolute_path(test_path, "/tmp")  # noqa: S108
         assert abs_path is None
 
-    def test_absolute_path_subpath_parent(self):
+    def test_absolute_path_subpath_parent(self) -> None:
         """Test absolute paths."""
         root = Path("/tmp/subdir/foo")  # noqa: S108
         config = TreestampsConfig(program_name="test", path=root)
@@ -47,7 +47,7 @@ class TestAbsolutePath:
         abs_path = treestamps._get_absolute_path(root, test_path)
         assert abs_path == root
 
-    def test_absolute_path_subpath_dot(self):
+    def test_absolute_path_subpath_dot(self) -> None:
         """Test absolute paths."""
         root = Path("/tmp/subdir/foo")  # noqa: S108
         config = TreestampsConfig(program_name="test", path=root)

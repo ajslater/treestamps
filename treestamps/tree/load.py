@@ -4,6 +4,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from warnings import warn
 
+from ruamel.yaml.comments import CommentedMap
+
 from treestamps.tree.config import TreestampsConfig
 from treestamps.tree.get import TreestampsGet
 
@@ -18,12 +20,16 @@ class TreestampLoad(TreestampsGet):
         )
 
     @classmethod
-    def _load_pop_and_compare_config(cls, yaml_config, compare_config):
+    def _load_pop_and_compare_config(
+        cls,
+        yaml_config: CommentedMap | Mapping | None,
+        compare_config: CommentedMap | Mapping[str, bool] | None,
+    ) -> bool:
         normalized_config = TreestampsConfig.normalize_config(yaml_config)
         # Shallow equality!
         return compare_config == normalized_config
 
-    def _load_pop_config_matches(self, yaml):
+    def _load_pop_config_matches(self, yaml: dict[str, CommentedMap]) -> bool:
         """Return if the configured and loaded configs match."""
         yaml_ts_config = yaml.pop(self._TREESTAMPS_CONFIG_TAG, {})
         yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
@@ -48,7 +54,7 @@ class TreestampLoad(TreestampsGet):
         except Exception as exc:
             self._printer.warn(f"Invalid timestamp for {path_str}: {ts}", exc)
 
-    def load_map(self, timestamps_root: Path, yaml: Mapping):
+    def load_map(self, timestamps_root: Path, yaml: Mapping) -> None:
         """Load timestamps from a dict."""
         if not yaml:
             return
@@ -73,7 +79,7 @@ class TreestampLoad(TreestampsGet):
         for path_str, ts in entries.items():
             self._load_timestamp_entry(timestamps_root, path_str, ts)
 
-    def loads(self, timestamps_root: Path, yaml: str | bytes):
+    def loads(self, timestamps_root: Path, yaml: str | bytes) -> None:
         """Load timestamps from a string."""
         try:
             if isinstance(yaml, bytes):

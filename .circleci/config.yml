@@ -26,7 +26,6 @@ jobs:
       - persist_to_workspace:
           paths:
             - ./README.md
-            - ./bin
             - ./dist
             - ./pyproject.toml
           root: .

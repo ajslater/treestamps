@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Run all tests
 set -euxo pipefail
 mkdir -p test-results

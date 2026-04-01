@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from treestamps.config import CommonConfig
 
@@ -14,12 +15,12 @@ class TreestampsConfig(CommonConfig):
 
     path: Path = Path()
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Fix types."""
         super().__post_init__()
         self.path = Path(self.path)
 
-    def get_config_dict(self):
+    def get_config_dict(self) -> dict[str, Any]:
         """Return select attributes as a dict."""
         result = {}
         for config_key in _CONFIG_KEYS:

@@ -1,19 +1,24 @@
 # 📰 Treestamps News
 
-# v2.3.0
+## v2.3.1
+
+- Add type hints and py.typed sentinel
+- Better docs
+
+## v2.3.0
 
 - Represent frozensets as yaml sets instead of mappings. Represent any Mapping
   type as mappings.
 
-# v2.2.7
+## v2.2.7
 
 - More flexible ruamel.yaml dependency.
 
-# v2.2.6
+## v2.2.6
 
 - Fix wal loading error message.
 
-# v2.2.5
+## v2.2.5
 
 - Update colors
 

@@ -4,14 +4,14 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import TextIO
 
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML, MappingNode, RoundTripRepresenter
 from ruamel.yaml.comments import CommentedOrderedMap, CommentedSet
 
 from treestamps.printer import Printer
 from treestamps.tree.config import TreestampsConfig
 
 
-def represent_frozenset(dumper, data: frozenset):
+def represent_frozenset(dumper: RoundTripRepresenter, data: frozenset) -> MappingNode:
     """Represent frozenset as a CommentedSet."""
     return dumper.represent_set(CommentedSet(data))
 
@@ -47,7 +47,7 @@ class TreestampsInit:
         return cls._WAL_FILENAME_TEMPLATE.format(program_name=program_name)
 
     @classmethod
-    def get_filenames(cls, program_name):
+    def get_filenames(cls, program_name) -> tuple[str, str]:
         """Get all filenames produced by treestamps."""
         return (cls.get_filename(program_name), cls.get_wal_filename(program_name))
 
@@ -72,14 +72,16 @@ class TreestampsInit:
         self._printer.skip(f"Timestamp outside {root_dir}'s tree, ignored", path)
         return None
 
-    def _config_yaml(self):
+    def _config_yaml(self) -> None:
         self._YAML: YAML = YAML(typ="rt")
         self._YAML.allow_duplicate_keys = True
         self._YAML.indent(offset=2)  # Conform to Prettier
         self._YAML.representer.add_representer(frozenset, represent_frozenset)
         self._YAML.representer.add_representer(Mapping, represent_mapping)
 
-    def __init__(self, config: TreestampsConfig, printer: Printer | None = None):
+    def __init__(
+        self, config: TreestampsConfig, printer: Printer | None = None
+    ) -> None:
         """Initialize instance variables."""
         # config
         self._config: TreestampsConfig = config
@@ -96,4 +98,4 @@ class TreestampsInit:
         self._wal: TextIO | None = None
         self._consumed_paths: set[Path] = set()
         self._timestamps: dict[Path, float] = {}
-        self._printer: Printer = printer if printer else Printer(config.verbose)
+        self._printer: Printer = printer or Printer(config.verbose)

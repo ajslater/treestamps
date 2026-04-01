@@ -13,15 +13,15 @@ __all__ = ()
 class TestClassMethodds:
     """Test classmethods."""
 
-    def test_get_filename(self):
+    def test_get_filename(self) -> None:
         """Test get filename."""
         assert Treestamps.get_filename("foo") == ".foo_treestamps.yaml"
 
-    def test_get_wal_filename(self):
+    def test_get_wal_filename(self) -> None:
         """Test get wal filename."""
         assert Treestamps.get_wal_filename("foo") == ".foo_treestamps.wal.yaml"
 
-    def test_normalize_config(self):
+    def test_normalize_config(self) -> None:
         """Test normalize config."""
         keys = frozenset(["a", "b"])
         cc = CommonConfig("Dummy", program_config_keys=keys)
@@ -50,7 +50,7 @@ class TestClassMethodds:
         )
         assert cc.program_config == MappingProxyType({"a": {"b": (1, 1, 2, 3)}})
 
-    def test_grove(self):
+    def test_grove(self) -> None:
         """Test the factory."""
         path_a = Path(__file__)
         path_b = path_a.parent

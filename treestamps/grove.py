@@ -4,6 +4,7 @@ from collections.abc import Iterable, Mapping
 from copy import copy
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any
 from warnings import warn
 
 from treestamps.config import CommonConfig
@@ -18,7 +19,7 @@ class GrovestampsConfig(CommonConfig):
 
     paths: Iterable[str | Path] = ()
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """
         Pathify, filter, dedupe, order and tuplify paths.
 
@@ -38,7 +39,7 @@ class GrovestampsConfig(CommonConfig):
                 files.add(path)
         self.paths = tuple(sorted(dirs) + sorted(files))
 
-    def get_treestamps_config_dict(self):
+    def get_treestamps_config_dict(self) -> dict[str, Any]:
         """Get a treestamps style config dict from this config."""
         config = copy(self)
         if config.program_config is not None:
@@ -73,7 +74,7 @@ class Grovestamps(dict):
         self.filename: str = Treestamps.get_filename(self._config.program_name)
         self.wal_filename: str = Treestamps.get_wal_filename(self._config.program_name)
 
-    def load(self, path: str | Path, yaml: Mapping | str | bytes | Path):
+    def load(self, path: str | Path, yaml: Mapping | str | bytes | Path) -> None:
         """Load a timestamp yaml dict into the correct treestamps."""
         path = Path(path)
         if not path.is_dir():
@@ -92,12 +93,12 @@ class Grovestamps(dict):
             reason = f"load dict to {path} is not relative to any Grovetamps path: {tuple(self.keys())}"
             raise ValueError(reason)
 
-    def load_map(self, grove: Mapping[Path, Mapping | str | bytes | Path]):
+    def load_map(self, grove: Mapping[Path, Mapping | str | bytes | Path]) -> None:
         """Load a grove of treestamps from a mapping."""
         for path, yaml in grove.items():
             self.load(path, yaml)
 
-    def loads(self, path: str | Path, yaml_str: str):
+    def loads(self, path: str | Path, yaml_str: str) -> None:
         """Load a timestamp yaml string into the correct treestamps."""
         self.load(path, yaml_str)
 
