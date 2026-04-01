@@ -191,7 +191,7 @@ addopts = [
 ]
 junit_family = "xunit2"
 strict = true
-testpaths = "tests"
+testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "strict"
 

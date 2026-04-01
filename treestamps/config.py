@@ -22,13 +22,15 @@ class CommonConfig(ABC):
     program_config_keys: Iterable[str] = frozenset()
 
     @classmethod
-    def normalize_config(cls, value) -> dict[str, Any] | tuple | frozenset:
+    def normalize_config(cls, value: Any) -> Any:
         """Recursively convert iterables into frozen sorted unique lists."""
         if isinstance(value, Mapping | CommentedMap):
-            value = dict(
-                sorted(
-                    (key, cls.normalize_config(sub_value))
-                    for key, sub_value in value.items()
+            value = MappingProxyType(
+                dict(
+                    sorted(
+                        (key, cls.normalize_config(sub_value))
+                        for key, sub_value in value.items()
+                    )
                 )
             )
         elif isinstance(value, list | tuple):
@@ -50,7 +52,7 @@ class CommonConfig(ABC):
         # Filter dict by keys
         if self.program_config is not None:
 
-            def filter_func(pair):
+            def filter_func(pair: tuple[str, tuple[int, int, int, int, int]]) -> bool:
                 return pair[0] in self.program_config_keys
 
             filtered_program_config = dict(

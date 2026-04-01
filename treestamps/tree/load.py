@@ -4,6 +4,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from warnings import warn
 
+from ruamel.yaml.comments import CommentedMap
+
 from treestamps.tree.config import TreestampsConfig
 from treestamps.tree.get import TreestampsGet
 
@@ -18,12 +20,16 @@ class TreestampLoad(TreestampsGet):
         )
 
     @classmethod
-    def _load_pop_and_compare_config(cls, yaml_config, compare_config) -> bool:
+    def _load_pop_and_compare_config(
+        cls,
+        yaml_config: CommentedMap | Mapping | None,
+        compare_config: CommentedMap | Mapping[str, bool] | None,
+    ) -> bool:
         normalized_config = TreestampsConfig.normalize_config(yaml_config)
         # Shallow equality!
         return compare_config == normalized_config
 
-    def _load_pop_config_matches(self, yaml):
+    def _load_pop_config_matches(self, yaml: dict[str, CommentedMap]) -> bool:
         """Return if the configured and loaded configs match."""
         yaml_ts_config = yaml.pop(self._TREESTAMPS_CONFIG_TAG, {})
         yaml_program_config = yaml.pop(self._CONFIG_TAG, None)

@@ -4,14 +4,14 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import TextIO
 
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML, MappingNode, RoundTripRepresenter
 from ruamel.yaml.comments import CommentedOrderedMap, CommentedSet
 
 from treestamps.printer import Printer
 from treestamps.tree.config import TreestampsConfig
 
 
-def represent_frozenset(dumper, data: frozenset):
+def represent_frozenset(dumper: RoundTripRepresenter, data: frozenset) -> MappingNode:
     """Represent frozenset as a CommentedSet."""
     return dumper.represent_set(CommentedSet(data))
 

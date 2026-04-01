@@ -1,5 +1,7 @@
 """Print Messages."""
 
+from pathlib import Path
+
 from termcolor import cprint
 
 
@@ -15,7 +17,7 @@ class Printer:
         self,
         reason: str,
         color: str = "white",
-        attrs=None,
+        attrs: list[str] | None = None,
         *,
         force_verbose: bool = False,
         end: str = "\n",
@@ -34,23 +36,23 @@ class Printer:
         if end:
             self._after_newline = True
 
-    def skip(self, message: str, path) -> None:
+    def skip(self, message: str, path: Path) -> None:
         """Skip Message."""
         parts = ["Skip", message, str(path)]
         message = ": ".join(parts)
         self._message(message, color="dark_grey")
 
-    def load(self, message: str, path) -> None:
+    def load(self, message: str, path: Path) -> None:
         """Save timestamps."""
         message = f"{message} {path}"
         self._message(message, color="cyan")
 
-    def save(self, message: str, path) -> None:
+    def save(self, message: str, path: Path) -> None:
         """Save timestamps."""
         message = f"{message} {path}"
         self._message(message, color="green", attrs=["bold"])
 
-    def compact(self, message: str, path, timestamp) -> None:
+    def compact(self, message: str, path: Path, timestamp: float) -> None:
         """Compact timestamps."""
         message = ": ".join((message, str(path), str(timestamp)))
         self._message(message, color="dark_grey", attrs=["dark"])
