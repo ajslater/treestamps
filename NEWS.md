@@ -3,6 +3,7 @@
 ## v2.3.1
 
 - Add type hints and py.typed sentinel
+- Better docs
 
 ## v2.3.0
 
