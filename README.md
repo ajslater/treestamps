@@ -12,14 +12,6 @@ subsequent runs are _incremental, not repetitive_.
 
 ## 🚀 Why Treestamps?
 
-Most filesystem tools do something like:
-
-- Walk a directory tree
-- Process each file
-- Repeat on the next run
-
-That’s wasteful.
-
 Treestamps gives you:
 
 - Persistent state across runs
