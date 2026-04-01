@@ -1606,7 +1606,7 @@ wheels = [
 
 [[package]]
 name = "treestamps"
-version = "2.3.2"
+version = "2.3.1"
 source = { editable = "." }
 dependencies = [
     { name = "ruamel-yaml" },

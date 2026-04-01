@@ -1,9 +1,5 @@
 # 📰 Treestamps News
 
-## v2.3.2
-
-- Even more type hints
-
 ## v2.3.1
 
 - Add type hints and py.typed sentinel
