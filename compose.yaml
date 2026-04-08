@@ -5,6 +5,12 @@ services:
       target: treestamps-ci
     image: treestamps-ci:ci
     container_name: treestamps-ci
+    volumes:
+      - ./test-results:/app/test-results
+      - ./dist:/app/dist
+    environment:
+      - PYTHONUNBUFFERED=1
+    entrypoint: [sleep, infinity]
   treestamps-build-builder:
     build:
       context: .
