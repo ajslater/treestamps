@@ -74,6 +74,7 @@ jobs:
         run: |
           mkdir -p dist test-results
           docker compose up -d ci
+          docker ps
 
       - name: Lint
         if: steps.gate.outputs.identical != 'true'
