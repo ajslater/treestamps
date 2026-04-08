@@ -63,7 +63,7 @@ jobs:
               fi
             fi
           else
-            echo "No merge detected. Continue with Lint, Test, & Build.
+            echo "No merge detected. Continue with Lint, Test, & Build."
           fi
 
       - name: Set up Docker Buildx
