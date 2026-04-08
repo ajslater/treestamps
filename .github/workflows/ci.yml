@@ -41,30 +41,8 @@ jobs:
         if: github.ref_name == 'main' && github.event_name == 'push'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # 1. Get the PR info for the merge that just happened
-          PR_DATA=$(gh pr list --state merged --limit 1 --json headRefName,headRefOid --template '{{range .}}{{.headRefName}},{{.headRefOid}}{{end}}')
-
-          if [ -n "$PR_DATA" ]; then
-            SOURCE_BRANCH=$(echo $PR_DATA | cut -d',' -f1)
-            SOURCE_SHA=$(echo $PR_DATA | cut -d',' -f2)
-            echo "A merge just happened from $SOURCE_BRANCH."
-
-            # 2. Check for code identity
-            git fetch origin "$SOURCE_BRANCH" --depth=1
-            if git diff --quiet HEAD "origin/$SOURCE_BRANCH"; then
-                echo "Code is identical to $SOURCE_BRANCH"
-              # echo "identical=true" >> "$GITHUB_OUTPUT" # unused
-              # 3. Attempt to download the artifact strictly by the source commit SHA
-              # This ensures we only use a wheel that was built exactly for this code
-              if gh run download --commit "$SOURCE_SHA" --name python-dist --dir dist 2>/dev/null; then
-                echo "dist_found=true" >> "$GITHUB_OUTPUT"
-                echo "Successfully retrieved dist from commit $SOURCE_SHA"
-              fi
-            fi
-          else
-            echo "No merge detected. Continue with Lint, Test, & Build."
-          fi
+          GH_REPO: ${{ github.repository }}
+        run: .github/workflows/download-dist-if-identical.sh
 
       - name: Set up Docker Buildx
         if: steps.gate.outputs.dist_found != 'true'
@@ -130,6 +108,7 @@ jobs:
           retention-days: 2
 
       - name: Stop Services
+        if: steps.gate.outputs.dist_found != 'true'
         run: docker compose down
 
   # ---------------------------------------------------------------------------

@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+## v2.4.3
+
+- Fix noop not writing timestamp if none exists.
+
 ## v2.4.2
 
 - Fix tree.dumpf() was counting the root wallfile as a consumed child timestamp.
