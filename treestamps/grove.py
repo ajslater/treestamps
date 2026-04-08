@@ -115,12 +115,8 @@ class Grovestamps(dict[Path, Treestamps]):
             frozenset(skip_top_paths) if skip_top_paths else frozenset()
         )
         for top_path, treestamps in self.items():
-            if top_path in skip_top_paths_set:
-                self._printer.skip("updating timestamps for", top_path)
-                continue
-
-            self._printer.save("Saving timestamps for", top_path)
-            treestamps.dumpf()
+            noop = top_path in skip_top_paths_set
+            treestamps.dumpf(noop=noop)
 
     def dumps(self) -> dict[Path, str]:
         """Dump all treestamps to dict as strings."""
