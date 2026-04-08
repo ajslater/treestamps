@@ -2,8 +2,8 @@ services:
   ci:
     build:
       context: .
-      dockerfile: Dockerfile
-    image: treestamps-ci
+      target: treestamps-ci
+    image: treestamps-ci:ci
     container_name: treestamps-ci
   treestamps-build-builder:
     build:
