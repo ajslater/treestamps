@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+## v2.4.2
+
+- Fix tree.dumpf() was counting the root wallfile as a consumed child timestamp.
+
 ## v2.4.1
 
 - dumpf() noop_top_paths closes wal files properly
