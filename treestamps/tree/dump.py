@@ -83,12 +83,14 @@ class TreestampsDump(TreestampsInit):
         return bool(child_consumed_paths)
 
     def dumpf(self, *, noop: bool = False) -> None:
-        """
-        Serialize timestamps and dump to file.
-
-        Skips if noop = True except if child timestamp files were consumed.
-        """
-        noop = noop and not self._were_child_timestamps_consumed()
+        """Serialize timestamps and dump to file."""
+        noop = (
+            # Skip if noop = True except if the dump path doesn't exist or child
+            # timestamp files were consumed.
+            noop
+            and self._dump_path.exists()
+            and not self._were_child_timestamps_consumed()
+        )
         if not noop:
             yaml = self.dump_dict()
             self._YAML.dump(yaml, self._dump_path)
