@@ -77,13 +77,19 @@ class TreestampsDump(TreestampsInit):
         yaml = self.dump_dict()
         self._YAML.dump(yaml, self._wal_path)
 
+    def _were_child_timestamps_consumed(self):
+        root_consumed_paths = frozenset({self._dump_path, self._wal_path})
+        child_consumed_paths = frozenset(self._consumed_paths - root_consumed_paths)
+        return bool(child_consumed_paths)
+
     def dumpf(self, *, noop: bool = False) -> None:
         """
         Serialize timestamps and dump to file.
 
         Skips if noop = True except if child timestamp files were consumed.
         """
-        if not noop or self._consumed_paths - {self._dump_path}:
+        noop = noop and not self._were_child_timestamps_consumed()
+        if not noop:
             yaml = self.dump_dict()
             self._YAML.dump(yaml, self._dump_path)
             self._printer.save("Saved timestamps for", self.root_dir)
