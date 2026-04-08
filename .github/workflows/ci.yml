@@ -43,6 +43,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: .github/workflows/download-dist-if-identical.sh
+
       - name: Set up Docker Buildx
         if: steps.gate.outputs.dist_found != 'true'
         uses: docker/setup-buildx-action@v4
