@@ -65,7 +65,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          target: treestamps-build-builder
+          target: treestamps-builder
           load: true
           tags: treestamps:latest
           cache-from: type=registry,ref=${{ env.BUILDER_IMAGE }}:cache
@@ -74,19 +74,19 @@ jobs:
       - name: Start Services
         run: |
           mkdir -p dist test-results
-          docker compose up -d treestamps-test
+          docker compose up -d ci
 
       - name: Lint
         if: steps.gate.outputs.identical != 'true'
-        run: docker exec treestamps-test make lint
+        run: docker exec treestamps-ci make lint
 
       - name: Tests
         id: run-tests
         if: steps.gate.outputs.identical != 'true'
-        run: docker exec treestamps-test make test
+        run: docker exec treestamps-ci make test
 
       - name: Build Distribution
-        run: docker exec treestamps-test make build
+        run: docker exec treestamps-ci make build
 
       - name: Upload Test Results
         if: "!cancelled() && steps.run-tests.outcome != 'skipped'"
