@@ -107,7 +107,9 @@ class Grovestamps(dict[Path, Treestamps]):
         path = Path(path)
         self.load(path.parent, path)
 
-    def dumpf(self, skip_top_paths: Sequence[Path] | None = None) -> None:
+    def dumpf(
+        self, skip_top_paths: Sequence[Path] | set[Path] | frozenset[Path] | None = None
+    ) -> None:
         """Dump all treestamps."""
         skip_top_paths_set = (
             frozenset(skip_top_paths) if skip_top_paths else frozenset()
