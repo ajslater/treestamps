@@ -80,7 +80,7 @@ jobs:
         run: docker exec treestamps-ci make lint
 
       - name: Tests
-        id: run-tests
+        id: tests
         if: steps.gate.outputs.identical != 'true'
         run: docker exec treestamps-ci make test
 
@@ -88,8 +88,8 @@ jobs:
         run: docker exec treestamps-ci make build
 
       - name: Upload Test Results
-        id: update-tests
-        if: "!cancelled() && steps.run-tests.outcome != 'skipped'"
+        id: upload-tests
+        if: "!cancelled() && steps.tests.outcome != 'skipped'"
         uses: actions/upload-artifact@v7
         with:
           name: test-results
@@ -102,7 +102,6 @@ jobs:
           report_paths: "**/test-results/pytest/*.xml"
 
       - name: Upload dist artifact
-        if: "!cancelled() && steps.tests.outcome != 'skipped'"
         uses: actions/upload-artifact@v7
         with:
           name: python-dist
