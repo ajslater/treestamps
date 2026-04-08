@@ -1,6 +1,6 @@
 """A dict of Treestamps."""
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from copy import copy
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -49,7 +49,7 @@ class GrovestampsConfig(CommonConfig):
         return config_dict
 
 
-class Grovestamps(dict):
+class Grovestamps(dict[Path, Treestamps]):
     """A path keyed dict of Treestamps."""
 
     def __init__(self, config: GrovestampsConfig) -> None:
@@ -83,7 +83,7 @@ class Grovestamps(dict):
             if path.is_relative_to(top_path):
                 treestamps = self[top_path]
                 if isinstance(yaml, Mapping):
-                    treestamps.load_dict(yaml)
+                    treestamps.load_map(path, yaml)
                 elif isinstance(yaml, str | bytes):
                     treestamps.loads(path, yaml)
                 elif isinstance(yaml, Path):  # pyright: ignore[reportUnnecessaryIsInstance]
@@ -107,9 +107,16 @@ class Grovestamps(dict):
         path = Path(path)
         self.load(path.parent, path)
 
-    def dumpf(self) -> None:
+    def dumpf(self, skip_top_paths: Sequence[Path] | None = None) -> None:
         """Dump all treestamps."""
+        skip_top_paths_set = (
+            frozenset(skip_top_paths) if skip_top_paths else frozenset()
+        )
         for top_path, treestamps in self.items():
+            if top_path in skip_top_paths_set:
+                self._printer.skip("updating timestamps for", top_path)
+                continue
+
             self._printer.save("Saving timestamps for", top_path)
             treestamps.dumpf()
 

@@ -1,5 +1,10 @@
 # 📰 Treestamps News
 
+## v2.4.0
+
+- Add skip_top_paths to grove.dumpf() to skip writing timestamps if nothing
+  changed.
+
 ## v2.3.1
 
 - Add type hints and py.typed sentinel
