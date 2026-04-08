@@ -3,7 +3,6 @@
 from pathlib import Path
 from types import MappingProxyType
 
-from treestamps.config import CommonConfig
 from treestamps.grove import Grovestamps, GrovestampsConfig
 from treestamps.tree import Treestamps
 
@@ -24,16 +23,18 @@ class TestClassMethodds:
     def test_normalize_config(self) -> None:
         """Test normalize config."""
         keys = frozenset(["a", "b"])
-        cc = CommonConfig("Dummy", program_config_keys=keys)
+        cc = GrovestampsConfig("Dummy", program_config_keys=keys)
         assert cc.program_config is None
 
-        cc = CommonConfig("Dummy", program_config_keys=keys, program_config={})
+        cc = GrovestampsConfig("Dummy", program_config_keys=keys, program_config={})
         assert cc.program_config == MappingProxyType({})
 
-        cc = CommonConfig("Dummy", program_config_keys=keys, program_config={"a": 1})
+        cc = GrovestampsConfig(
+            "Dummy", program_config_keys=keys, program_config={"a": 1}
+        )
         assert cc.program_config == MappingProxyType({"a": 1})
 
-        cc = CommonConfig(
+        cc = GrovestampsConfig(
             "Dummy",
             program_config_keys=keys,
             program_config={"a": 1, "b": [3, 2, 1, 2]},
@@ -45,7 +46,7 @@ class TestClassMethodds:
             }
         )
 
-        cc = CommonConfig(
+        cc = GrovestampsConfig(
             "Dummy", program_config_keys=keys, program_config={"a": {"b": [2, 1, 3, 1]}}
         )
         assert cc.program_config == MappingProxyType({"a": {"b": (1, 1, 2, 3)}})
