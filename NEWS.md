@@ -2,7 +2,10 @@
 
 ## v2.4.1
 
-- Allow set & frozenset to dumpf() args typechecking
+- dumpf() noop_top_paths closes wal files properly
+- dumpf() noop_top_paths writes anyway if children treestamp files were
+  consumed.
+- Allow set & frozenset to dumpf() noop_top_paths for typechecking
 
 ## v2.4.0
 
