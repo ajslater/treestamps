@@ -65,7 +65,6 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          target: treestamps-ci
           load: true
           tags: treestamps-ci:ci
           cache-from: type=registry,ref=${{ env.BUILDER_IMAGE }}:cache
