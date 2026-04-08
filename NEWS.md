@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+## v2.4.1
+
+- Allow set & frozenset to dumpf() args typechecking
+
 ## v2.4.0
 
 - Add skip_top_paths to grove.dumpf() to skip writing timestamps if nothing
