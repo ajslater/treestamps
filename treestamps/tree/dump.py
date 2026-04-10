@@ -40,7 +40,7 @@ class TreestampsDump(TreestampsInit):
         self._wal: None | TextIO = None
 
     def dump_dict(self) -> dict:
-        """Seriailiez timestamps and dump to a dict."""
+        """Serialize timestamps and dump to a dict."""
         yaml = {}
         for abs_path, timestamp in self._timestamps.items():
             try:
@@ -78,7 +78,7 @@ class TreestampsDump(TreestampsInit):
         yaml = self.dump_dict()
         self._YAML.dump(yaml, self._wal_path)
 
-    def _were_child_timestamps_consumed(self):
+    def _were_child_timestamps_consumed(self) -> bool:
         root_consumed_paths = frozenset({self._dump_path, self._wal_path})
         child_consumed_paths = frozenset(self._consumed_paths - root_consumed_paths)
         return bool(child_consumed_paths)

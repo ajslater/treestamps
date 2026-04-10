@@ -10,7 +10,7 @@ from treestamps.tree.dump import TreestampsDump
 class TreestampsSet(TreestampsDump):
     """Set Methods."""
 
-    _WAL_HEADER: str = TreestampsDump._WAL_TAG + ":\n"  # noqa: SLF001
+    _WAL_HEADER: str = "wal:\n"
 
     def _compact_timestamps_below(self, abs_root_path: Path) -> None:
         """Compact the timestamp cache below a particular path."""
@@ -19,10 +19,11 @@ class TreestampsSet(TreestampsDump):
         root_timestamp = self._timestamps.get(abs_root_path)
         if root_timestamp is None:
             return
-        delete_paths = set()
-        for abs_path, timestamp in self._timestamps.items():
-            if abs_path.is_relative_to(abs_root_path) and timestamp < root_timestamp:
-                delete_paths.add(abs_path)
+        delete_paths = {
+            abs_path
+            for abs_path, timestamp in self._timestamps.items()
+            if abs_path.is_relative_to(abs_root_path) and timestamp < root_timestamp
+        }
         for del_path in delete_paths:
             del self._timestamps[del_path]
         self._printer.compact(

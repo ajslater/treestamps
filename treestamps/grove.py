@@ -1,6 +1,6 @@
 """A dict of Treestamps."""
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Iterable, Mapping
 from copy import copy
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -81,15 +81,16 @@ class Grovestamps(dict[Path, Treestamps]):
         path = Path(path)
         if not path.is_dir():
             path = path.parent
-        for top_path in self.keys():
+        for top_path in self:
             if path.is_relative_to(top_path):
                 treestamps = self[top_path]
-                if isinstance(yaml, Mapping):
-                    treestamps.load_map(path, yaml)
-                elif isinstance(yaml, str | bytes):
-                    treestamps.loads(path, yaml)
-                elif isinstance(yaml, Path):  # pyright: ignore[reportUnnecessaryIsInstance]
-                    treestamps.loadf(path)
+                match yaml:
+                    case Mapping():
+                        treestamps.load_map(path, yaml)
+                    case str() | bytes():
+                        treestamps.loads(path, yaml)
+                    case Path():
+                        treestamps.loadf(path)
                 break
         else:
             reason = f"load dict to {path} is not relative to any Grovetamps path: {tuple(self.keys())}"
@@ -115,14 +116,10 @@ class Grovestamps(dict[Path, Treestamps]):
 
     @deprecated("Grove.dumpf(noop_top_paths) is deprecated; use dumpf() instead.")
     @overload
-    def dumpf(
-        self, noop_top_paths: Sequence[Path] | set[Path] | frozenset[Path] | None
-    ) -> None:
+    def dumpf(self, noop_top_paths: Collection[Path] | None) -> None:
         pass
 
-    def dumpf(
-        self, noop_top_paths: Sequence[Path] | set[Path] | frozenset[Path] | None = None
-    ) -> None:
+    def dumpf(self, noop_top_paths: Collection[Path] | None = None) -> None:
         """Dump all treestamps."""
         if noop_top_paths is not None:
             warn(
