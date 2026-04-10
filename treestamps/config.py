@@ -81,7 +81,7 @@ class CommonConfig(ABC):
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         """Re-normalize after unpickling to restore MappingProxyType wrappers."""
-        self.__dict__.update(state)
+        self.__dict__.update(state)  # pyright: ignore[reportAttributeAccessIssue]
         if self.program_config is not None:
             self.program_config = MappingProxyType(
                 dict(self.normalize_config(self.program_config))
