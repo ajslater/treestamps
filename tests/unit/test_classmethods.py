@@ -1,5 +1,6 @@
 """Test classmethods."""
 
+import pickle
 from pathlib import Path
 from types import MappingProxyType
 
@@ -9,7 +10,7 @@ from treestamps.tree import Treestamps
 __all__ = ()
 
 
-class TestClassMethodds:
+class TestClassMethods:
     """Test classmethods."""
 
     def test_get_filename(self) -> None:
@@ -50,6 +51,25 @@ class TestClassMethodds:
             "Dummy", program_config_keys=keys, program_config={"a": {"b": [2, 1, 3, 1]}}
         )
         assert cc.program_config == MappingProxyType({"a": {"b": (1, 1, 2, 3)}})
+
+    def test_pickle_config_none(self) -> None:
+        """Test pickling config with no program_config."""
+        cc = GrovestampsConfig("Dummy")
+        restored = pickle.loads(pickle.dumps(cc))  # noqa: S301
+        assert restored.program_config is None
+        assert restored.program_name == "Dummy"
+
+    def test_pickle_config_with_nested_data(self) -> None:
+        """Test pickling config with nested program_config."""
+        keys = frozenset(["key"])
+        cc = GrovestampsConfig(
+            "Dummy",
+            program_config_keys=keys,
+            program_config={"key": {"nested": [3, 1, 2]}},
+        )
+        restored = pickle.loads(pickle.dumps(cc))  # noqa: S301
+        assert restored.program_config == cc.program_config
+        assert type(restored.program_config) is MappingProxyType
 
     def test_grove(self) -> None:
         """Test the factory."""

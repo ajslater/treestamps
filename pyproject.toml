@@ -18,7 +18,7 @@ keywords = ["directory", "library", "recursive", "timestamps"]
 readme = "README.md"
 requires-python = ">=3.10"
 name = "treestamps"
-version = "2.5.1"
+version = "2.5.2"
 [[project.authors]]
 name = "AJ Slater"
 email = "aj@slater.net"

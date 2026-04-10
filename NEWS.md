@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+## v2.5.2
+
+- Allow treestamps config to be pickable
+
 ## v2.5.1
 
 - Add Grove.compact(top_path, path)

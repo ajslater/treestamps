@@ -47,7 +47,7 @@ class TreestampsInit:
         return cls._WAL_FILENAME_TEMPLATE.format(program_name=program_name)
 
     @classmethod
-    def get_filenames(cls, program_name) -> tuple[str, str]:
+    def get_filenames(cls, program_name: str) -> tuple[str, str]:
         """Get all filenames produced by treestamps."""
         return (cls.get_filename(program_name), cls.get_wal_filename(program_name))
 
