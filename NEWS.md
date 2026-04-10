@@ -1,5 +1,10 @@
 # 📰 Treestamps News
 
+## v2.5.0
+
+- Simpler change detection based on treestamps.set()
+- Params to dumpf() deprecated
+
 ## v2.4.3
 
 - Fix noop not writing timestamp if none exists.

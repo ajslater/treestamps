@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail
 # Download last dist artifacts if current code is identical to the merge source.
+set -euo pipefail
 
 PR_DATA=$(gh pr list --state merged --limit 1 --json headRefName,headRefOid \
   --template '{{range .}}{{.headRefName}},{{.headRefOid}}{{end}}')

@@ -11,25 +11,3 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     entrypoint: [sleep, infinity]
-  treestamps-build-builder:
-    build:
-      context: .
-      dockerfile: build.Dockerfile
-    image: ajslater/treestamps-builder
-    container_name: treestamps-build-builder
-  treestamps-lint:
-    image: ajslater/treestamps-builder
-    container_name: treestamps-lint
-    command: make lint
-  treestamps-test:
-    image: ajslater/treestamps-builder
-    container_name: treestamps-test
-    volumes:
-      - ./test-results:/app/test-results:rw
-    command: make test
-  treestamps-build:
-    image: ajslater/treestamps-builder
-    container_name: treestamps-build
-    volumes:
-      - ./dist:/app/dist:rw
-    command: make build

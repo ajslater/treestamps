@@ -69,6 +69,7 @@ class TreestampsSet(TreestampsDump):
 
         # Set timestamp
         self._timestamps[abs_path] = mtime
+        self._changed = True
 
         # compact
         if compact:
@@ -77,3 +78,15 @@ class TreestampsSet(TreestampsDump):
         # write to wal
         self._write_ahead_log(abs_path, mtime)
         return mtime
+
+    def compact(self, path: Path | str) -> None:
+        """
+        Compact timestamps below path without recording a new timestamp.
+
+        Unlike set(compact=True) this does not update any timestamp, write to
+        the WAL, or mark the tree as changed. Safe to call after processing a
+        subdirectory regardless of whether anything in it was modified.
+        """
+        abs_path = self._get_absolute_path(self.root_dir, path)
+        if abs_path:
+            self._compact_timestamps_below(abs_path)

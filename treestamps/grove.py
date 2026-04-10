@@ -4,8 +4,10 @@ from collections.abc import Iterable, Mapping, Sequence
 from copy import copy
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, overload
 from warnings import warn
+
+from typing_extensions import deprecated
 
 from treestamps.config import CommonConfig
 from treestamps.printer import Printer
@@ -107,16 +109,32 @@ class Grovestamps(dict[Path, Treestamps]):
         path = Path(path)
         self.load(path.parent, path)
 
+    @overload
+    def dumpf(self) -> None:
+        pass
+
+    @deprecated("Grove.dumpf(noop_top_paths) is deprecated; use dumpf() instead.")
+    @overload
+    def dumpf(
+        self, noop_top_paths: Sequence[Path] | set[Path] | frozenset[Path] | None
+    ) -> None:
+        pass
+
     def dumpf(
         self, noop_top_paths: Sequence[Path] | set[Path] | frozenset[Path] | None = None
     ) -> None:
         """Dump all treestamps."""
-        skip_top_paths_set = (
-            frozenset(noop_top_paths) if noop_top_paths else frozenset()
-        )
-        for top_path, treestamps in self.items():
-            noop = top_path in skip_top_paths_set
-            treestamps.dumpf(noop=noop)
+        if noop_top_paths is not None:
+            warn(
+                (
+                    "Grove.dumpf(noop_top_paths) is deprecated; Treestamps now tracks changes "
+                    "internally. Stop calling set() on unchanged files instead."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        for treestamps in self.values():
+            treestamps.dumpf()
 
     def dumps(self) -> dict[Path, str]:
         """Dump all treestamps to dict as strings."""
@@ -132,3 +150,14 @@ class Grovestamps(dict[Path, Treestamps]):
         """Alias for dumpf."""
         warn("replaced by Grovestamps.dumpf()", PendingDeprecationWarning, stacklevel=2)
         self.dumpf()
+
+    def set(
+        self,
+        top_path: Path,
+        path: Path,
+        mtime: float | None = None,
+        *,
+        compact: bool = False,
+    ) -> None:
+        """Set timestamp in tree."""
+        self[top_path].set(path, mtime, compact=compact)
