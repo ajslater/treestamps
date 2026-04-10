@@ -61,3 +61,28 @@ class CommonConfig(ABC):
             self.program_config = MappingProxyType(
                 dict(self.normalize_config(filtered_program_config))
             )
+
+    @classmethod
+    def _denormalize(cls, value: Any) -> Any:
+        """Recursively convert MappingProxyType back to dict for pickling."""
+        if isinstance(value, MappingProxyType):
+            return {k: cls._denormalize(v) for k, v in value.items()}
+        if isinstance(value, (tuple, frozenset)):
+            converted = [cls._denormalize(v) for v in value]
+            return type(value)(converted)
+        return value
+
+    def __getstate__(self) -> dict[str, Any]:
+        """Convert MappingProxyType to dict for pickling."""
+        state = self.__dict__.copy()
+        if state.get("program_config") is not None:
+            state["program_config"] = self._denormalize(state["program_config"])
+        return state
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Re-normalize after unpickling to restore MappingProxyType wrappers."""
+        self.__dict__.update(state)
+        if self.program_config is not None:
+            self.program_config = MappingProxyType(
+                dict(self.normalize_config(self.program_config))
+            )
