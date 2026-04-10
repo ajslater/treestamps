@@ -1,9 +1,14 @@
 # 📰 Treestamps News
 
+## v2.5.1
+
+- Add Grove.compact(top_path, path)
+
 ## v2.5.0
 
 - Simpler change detection based on treestamps.set()
 - Params to dumpf() deprecated
+- Add Grove.set(top_path, path, ...)
 
 ## v2.4.3
 
