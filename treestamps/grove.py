@@ -4,8 +4,10 @@ from collections.abc import Iterable, Mapping, Sequence
 from copy import copy
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, overload
 from warnings import warn
+
+from typing_extensions import deprecated
 
 from treestamps.config import CommonConfig
 from treestamps.printer import Printer
@@ -107,6 +109,17 @@ class Grovestamps(dict[Path, Treestamps]):
         path = Path(path)
         self.load(path.parent, path)
 
+    @overload
+    def dumpf(self) -> None:
+        pass
+
+    @deprecated("Grove.dumpf(noop_top_paths) is deprecated; use dumpf() instead.")
+    @overload
+    def dumpf(
+        self, noop_top_paths: Sequence[Path] | set[Path] | frozenset[Path] | None
+    ) -> None:
+        pass
+
     def dumpf(
         self, noop_top_paths: Sequence[Path] | set[Path] | frozenset[Path] | None = None
     ) -> None:
@@ -137,3 +150,14 @@ class Grovestamps(dict[Path, Treestamps]):
         """Alias for dumpf."""
         warn("replaced by Grovestamps.dumpf()", PendingDeprecationWarning, stacklevel=2)
         self.dumpf()
+
+    def set(
+        self,
+        top_path: Path,
+        path: Path,
+        mtime: float | None = None,
+        *,
+        compact: bool = False,
+    ) -> None:
+        """Set timestamp in tree."""
+        self[top_path].set(path, mtime, compact=compact)

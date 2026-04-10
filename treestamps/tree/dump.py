@@ -2,10 +2,11 @@
 
 from contextlib import suppress
 from pathlib import Path
-from typing import TextIO
+from typing import TextIO, overload
 from warnings import warn
 
 from ruamel.yaml import StringIO
+from typing_extensions import deprecated
 
 from treestamps.tree.init import TreestampsInit
 
@@ -81,6 +82,15 @@ class TreestampsDump(TreestampsInit):
         root_consumed_paths = frozenset({self._dump_path, self._wal_path})
         child_consumed_paths = frozenset(self._consumed_paths - root_consumed_paths)
         return bool(child_consumed_paths)
+
+    @overload
+    def dumpf(self) -> None:
+        pass
+
+    @deprecated("Treestamps.dumpf(noop) is deprecated, Use dumpf() instead")
+    @overload
+    def dumpf(self, *, noop: bool) -> None:
+        pass
 
     def dumpf(self, *, noop: bool | None = None) -> None:
         """
