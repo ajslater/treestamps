@@ -161,3 +161,7 @@ class Grovestamps(dict[Path, Treestamps]):
     ) -> None:
         """Set timestamp in tree."""
         self[top_path].set(path, mtime, compact=compact)
+
+    def compact(self, top_path: Path, path: Path):
+        """Compact timestamps in tree."""
+        self[top_path].compact(path)
