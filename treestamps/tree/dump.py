@@ -82,16 +82,29 @@ class TreestampsDump(TreestampsInit):
         child_consumed_paths = frozenset(self._consumed_paths - root_consumed_paths)
         return bool(child_consumed_paths)
 
-    def dumpf(self, *, noop: bool = False) -> None:
-        """Serialize timestamps and dump to file."""
-        noop = (
-            # Skip if noop = True except if the dump path doesn't exist or child
-            # timestamp files were consumed.
-            noop
-            and self._dump_path.exists()
-            and not self._were_child_timestamps_consumed()
+    def dumpf(self, *, noop: bool | None = None) -> None:
+        """
+        Serialize timestamps and dump to file.
+
+        Treestamps decides if the dump write to disk needs to happened by whether
+        set() has been called since the last dump the file does not exist or we ate
+        child timestamp files.
+        """
+        if noop is not None:
+            warn(
+                (
+                    "Treestamps.dumpf(noop) is deprecated; Treestamps now tracks changes "
+                    "internally. Stop calling set() on unchanged files instead."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        changed = (
+            self._changed
+            or not self._dump_path.exists()
+            or self._were_child_timestamps_consumed()
         )
-        if not noop:
+        if changed:
             yaml = self.dump_dict()
             self._YAML.dump(yaml, self._dump_path)
             self._printer.save("Saved timestamps for", self.root_dir)
@@ -99,6 +112,7 @@ class TreestampsDump(TreestampsInit):
             self._close_wal()
             self._printer.skip("updating timestamps for", self.root_dir)
         self.cleanup_old_timestamps()
+        self._changed = False
 
     def dump(self) -> None:
         """Compatibility alias for dumpf()."""

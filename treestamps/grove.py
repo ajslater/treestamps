@@ -111,12 +111,17 @@ class Grovestamps(dict[Path, Treestamps]):
         self, noop_top_paths: Sequence[Path] | set[Path] | frozenset[Path] | None = None
     ) -> None:
         """Dump all treestamps."""
-        skip_top_paths_set = (
-            frozenset(noop_top_paths) if noop_top_paths else frozenset()
-        )
-        for top_path, treestamps in self.items():
-            noop = top_path in skip_top_paths_set
-            treestamps.dumpf(noop=noop)
+        if noop_top_paths is not None:
+            warn(
+                (
+                    "Grove.dumpf(noop_top_paths) is deprecated; Treestamps now tracks changes "
+                    "internally. Stop calling set() on unchanged files instead."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        for treestamps in self.values():
+            treestamps.dumpf()
 
     def dumps(self) -> dict[Path, str]:
         """Dump all treestamps to dict as strings."""
