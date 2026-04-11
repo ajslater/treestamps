@@ -16,9 +16,11 @@ def represent_frozenset(dumper: RoundTripRepresenter, data: frozenset) -> Mappin
     return dumper.represent_set(CommentedSet(data))
 
 
-def represent_mapping(dumper, data: Mapping):
+def represent_mapping(dumper, tag, data: Mapping, flow_style=None) -> MappingNode:
     """Represent Mappings as Mappings."""
-    return dumper.represent_mapping(CommentedOrderedMap(data))
+    return dumper.represent_mapping(
+        tag, CommentedOrderedMap(data), flow_style=flow_style
+    )
 
 
 class TreestampsInit:
