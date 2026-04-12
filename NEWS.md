@@ -1,5 +1,10 @@
 # 📰 Treestamps News
 
+## v2.5.4
+
+- Fix special characters in wal entrries
+- Fix compact_all() calling nonextant method.
+
 ## v2.5.3
 
 - treestamps.compact_top() and grove.compact_all()

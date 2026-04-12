@@ -71,6 +71,46 @@ class TestCycle(BaseTestDir):
             ts.set(path, compact=True)
         # untested :/
 
+    def test_wal_roundtrip_special_chars(self) -> None:
+        """Test WAL survives crash with special-character paths."""
+        subpath = self.TMP_ROOT / "wal_test"
+        subpath.mkdir()
+
+        config = GrovestampsConfig(PROGRAM_NAME, paths=(subpath,), verbose=0)
+        gs = Grovestamps(config)
+        ts = gs[subpath]
+
+        # Paths that exercise YAML special characters
+        names = (
+            "plain",
+            "Movie: The Sequel",
+            "Album #1",
+            "dir [special]/file",
+            "has 'quotes' here",
+            "combo: #tricky [one]",
+        )
+        set_times: dict[Path, float] = {}
+        for name in names:
+            path = subpath / name
+            mtime = ts.set(path)
+            assert mtime is not None
+            set_times[path] = mtime
+
+        # Simulate crash: flush but do NOT call dumpf().
+        if ts._wal:
+            ts._wal.flush()
+        wal_path = subpath / f".{PROGRAM_NAME}_treestamps.wal.yaml"
+        assert wal_path.exists()
+
+        # Reload from scratch — should parse the WAL without error
+        gs2 = Grovestamps(config)
+        ts2 = gs2[subpath]
+        for path, expected in set_times.items():
+            loaded = ts2.get(path)
+            assert loaded == expected, (
+                f"WAL mismatch for {path}: {loaded} != {expected}"
+            )
+
     def test_set_dump_load_get(self) -> None:
         """Test it all."""
         # Make subdirs
