@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TextIO
 
+from ruamel.yaml import StringIO
+
 from treestamps.tree.dump import TreestampsDump
 
 
@@ -33,19 +35,19 @@ class TreestampsSet(TreestampsDump):
     def _write_ahead_log(self, abs_path: Path, mtime: float) -> None:
         """Write to the WAL."""
         if not self._wal:
-            # Init wall
+            # Init WAL
             self._dumpf_init_wal()
             self._consumed_paths.add(self._wal_path)
             self._wal: TextIO | None = self._wal_path.open("a")
             _ = self._wal.write(self._WAL_HEADER)
 
-        # Manually construct yaml dict list item.
+        # Use YAML library to serialize the entry so all special characters
+        # are handled correctly (colons, #, [], {}, quotes, etc.)
         path_str = self._get_relative_path_str(abs_path)
-        if ":" in path_str:
-            # Safe wal strings. Handled automatically by yaml dumper.
-            # https://github.com/commx/ruamel-yaml/blob/master/util.py#L211
-            path_str = "'" + path_str.replace("'", "''") + "'"
-        wal_entry = f"- {path_str}: {mtime}\n"
+        with StringIO() as buf:
+            self._YAML.dump({path_str: mtime}, buf)
+            yaml_line = buf.getvalue().rstrip("\n")
+        wal_entry = f"- {yaml_line}\n"
 
         _ = self._wal.write(wal_entry)
 
@@ -93,5 +95,5 @@ class TreestampsSet(TreestampsDump):
             self._compact_timestamps_below(abs_path)
 
     def compact_top(self) -> None:
-        """Compcat top path."""
-        self._compact_timestamps_below(self.root_dir)
+        """Compact the top dir."""
+        self.compact(self.root_dir)
