@@ -162,3 +162,8 @@ class Grovestamps(dict[Path, Treestamps]):
     def compact(self, top_path: Path, path: Path):
         """Compact timestamps in tree."""
         self[top_path].compact(path)
+
+    def compact_all(self):
+        """Compact all treestamps."""
+        for treestamps in self.values():
+            treestamps.compact_top()

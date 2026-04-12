@@ -91,3 +91,7 @@ class TreestampsSet(TreestampsDump):
         abs_path = self._get_absolute_path(self.root_dir, path)
         if abs_path:
             self._compact_timestamps_below(abs_path)
+
+    def compact_top(self) -> None:
+        """Compcat top path."""
+        self._compact_timestamps_below(self.root_dir)

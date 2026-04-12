@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+## v2.5.3
+
+- treestamps.compact_top() and grove.compact_all()
+
 ## v2.5.2
 
 - Allow treestamps config to be pickable
