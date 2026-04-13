@@ -1,5 +1,10 @@
 # 📰 Treestamps News
 
+## v3.0.0
+
+- Grovestamps no longer inherits from dict.
+- Grovestamps.get_timestamp(top_path, path)
+
 ## v2.5.4
 
 - Fix special characters in wal entrries
