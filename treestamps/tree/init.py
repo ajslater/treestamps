@@ -82,3 +82,29 @@ class TreestampsInit(TreestampsBase):
     def get_relative_path_str(self, abs_path: Path) -> str:
         """Get the path string relative to the root_dir."""
         return str(abs_path.relative_to(self.root_dir))
+
+    def _serialize_program_config(self) -> dict:
+        """Create dict for the config tag in the yaml to be dumped."""
+        # NOTE: Treestamps symlinks & ignore options should be represented in
+        # the program config.
+        yaml = {}
+        if self._config.program_config is not None:
+            yaml[self._CONFIG_TAG] = dict(self._config.program_config)
+        yaml[self._TREESTAMPS_CONFIG_TAG] = {
+            "ignore": self._config.ignore,
+            "symlinks": self._config.symlinks,
+        }
+        return yaml
+
+    def _serialize_timestamps(self) -> dict:
+        """Serialize timestamps and config to a dict."""
+        yaml = {}
+        for abs_path, timestamp in self._timestamps.items():
+            try:
+                rel_path_str = self.get_relative_path_str(abs_path)
+                yaml[rel_path_str] = timestamp
+            except Exception as exc:
+                self._printer.warn(f"Serializing {abs_path}", exc)
+        config_yaml = self._serialize_program_config()
+        yaml.update(config_yaml)
+        return yaml
