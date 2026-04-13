@@ -7,6 +7,7 @@ from typing import TextIO
 from ruamel.yaml import YAML, MappingNode, RoundTripRepresenter
 from ruamel.yaml.comments import CommentedOrderedMap, CommentedSet
 
+from treestamps.base import TreestampsBase
 from treestamps.printer import Printer
 from treestamps.tree.config import TreestampsConfig
 
@@ -16,42 +17,17 @@ def represent_frozenset(dumper: RoundTripRepresenter, data: frozenset) -> Mappin
     return dumper.represent_set(CommentedSet(data))
 
 
-def represent_mapping(dumper, tag, data: Mapping, flow_style=None) -> MappingNode:
+def represent_mapping(dumper, data: Mapping):
     """Represent Mappings as Mappings."""
-    return dumper.represent_mapping(
-        tag, CommentedOrderedMap(data), flow_style=flow_style
-    )
+    return dumper.represent_mapping(CommentedOrderedMap(data))
 
 
-class TreestampsInit:
+class TreestampsInit(TreestampsBase):
     """Common methods."""
 
     _CONFIG_TAG: str = "config"
     _TREESTAMPS_CONFIG_TAG: str = "treestamps_config"
     _WAL_TAG: str = "wal"
-    _FILENAME_TEMPLATE: str = ".{program_name}_treestamps.yaml"
-    _WAL_FILENAME_TEMPLATE: str = ".{program_name}_treestamps.wal.yaml"
-
-    @staticmethod
-    def get_dir(path: Path | str) -> Path:
-        """Return a directory for a path."""
-        path = Path(path)
-        return path if path.is_dir() else path.parent
-
-    @classmethod
-    def get_filename(cls, program_name: str) -> str:
-        """Return the timestamps filename for a program."""
-        return cls._FILENAME_TEMPLATE.format(program_name=program_name)
-
-    @classmethod
-    def get_wal_filename(cls, program_name: str) -> str:
-        """Return the write ahead log filename for the program."""
-        return cls._WAL_FILENAME_TEMPLATE.format(program_name=program_name)
-
-    @classmethod
-    def get_filenames(cls, program_name: str) -> tuple[str, str]:
-        """Get all filenames produced by treestamps."""
-        return (cls.get_filename(program_name), cls.get_wal_filename(program_name))
 
     def _get_absolute_path(self, root_dir: Path, path: Path | str) -> Path | None:
         """Convert paths to relevant absolute paths."""
@@ -102,3 +78,7 @@ class TreestampsInit:
         self._timestamps: dict[Path, float] = {}
         self._changed: bool = False
         self._printer: Printer = printer or Printer(config.verbose)
+
+    def get_relative_path_str(self, abs_path: Path) -> str:
+        """Get the path string relative to the root_dir."""
+        return str(abs_path.relative_to(self.root_dir))
