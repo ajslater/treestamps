@@ -1,22 +1,31 @@
 """Write-Ahead Log operations."""
 
+from contextlib import suppress
 from pathlib import Path
 from types import MappingProxyType
 from typing import TextIO
 
 from ruamel.yaml import StringIO
 
-from treestamps.tree.dump import TreestampsDump
+from treestamps.tree.init import TreestampsInit
 
 
-class TreestampsWal(TreestampsDump):
-    """WAL operations mixin."""
+class TreestampsWal(TreestampsInit):
+    """WAL operations."""
 
     _WAL_HEADER: str = "wal:\n"
 
+    def _close_wal(self) -> None:
+        """Close the write ahead log."""
+        if self._wal is None:
+            return
+        with suppress(AttributeError):
+            self._wal.close()
+        self._wal = None
+
     def _dumpf_init_wal(self) -> None:
         """Write current state to a new WAL file on disk."""
-        yaml = self.dump_dict()
+        yaml = self._serialize_timestamps()
         self._YAML.dump(yaml, self._wal_path)
 
     def write_ahead_log(self, abs_path: Path, mtime: float) -> None:

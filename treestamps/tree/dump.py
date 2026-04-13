@@ -1,54 +1,24 @@
 """Dump Methods."""
 
-from contextlib import suppress
-from typing import TYPE_CHECKING, TextIO, overload
+from typing import TYPE_CHECKING, overload
 from warnings import warn
 
 from ruamel.yaml import StringIO
 from typing_extensions import deprecated
 
-from treestamps.tree.init import TreestampsInit
+from treestamps.tree.wal import TreestampsWal
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 
-class TreestampsDump(TreestampsInit):
+class TreestampsDump(TreestampsWal):
     """Dump Methods."""
-
-    def _get_dumpable_program_config(self) -> dict:
-        """Set the config tag in the yaml to be dumped."""
-        # NOTE: Treestamps symlinks & ignore options should be represented in
-        # the program config.
-        yaml = {}
-        if self._config.program_config is not None:
-            yaml[self._CONFIG_TAG] = dict(self._config.program_config)
-        yaml[self._TREESTAMPS_CONFIG_TAG] = {
-            "ignore": self._config.ignore,
-            "symlinks": self._config.symlinks,
-        }
-        return yaml
-
-    def _close_wal(self) -> None:
-        """Close the write ahead log."""
-        # Avoids a depenedancy cycle with wal.py
-        if self._wal is None:
-            return
-        with suppress(AttributeError):
-            self._wal.close()
-        self._wal: None | TextIO = None
 
     def dump_dict(self) -> dict:
         """Serialize timestamps and dump to a dict."""
-        yaml = {}
-        for abs_path, timestamp in self._timestamps.items():
-            try:
-                rel_path_str = self.get_relative_path_str(abs_path)
-                yaml[rel_path_str] = timestamp
-            except Exception as exc:
-                self._printer.warn(f"Serializing {abs_path}", exc)
-        config_yaml = self._get_dumpable_program_config()
-        yaml.update(config_yaml)
+        # NOTE Does not cleanup old timestamps from disk
+        yaml = self._serialize_timestamps()
         self._close_wal()
         return yaml
 

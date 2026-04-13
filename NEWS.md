@@ -1,5 +1,12 @@
 # 📰 Treestamps News
 
+## v3.0.0
+
+- Grovestamps no longer inherits from dict.
+- Grovestamps.get_timestamp(top_path, path)
+- Remove deprecated Grovestamps.dump() method.
+- Remove deprecated Grovestamps.dumpf(noop_top_paths) signature.
+
 ## v2.5.4
 
 - Fix special characters in wal entrries
