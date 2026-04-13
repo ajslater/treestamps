@@ -2,17 +2,12 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TextIO
 
-from ruamel.yaml import StringIO
-
-from treestamps.tree.dump import TreestampsDump
+from treestamps.tree.load import TreestampsLoad
 
 
-class TreestampsSet(TreestampsDump):
+class TreestampsSet(TreestampsLoad):
     """Set Methods."""
-
-    _WAL_HEADER: str = "wal:\n"
 
     def _compact_timestamps_below(self, abs_root_path: Path) -> None:
         """Compact the timestamp cache below a particular path."""
@@ -31,25 +26,6 @@ class TreestampsSet(TreestampsDump):
         self._printer.compact(
             "Compacted timestamps under", abs_root_path, root_timestamp
         )
-
-    def _write_ahead_log(self, abs_path: Path, mtime: float) -> None:
-        """Write to the WAL."""
-        if not self._wal:
-            # Init WAL
-            self._dumpf_init_wal()
-            self._consumed_paths.add(self._wal_path)
-            self._wal: TextIO | None = self._wal_path.open("a")
-            _ = self._wal.write(self._WAL_HEADER)
-
-        # Use YAML library to serialize the entry so all special characters
-        # are handled correctly (colons, #, [], {}, quotes, etc.)
-        path_str = self._get_relative_path_str(abs_path)
-        with StringIO() as buf:
-            self._YAML.dump({path_str: mtime}, buf)
-            yaml_line = buf.getvalue().rstrip("\n")
-        wal_entry = f"- {yaml_line}\n"
-
-        _ = self._wal.write(wal_entry)
 
     def set(
         self,
@@ -79,7 +55,7 @@ class TreestampsSet(TreestampsDump):
             self._compact_timestamps_below(abs_path)
 
         # write to wal
-        self._write_ahead_log(abs_path, mtime)
+        self.write_ahead_log(abs_path, mtime)
         return mtime
 
     def compact(self, path: Path | str) -> None:
@@ -94,6 +70,6 @@ class TreestampsSet(TreestampsDump):
         if abs_path:
             self._compact_timestamps_below(abs_path)
 
-    def compact_top(self) -> None:
+    def compact_top(self):
         """Compact the top dir."""
         self.compact(self.root_dir)

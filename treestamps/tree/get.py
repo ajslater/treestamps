@@ -2,10 +2,10 @@
 
 from pathlib import Path
 
-from treestamps.tree.init import TreestampsInit
+from treestamps.tree.wal import TreestampsWal
 
 
-class TreestampsGet(TreestampsInit):
+class TreestampsGet(TreestampsWal):
     """Get Methods."""
 
     @staticmethod

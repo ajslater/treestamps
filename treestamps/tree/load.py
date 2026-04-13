@@ -10,7 +10,7 @@ from treestamps.tree.config import TreestampsConfig
 from treestamps.tree.get import TreestampsGet
 
 
-class TreestampLoad(TreestampsGet):
+class TreestampsLoad(TreestampsGet):
     """Load methods."""
 
     def _is_path_skipped(self, path: Path) -> bool:
@@ -64,17 +64,11 @@ class TreestampLoad(TreestampsGet):
         if not self._load_pop_config_matches(yaml):
             return
         # Pop off the WAL
-        wal = yaml.pop(self._WAL_TAG, ())
+        wal_entries = self.pop_wal_entries(yaml)
 
         # What's left are timestamp entries
         entries = yaml
-
-        # Update entries with WAL entries
-        for wal_entry in wal:
-            try:
-                entries.update(wal_entry)
-            except Exception as exc:
-                self._printer.warn(f"loading WAL entry: {wal_entry}", exc)
+        entries.update(wal_entries)
 
         for path_str, ts in entries.items():
             self._load_timestamp_entry(timestamps_root, path_str, ts)

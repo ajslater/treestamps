@@ -1,14 +1,14 @@
-"""A dict of Treestamps."""
+"""A Mapping of Treestamps."""
 
-from collections.abc import Collection, Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from copy import copy
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, overload
-from warnings import warn
+from typing import Any
 
-from typing_extensions import deprecated
+from typing_extensions import override
 
+from treestamps.base import TreestampsBase
 from treestamps.config import CommonConfig
 from treestamps.printer import Printer
 from treestamps.tree import Treestamps
@@ -51,39 +51,57 @@ class GrovestampsConfig(CommonConfig):
         return config_dict
 
 
-class Grovestamps(dict[Path, Treestamps]):
-    """A path keyed dict of Treestamps."""
+class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
+    """A path keyed mapping of Treestamps."""
 
     def __init__(self, config: GrovestampsConfig) -> None:
-        """Create a dictionary of Treestamps keyed with paths."""
-        super().__init__()
+        """Create a mapping of Treestamps keyed with paths."""
         self._config: GrovestampsConfig = config
         self._printer: Printer = Printer(config.verbose)
+        self._trees: dict[Path, Treestamps] = {}
 
         treestamps_config_dict = self._config.get_treestamps_config_dict()
 
         for top_path in self._config.paths:
-            root_dir = Treestamps.get_dir(top_path)
-            if root_dir in self:
+            root_dir = self.get_dir(top_path)
+            if root_dir in self._trees:
                 continue
             tree_config = TreestampsConfig(
                 **treestamps_config_dict, path=Path(top_path)
             )
             ts = Treestamps(tree_config, self._printer)
             ts.loadf_tree()
-            self[root_dir] = ts
+            self._trees[root_dir] = ts
 
-        self.filename: str = Treestamps.get_filename(self._config.program_name)
-        self.wal_filename: str = Treestamps.get_wal_filename(self._config.program_name)
+        self.filename: str = self.get_filename(self._config.program_name)
+        self.wal_filename: str = self.get_wal_filename(self._config.program_name)
+
+    # Mapping interface
+
+    @override
+    def __getitem__(self, key: Path) -> Treestamps:
+        """Get a Treestamps by its root path."""
+        return self._trees[key]
+
+    @override
+    def __iter__(self) -> Iterator[Path]:
+        """Iterate over root paths."""
+        return iter(self._trees)
+
+    @override
+    def __len__(self) -> int:
+        """Return the number of trees."""
+        return len(self._trees)
+
+    # Load methods
 
     def load(self, path: str | Path, yaml: Mapping | str | bytes | Path) -> None:
         """Load a timestamp yaml dict into the correct treestamps."""
         path = Path(path)
         if not path.is_dir():
             path = path.parent
-        for top_path in self:
+        for top_path, treestamps in self._trees.items():
             if path.is_relative_to(top_path):
-                treestamps = self[top_path]
                 match yaml:
                     case Mapping():
                         treestamps.load_map(path, yaml)
@@ -93,7 +111,10 @@ class Grovestamps(dict[Path, Treestamps]):
                         treestamps.loadf(path)
                 break
         else:
-            reason = f"load dict to {path} is not relative to any Grovetamps path: {tuple(self.keys())}"
+            reason = (
+                f"load dict to {path} is not relative to any "
+                f"Grovestamps path: {tuple(self._trees.keys())}"
+            )
             raise ValueError(reason)
 
     def load_map(self, grove: Mapping[Path, Mapping | str | bytes | Path]) -> None:
@@ -110,43 +131,27 @@ class Grovestamps(dict[Path, Treestamps]):
         path = Path(path)
         self.load(path.parent, path)
 
-    @overload
+    # Dump methods
+
     def dumpf(self) -> None:
-        pass
-
-    @deprecated("Grove.dumpf(noop_top_paths) is deprecated; use dumpf() instead.")
-    @overload
-    def dumpf(self, noop_top_paths: Collection[Path] | None) -> None:
-        pass
-
-    def dumpf(self, noop_top_paths: Collection[Path] | None = None) -> None:
         """Dump all treestamps."""
-        if noop_top_paths is not None:
-            warn(
-                (
-                    "Grove.dumpf(noop_top_paths) is deprecated; Treestamps now tracks changes "
-                    "internally. Stop calling set() on unchanged files instead."
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        for treestamps in self.values():
+        for treestamps in self._trees.values():
             treestamps.dumpf()
 
     def dumps(self) -> dict[Path, str]:
         """Dump all treestamps to dict as strings."""
-        return {top_path: treestamps.dumps() for top_path, treestamps in self.items()}
+        return {
+            top_path: treestamps.dumps() for top_path, treestamps in self._trees.items()
+        }
 
     def dump_dict(self) -> dict[Path, dict]:
         """Dump all treestamps to dict."""
         return {
-            top_path: treestamps.dump_dict() for top_path, treestamps in self.items()
+            top_path: treestamps.dump_dict()
+            for top_path, treestamps in self._trees.items()
         }
 
-    def dump(self) -> None:
-        """Alias for dumpf."""
-        warn("replaced by Grovestamps.dumpf()", PendingDeprecationWarning, stacklevel=2)
-        self.dumpf()
+    # Set methods
 
     def set(
         self,
@@ -157,13 +162,19 @@ class Grovestamps(dict[Path, Treestamps]):
         compact: bool = False,
     ) -> None:
         """Set timestamp in tree."""
-        self[top_path].set(path, mtime, compact=compact)
+        self._trees[top_path].set(path, mtime, compact=compact)
 
-    def compact(self, top_path: Path, path: Path):
+    def compact(self, top_path: Path, path: Path) -> None:
         """Compact timestamps in tree."""
-        self[top_path].compact(path)
+        self._trees[top_path].compact(path)
 
-    def compact_all(self):
-        """Compact all treestamps."""
-        for treestamps in self.values():
+    def compact_top_paths(self):
+        """Compact all timestamps in all trees."""
+        for treestamps in self._trees.values():
             treestamps.compact_top()
+
+    # Convenience Get methods
+
+    def get_timestamp(self, top_path: Path, path: Path | str) -> float | None:
+        """Get a timestamp from the tree keyed by top_path."""
+        return self._trees[top_path].get(path)

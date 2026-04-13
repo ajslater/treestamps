@@ -1,8 +1,7 @@
 """Dump Methods."""
 
 from contextlib import suppress
-from pathlib import Path
-from typing import TextIO, overload
+from typing import TYPE_CHECKING, TextIO, overload
 from warnings import warn
 
 from ruamel.yaml import StringIO
@@ -10,13 +9,12 @@ from typing_extensions import deprecated
 
 from treestamps.tree.init import TreestampsInit
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 class TreestampsDump(TreestampsInit):
     """Dump Methods."""
-
-    def _get_relative_path_str(self, abs_path: Path) -> str:
-        """Get the path string relative to the root_dir."""
-        return str(abs_path.relative_to(self.root_dir))
 
     def _get_dumpable_program_config(self) -> dict:
         """Set the config tag in the yaml to be dumped."""
@@ -33,6 +31,7 @@ class TreestampsDump(TreestampsInit):
 
     def _close_wal(self) -> None:
         """Close the write ahead log."""
+        # Avoids a depenedancy cycle with wal.py
         if self._wal is None:
             return
         with suppress(AttributeError):
@@ -44,7 +43,7 @@ class TreestampsDump(TreestampsInit):
         yaml = {}
         for abs_path, timestamp in self._timestamps.items():
             try:
-                rel_path_str = self._get_relative_path_str(abs_path)
+                rel_path_str = self.get_relative_path_str(abs_path)
                 yaml[rel_path_str] = timestamp
             except Exception as exc:
                 self._printer.warn(f"Serializing {abs_path}", exc)
@@ -72,11 +71,6 @@ class TreestampsDump(TreestampsInit):
         with StringIO() as buf:
             self._YAML.dump(yaml, buf)
             return buf.getvalue()
-
-    def _dumpf_init_wal(self) -> None:
-        """Write a new wal file to disk."""
-        yaml = self.dump_dict()
-        self._YAML.dump(yaml, self._wal_path)
 
     def _were_child_timestamps_consumed(self) -> bool:
         root_consumed_paths = frozenset({self._dump_path, self._wal_path})
