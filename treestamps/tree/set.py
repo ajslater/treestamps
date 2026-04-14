@@ -48,7 +48,9 @@ class TreestampsSet(TreestampsLoad):
 
         # Set timestamp
         self._timestamps[abs_path] = mtime
-        self._changed = True
+        if not abs_path.is_dir():
+            # Setting dirs doesn't count as a real change.
+            self._changed = True
 
         # compact
         if compact:
