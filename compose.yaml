@@ -1,8 +1,6 @@
 services:
   ci:
-    build:
-      context: .
-    image: ${CI_IMAGE}
+    image: ${CI_IMAGE_CI}
     container_name: ${CI_CONTAINER}
     volumes:
       - ./test-results:/app/test-results
