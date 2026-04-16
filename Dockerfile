@@ -10,10 +10,13 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# hadolint ignore=DL4006
+RUN curl -fsSL https://bun.com/install | bash
+
 WORKDIR /app
 
 COPY pyproject.toml uv.lock package.json package-lock.json ./
-RUN npm install
+RUN bun install
 
 COPY . .
 RUN mkdir -p test-results dist
