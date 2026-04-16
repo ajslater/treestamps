@@ -2,9 +2,8 @@ services:
   ci:
     build:
       context: .
-      target: treestamps-ci
-    image: treestamps-ci:ci
-    container_name: treestamps-ci
+    image: ${CI_IMAGE}
+    container_name: ${CI_CONTAINER}
     volumes:
       - ./test-results:/app/test-results
       - ./dist:/app/dist
