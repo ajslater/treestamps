@@ -77,16 +77,16 @@ jobs:
 
       - name: Lint
         if: steps.gate.outputs.dist_found != 'true'
-        run: docker exec $CI_CONTAINER make lint
+        run: docker exec "$CI_CONTAINER" make lint
 
       - name: Tests
         id: tests
         if: steps.gate.outputs.dist_found != 'true'
-        run: docker exec $CI_CONTAINER make test
+        run: docker exec "$CI_CONTAINER" make test
 
       - name: Build Distribution
         if: steps.gate.outputs.dist_found != 'true'
-        run: docker exec $CI_CONTAINER make build
+        run: docker exec "$CI_CONTAINER" make build
 
       - name: Upload Test Results
         id: upload-tests

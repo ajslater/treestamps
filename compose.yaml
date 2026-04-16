@@ -1,10 +1,12 @@
 services:
   ci:
-    image: ${CI_IMAGE_CI}
     container_name: ${CI_CONTAINER}
+    entrypoint:
+      - sleep
+      - infinity
+    environment:
+      - PYTHONUNBUFFERED=1
+    image: ${CI_IMAGE_CI}
     volumes:
       - ./test-results:/app/test-results
       - ./dist:/app/dist
-    environment:
-      - PYTHONUNBUFFERED=1
-    entrypoint: [sleep, infinity]
