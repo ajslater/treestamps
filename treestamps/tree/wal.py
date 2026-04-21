@@ -3,7 +3,6 @@
 from contextlib import suppress
 from pathlib import Path
 from types import MappingProxyType
-from typing import TextIO
 
 from ruamel.yaml import StringIO
 
@@ -17,35 +16,35 @@ class TreestampsWal(TreestampsInit):
 
     def _close_wal(self) -> None:
         """Close the write ahead log."""
-        if self._wal is None:
-            return
         with suppress(AttributeError):
-            self._wal.close()
+            self._wal.close()  # pyright: ignore[reportOptionalMemberAccess], #ty: ignore[unresolved-attribute]
         self._wal = None
 
     def _dumpf_init_wal(self) -> None:
         """Write current state to a new WAL file on disk."""
         yaml = self._serialize_timestamps()
         self._YAML.dump(yaml, self._wal_path)
+        self._consumed_paths.add(self._wal_path)
+        self._wal = self._wal_path.open("a", buffering=1, errors="backslashreplace")
+        self._wal.write(self._WAL_HEADER)
+
+    def _create_wal_entry(self, abs_path: Path, mtime: float) -> str:
+        """Create a yaml dicitionary as a list element entry line."""
+        path_str = self.get_relative_path_str(abs_path)
+
+        # Use YAML library to serialize the entry so all special characters
+        # are handled correctly (colons, #, [], {}, quotes, etc.)
+        with StringIO() as buf:
+            self._YAML.dump({path_str: mtime}, buf)
+            yaml_line = buf.getvalue().rstrip("\n")
+        return f"- {yaml_line}\n"
 
     def write_ahead_log(self, abs_path: Path, mtime: float) -> None:
         """Write an entry to the WAL."""
         if not self._wal:
-            # Init WAL
             self._dumpf_init_wal()
-            self._consumed_paths.add(self._wal_path)
-            self._wal: TextIO | None = self._wal_path.open("a")
-            _ = self._wal.write(self._WAL_HEADER)
-
-        # Use YAML library to serialize the entry so all special characters
-        # are handled correctly (colons, #, [], {}, quotes, etc.)
-        path_str = self.get_relative_path_str(abs_path)
-        with StringIO() as buf:
-            self._YAML.dump({path_str: mtime}, buf)
-            yaml_line = buf.getvalue().rstrip("\n")
-        wal_entry = f"- {yaml_line}\n"
-
-        _ = self._wal.write(wal_entry)
+        wal_entry = self._create_wal_entry(abs_path, mtime)
+        self._wal.write(wal_entry)  # pyright: ignore[reportOptionalMemberAccess], #ty: ignore[unresolved-attribute]
 
     def pop_wal_entries(self, yaml_dict: dict) -> MappingProxyType:
         """Pop off wal entries."""
