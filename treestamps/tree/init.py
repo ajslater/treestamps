@@ -95,16 +95,3 @@ class TreestampsInit(TreestampsBase):
             "symlinks": self._config.symlinks,
         }
         return yaml
-
-    def _serialize_timestamps(self) -> dict:
-        """Serialize timestamps and config to a dict."""
-        yaml = {}
-        for abs_path, timestamp in self._timestamps.items():
-            try:
-                rel_path_str = self.get_relative_path_str(abs_path)
-                yaml[rel_path_str] = timestamp
-            except Exception as exc:
-                self._printer.warn(f"Serializing {abs_path}", exc)
-        config_yaml = self._serialize_program_config()
-        yaml.update(config_yaml)
-        return yaml

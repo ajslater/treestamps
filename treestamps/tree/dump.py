@@ -15,6 +15,17 @@ if TYPE_CHECKING:
 class TreestampsDump(TreestampsWal):
     """Dump Methods."""
 
+    def _serialize_timestamps(self) -> dict:
+        """Serialize timestamps and config to a dict."""
+        yaml = self._serialize_program_config()
+        for abs_path, timestamp in self._timestamps.items():
+            try:
+                rel_path_str = self.get_relative_path_str(abs_path)
+                yaml[rel_path_str] = timestamp
+            except Exception as exc:
+                self._printer.warn(f"Serializing {abs_path}", exc)
+        return yaml
+
     def dump_dict(self) -> dict:
         """Serialize timestamps and dump to a dict."""
         # NOTE Does not cleanup old timestamps from disk
