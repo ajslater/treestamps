@@ -22,7 +22,7 @@ class TreestampsWal(TreestampsInit):
 
     def _dumpf_init_wal(self) -> None:
         """Write current state to a new WAL file on disk."""
-        yaml = self._serialize_timestamps()
+        yaml = self._serialize_program_config()
         self._YAML.dump(yaml, self._wal_path)
         self._consumed_paths.add(self._wal_path)
         self._wal = self._wal_path.open("a", buffering=1, errors="backslashreplace")

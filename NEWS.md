@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+## v3.0.3
+
+- Fix wal & timestamps file creation to have config at the top
+
 ## v3.0.2
 
 - Flush wal entries more consistently
