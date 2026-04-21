@@ -27,25 +27,26 @@ class TreestampsWal(TreestampsInit):
         """Write current state to a new WAL file on disk."""
         yaml = self._serialize_timestamps()
         self._YAML.dump(yaml, self._wal_path)
+        self._consumed_paths.add(self._wal_path)
+        self._wal: TextIO | None = self._wal_path.open("a")
+        self._wal.write(self._WAL_HEADER)
+
+    def _create_wal_entry(self, abs_path: Path, mtime: float) -> str:
+        path_str = self.get_relative_path_str(abs_path)
+
+        # Use YAML library to serialize the entry so all special characters
+        # are handled correctly (colons, #, [], {}, quotes, etc.)
+        with StringIO() as buf:
+            self._YAML.dump({path_str: mtime}, buf)
+            yaml_line = buf.getvalue().rstrip("\n")
+        return f"- {yaml_line}\n"
 
     def write_ahead_log(self, abs_path: Path, mtime: float) -> None:
         """Write an entry to the WAL."""
         if not self._wal:
-            # Init WAL
             self._dumpf_init_wal()
-            self._consumed_paths.add(self._wal_path)
-            self._wal: TextIO | None = self._wal_path.open("a")
-            _ = self._wal.write(self._WAL_HEADER)
-
-        # Use YAML library to serialize the entry so all special characters
-        # are handled correctly (colons, #, [], {}, quotes, etc.)
-        path_str = self.get_relative_path_str(abs_path)
-        with StringIO() as buf:
-            self._YAML.dump({path_str: mtime}, buf)
-            yaml_line = buf.getvalue().rstrip("\n")
-        wal_entry = f"- {yaml_line}\n"
-
-        _ = self._wal.write(wal_entry)
+        wal_entry = self._create_wal_entry(abs_path, mtime)
+        self._wal.write(wal_entry)  # pyright: ignore[reportOptionalMemberAccess], #ty: ignore[unresolved-attribute]
 
     def pop_wal_entries(self, yaml_dict: dict) -> MappingProxyType:
         """Pop off wal entries."""
