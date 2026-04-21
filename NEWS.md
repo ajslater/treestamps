@@ -1,5 +1,10 @@
 # 📰 Treestamps News
 
+## v3.0.2
+
+- Flush wal entries more consistently
+- Make wal more resistant to errors with filenames.
+
 ## v3.0.1
 
 - Setting timestamps on dirs doesn't count for determining change as to when to

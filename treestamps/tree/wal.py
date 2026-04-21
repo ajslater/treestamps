@@ -3,7 +3,6 @@
 from contextlib import suppress
 from pathlib import Path
 from types import MappingProxyType
-from typing import TextIO
 
 from ruamel.yaml import StringIO
 
@@ -17,10 +16,8 @@ class TreestampsWal(TreestampsInit):
 
     def _close_wal(self) -> None:
         """Close the write ahead log."""
-        if self._wal is None:
-            return
         with suppress(AttributeError):
-            self._wal.close()
+            self._wal.close()  # pyright: ignore[reportOptionalMemberAccess], #ty: ignore[unresolved-attribute]
         self._wal = None
 
     def _dumpf_init_wal(self) -> None:
@@ -28,10 +25,11 @@ class TreestampsWal(TreestampsInit):
         yaml = self._serialize_timestamps()
         self._YAML.dump(yaml, self._wal_path)
         self._consumed_paths.add(self._wal_path)
-        self._wal: TextIO | None = self._wal_path.open("a")
+        self._wal = self._wal_path.open("a", buffering=1, errors="backslashreplace")
         self._wal.write(self._WAL_HEADER)
 
     def _create_wal_entry(self, abs_path: Path, mtime: float) -> str:
+        """Create a yaml dicitionary as a list element entry line."""
         path_str = self.get_relative_path_str(abs_path)
 
         # Use YAML library to serialize the entry so all special characters
