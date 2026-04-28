@@ -1,7 +1,9 @@
 """Load methods."""
 
 import os
+import re
 from collections.abc import Mapping
+from fnmatch import translate
 from pathlib import Path
 
 from ruamel.yaml.comments import CommentedMap
@@ -13,11 +15,39 @@ from treestamps.tree.get import TreestampsGet
 class TreestampsLoad(TreestampsGet):
     """Load methods."""
 
+    # Lazily populated cache: (name_patterns, path_globs).
+    # Single-segment globs (the common case: ``*.tmp``, ``__pycache__``)
+    # compile down to a regex matched against ``path.name`` directly, which
+    # is much cheaper than ``Path.match()`` re-parsing the glob each call.
+    _ignore_compiled: tuple[tuple[re.Pattern[str], ...], tuple[str, ...]] | None = None
+
+    def _ignore_patterns(
+        self,
+    ) -> tuple[tuple[re.Pattern[str], ...], tuple[str, ...]]:
+        """Return the precompiled (name_patterns, path_globs) for ignore."""
+        if self._ignore_compiled is not None:
+            return self._ignore_compiled
+        name_patterns: list[re.Pattern[str]] = []
+        path_globs: list[str] = []
+        for glob in self._config.ignore:
+            if "/" in glob:
+                path_globs.append(glob)
+            else:
+                name_patterns.append(re.compile(translate(glob)))
+        compiled = (tuple(name_patterns), tuple(path_globs))
+        self._ignore_compiled = compiled
+        return compiled
+
     def _is_path_skipped(self, path: Path) -> bool:
         """Return if path is ignored or not allowed because symlink."""
-        return any(path.match(ignore_glob) for ignore_glob in self._config.ignore) or (
-            not self._config.symlinks and path.is_symlink()
-        )
+        name_patterns, path_globs = self._ignore_patterns()
+        if name_patterns:
+            name = path.name
+            if any(p.match(name) for p in name_patterns):
+                return True
+        if any(path.match(glob) for glob in path_globs):
+            return True
+        return not self._config.symlinks and path.is_symlink()
 
     @classmethod
     def _load_pop_and_compare_config(

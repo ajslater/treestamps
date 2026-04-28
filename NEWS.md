@@ -23,6 +23,10 @@
     - `set()` skips the WAL write and `_changed` flip when the supplied mtime is
       not newer than the cached one.
     - `dumpf()` writes via temp file + `os.replace` for atomic snapshots.
+    - Ignore globs are precompiled. Single-segment globs (the common case:
+      `*.tmp`, `__pycache__`) compile to a regex matched against
+      `path.name` directly, ~12× faster than the old per-call
+      `Path.match()` glob re-compilation.
 - Added `bin/bench-treestamps` benchmark script and
   `tests/unit/test_wal_quote.py` for the new WAL key quoter.
 

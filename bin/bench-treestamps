@@ -96,6 +96,27 @@ def bench(args: argparse.Namespace) -> None:
         lo, med, hi = time_block(cold_load, args.repeats)
         print(f"  min/med/max: {fmt_secs(lo)} / {fmt_secs(med)} / {fmt_secs(hi)}")
 
+        # --- Cold load with ignore globs ------------------------------------
+        # Stresses _is_path_skipped, which runs once per directory entry.
+        ignore_globs = ("*.tmp", "__pycache__", "*.pyc", ".git", "node_modules")
+        print(
+            f"\n[cold load + ignore] {len(ignore_globs)} ignore globs"
+            f"  ({args.repeats} runs)"
+        )
+
+        def cold_load_ignore() -> None:
+            Grovestamps(
+                GrovestampsConfig(
+                    PROGRAM_NAME,
+                    paths=(root,),
+                    ignore=ignore_globs,
+                    check_config=False,
+                )
+            )
+
+        lo, med, hi = time_block(cold_load_ignore, args.repeats)
+        print(f"  min/med/max: {fmt_secs(lo)} / {fmt_secs(med)} / {fmt_secs(hi)}")
+
         # --- set() throughput ------------------------------------------------
         # Fresh tree under root2 to isolate from cold-load measurements
         root2 = work / "tree2"
