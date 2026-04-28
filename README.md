@@ -158,8 +158,8 @@ Treestamps does not print progress, status, or success messages. Reporting
 what's happening to your users is your program's job.
 
 The only output Treestamps emits is a handful of error messages from `loadf()`,
-`loads()`, and the WAL load path when YAML or timestamp entries can't be
-parsed. Set `verbose=0` on your config to suppress those too.
+`loads()`, and the WAL load path when YAML or timestamp entries can't be parsed.
+Set `verbose=0` on your config to suppress those too.
 
 ### Reporting from return values
 
@@ -167,9 +167,9 @@ parsed. Set `verbose=0` on your config to suppress those too.
 `bool` so you can drive your own logging or progress UI:
 
 - `loadf()` / `loads()` — `True` on a successful load
-- `dumpf()` — `True` if a write to disk actually happened, `False` if there
-  was nothing new to commit (no `set()` since the last dump and no consumed
-  child timestamp files)
+- `dumpf()` — `True` if a write to disk actually happened, `False` if there was
+  nothing new to commit (no `set()` since the last dump and no consumed child
+  timestamp files)
 
 ```python
 if ts.dumpf():
@@ -314,8 +314,8 @@ Treestamps is ideal for anything that
 
 ### “Timestamps not persisting”
 
-- Ensure `dumpf()` is called (and check its return value — `False` means
-  nothing was written)
+- Ensure `dumpf()` is called (and check its return value — `False` means nothing
+  was written)
 - Check write permissions in root directories
 
 ### “Unexpected invalidation”

@@ -1,5 +1,35 @@
 # 📰 Treestamps News
 
+## v4.1.0
+
+- Big perf wins on the hot paths used by picopt and nudebomb. On a 10k-file
+  synthetic tree (`bin/bench-treestamps`):
+    - Cold load ~3.0× faster (1.40s → 459ms)
+    - `set()` ~4.1× faster (8.5k → 35k ops/s)
+    - WAL replay ~2.7× faster (1.71s → 627ms)
+    - `get()` unchanged (parent-of-root timestamps are loaded into the cache so
+      `get()` must still walk to the filesystem root).
+- Internals:
+    - Load path uses ruamel safe-mode YAML instead of round-trip.
+    - WAL line append uses a hand-formatter for the common case, falling back to
+      safe-mode YAML for keys with control characters.
+    - Child-tree walk uses `os.scandir` (cached d_type, no extra `stat` per
+      entry) instead of `Path.iterdir`.
+    - `_load_timestamp_entry` uses an exact-key dict lookup instead of the
+      ancestor-walking public `get()` (also fixes a latent merge bug where
+      parent-dir stamps could shadow newer file-level entries on load).
+    - `_get_absolute_path` fast-paths relative inputs (the load case) to skip an
+      `os.getcwd()` per entry.
+    - `set()` skips the WAL write and `_changed` flip when the supplied mtime is
+      not newer than the cached one.
+    - `dumpf()` writes via temp file + `os.replace` for atomic snapshots.
+    - Ignore globs are precompiled. Single-segment globs (the common case:
+      `*.tmp`, `__pycache__`) compile to a regex matched against `path.name`
+      directly, ~12× faster than the old per-call `Path.match()` glob
+      re-compilation.
+- Added `bin/bench-treestamps` benchmark script and
+  `tests/unit/test_wal_quote.py` for the new WAL key quoter.
+
 ## v4.0.0
 
 - Remove most printing and progress from treestamps. This is now the

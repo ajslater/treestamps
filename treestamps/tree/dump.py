@@ -76,7 +76,14 @@ class TreestampsDump(TreestampsWal):
         dumped = False
         if changed:
             yaml = self.dump_dict()
-            self._YAML.dump(yaml, self._dump_path)
+            # Atomic rename: write to a sibling temp file then os.replace, so
+            # a crash mid-dump can't truncate the existing snapshot.
+            tmp_path = self._dump_path.with_suffix(self._dump_path.suffix + ".tmp")
+            try:
+                self._YAML.dump(yaml, tmp_path)
+                tmp_path.replace(self._dump_path)
+            finally:
+                tmp_path.unlink(missing_ok=True)
             dumped = True
         else:
             self._close_wal()

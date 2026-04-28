@@ -20,7 +20,9 @@ class TreestampsGet(TreestampsDump):
         if not abs_path:
             return mtime
 
-        # Walk up the tree to get the maximum time.
+        # Walk up the tree to get the maximum time. We must walk past
+        # root_dir because _load_all_parent_timestamps may have loaded
+        # entries for ancestor directories from parent stamp files.
         while abs_path != abs_path.parent:
             mtime = self.max_none(mtime, self._timestamps.get(abs_path))
             abs_path = abs_path.parent
