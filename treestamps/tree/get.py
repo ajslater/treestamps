@@ -14,20 +14,17 @@ class TreestampsGet(TreestampsDump):
         return max((x for x in (a, b) if x is not None), default=None)
 
     def get(self, path: Path | str) -> float | None:
-        """Get the timestamps up the directory tree, bounded by root_dir."""
+        """Get the timestamps up the directory tree. All the way to root."""
         mtime: float | None = None
         abs_path = self._get_absolute_path(self.root_dir, path)
         if not abs_path:
             return mtime
 
-        # Walk up the tree to get the maximum time. Stop after checking
-        # root_dir itself — anything above can't be in self._timestamps.
-        root_dir = self.root_dir
-        while True:
+        # Walk up the tree to get the maximum time. We must walk past
+        # root_dir because _load_all_parent_timestamps may have loaded
+        # entries for ancestor directories from parent stamp files.
+        while abs_path != abs_path.parent:
             mtime = self.max_none(mtime, self._timestamps.get(abs_path))
-            if abs_path == root_dir:
-                return mtime
-            parent = abs_path.parent
-            if parent == abs_path:
-                return mtime
-            abs_path = parent
+            abs_path = abs_path.parent
+
+        return mtime
