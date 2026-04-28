@@ -1,14 +1,22 @@
 # 📰 Treestamps News
 
-## v4.1.0
+## v4.0.0
 
-- Big perf wins on the hot paths used by picopt and nudebomb. On a 10k-file
-  synthetic tree (`bin/bench-treestamps`):
-    - Cold load ~3.0× faster (1.40s → 459ms)
-    - `set()` ~4.1× faster (8.5k → 35k ops/s)
-    - WAL replay ~2.7× faster (1.71s → 627ms)
-    - `get()` unchanged (parent-of-root timestamps are loaded into the cache so
-      `get()` must still walk to the filesystem root).
+- API
+    - Remove most printing and progress from treestamps. This is now the
+      responsibility of treestamps users. Verbosity quiets the few remaining
+      load prints on errors.
+    - loadf(), loads(), and dumpf() return booleans to help with any logging
+      users might want to do.
+    - Remove deprecated load() & dump() methods entirely.
+- Performance
+    - Big perf wins on the hot paths used by picopt and nudebomb. On a 10k-file
+      synthetic tree (`bin/bench-treestamps`):
+        - Cold load \~3.0× faster (1.40s → 459ms)
+        - `set()` \~4.1× faster (8.5k → 35k ops/s)
+        - WAL replay \~2.7× faster (1.71s → 627ms)
+        - `get()` unchanged (parent-of-root timestamps are loaded into the cache
+          so `get()` must still walk to the filesystem root).
 - Internals:
     - Load path uses ruamel safe-mode YAML instead of round-trip.
     - WAL line append uses a hand-formatter for the common case, falling back to
@@ -25,19 +33,10 @@
     - `dumpf()` writes via temp file + `os.replace` for atomic snapshots.
     - Ignore globs are precompiled. Single-segment globs (the common case:
       `*.tmp`, `__pycache__`) compile to a regex matched against `path.name`
-      directly, ~12× faster than the old per-call `Path.match()` glob
+      directly, \~12× faster than the old per-call `Path.match()` glob
       re-compilation.
 - Added `bin/bench-treestamps` benchmark script and
   `tests/unit/test_wal_quote.py` for the new WAL key quoter.
-
-## v4.0.0
-
-- Remove most printing and progress from treestamps. This is now the
-  responsibility of treestamps users. Verbosity quiets the few remaining load
-  prints on errors.
-- loadf(), loads(), and dumpf() return booleans to help with any logging users
-  might want to do.
-- Remove deprecated load() & dump() methods entirely.
 
 ## v3.0.3
 
