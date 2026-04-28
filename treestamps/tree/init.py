@@ -33,13 +33,13 @@ class TreestampsInit(TreestampsBase):
         # Do not normalize with resolve() to keep symlink paths.
         path = Path(path)
 
-        abs_path = path.absolute()
-        if abs_path.is_relative_to(root_dir):
-            # absolute path under the root, return the absolute path
-            return abs_path
-
+        # Fast path: relative inputs are anchored to root_dir, not cwd.
+        # This is the common case for entries loaded from a stamp file.
         if not path.is_absolute():
             return (root_dir / path).absolute()
+
+        if path.is_relative_to(root_dir):
+            return path
 
         if root_dir.is_relative_to(path):
             # path is above the root dir. use the root dir.
@@ -55,6 +55,16 @@ class TreestampsInit(TreestampsBase):
         self._YAML.indent(offset=2)  # Conform to Prettier
         self._YAML.representer.add_representer(frozenset, represent_frozenset)
         self._YAML.representer.add_representer(Mapping, represent_mapping)
+        # Fast safe-mode loader for the hot read path (uses libyaml when
+        # available). Returns plain dict/list/set — the rest of the code
+        # already handles those via Mapping/set isinstance checks.
+        self._LOAD_YAML: YAML = YAML(typ="safe")
+        self._LOAD_YAML.allow_duplicate_keys = True
+        # Fast safe-mode dumper for per-set WAL-line serialization. Only ever
+        # asked to dump {str: float}, so no custom representers needed.
+        self._WAL_LINE_YAML: YAML = YAML(typ="safe")
+        self._WAL_LINE_YAML.default_flow_style = False
+        self._WAL_LINE_YAML.width = 1 << 30  # never wrap a single entry
 
     def __init__(self, config: TreestampsConfig) -> None:
         """Initialize instance variables."""

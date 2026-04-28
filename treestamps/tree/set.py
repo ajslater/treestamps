@@ -41,7 +41,9 @@ class TreestampsSet(TreestampsLoad):
         old_mtime = self._timestamps.get(abs_path)
         if mtime is None:
             mtime = datetime.now(tz=timezone.utc).timestamp()
-        if old_mtime and old_mtime > mtime:
+        if old_mtime is not None and old_mtime >= mtime:
+            # No-op: already at or above the requested mtime. Skip both the
+            # _changed flag flip and the WAL write.
             return None
 
         # Set timestamp
