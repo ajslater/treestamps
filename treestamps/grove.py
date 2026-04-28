@@ -10,7 +10,6 @@ from typing_extensions import override
 
 from treestamps.base import TreestampsBase
 from treestamps.config import CommonConfig
-from treestamps.printer import Printer
 from treestamps.tree import Treestamps
 from treestamps.tree.config import TreestampsConfig
 
@@ -57,7 +56,6 @@ class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
     def __init__(self, config: GrovestampsConfig) -> None:
         """Create a mapping of Treestamps keyed with paths."""
         self._config: GrovestampsConfig = config
-        self._printer: Printer = Printer(config.verbose)
         self._trees: dict[Path, Treestamps] = {}
 
         treestamps_config_dict = self._config.get_treestamps_config_dict()
@@ -69,7 +67,7 @@ class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
             tree_config = TreestampsConfig(
                 **treestamps_config_dict, path=Path(top_path)
             )
-            ts = Treestamps(tree_config, self._printer)
+            ts = Treestamps(tree_config)
             ts.loadf_tree()
             self._trees[root_dir] = ts
 

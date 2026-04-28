@@ -54,5 +54,6 @@ class TreestampsWal(TreestampsInit):
             try:
                 entries.update(wal_entry)
             except Exception as exc:
-                self._printer.warn(f"loading WAL entry: {wal_entry}", exc)
+                if self._config.verbose:
+                    print(f"Error loading WAL entry: {wal_entry} - {exc}")  # noqa: T201
         return MappingProxyType(entries)

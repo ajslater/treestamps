@@ -8,7 +8,6 @@ from ruamel.yaml import YAML, MappingNode, RoundTripRepresenter
 from ruamel.yaml.comments import CommentedOrderedMap, CommentedSet
 
 from treestamps.base import TreestampsBase
-from treestamps.printer import Printer
 from treestamps.tree.config import TreestampsConfig
 
 
@@ -47,8 +46,8 @@ class TreestampsInit(TreestampsBase):
             return root_dir
 
         # path is outside our jurisdiction.
-        self._printer.skip(f"Timestamp outside {root_dir}'s tree, ignored", path)
-        return None
+        reason = f"Timestamp for {path} outside {root_dir}'s tree, ignored"
+        raise ValueError(reason)
 
     def _config_yaml(self) -> None:
         self._YAML: YAML = YAML(typ="rt")
@@ -57,9 +56,7 @@ class TreestampsInit(TreestampsBase):
         self._YAML.representer.add_representer(frozenset, represent_frozenset)
         self._YAML.representer.add_representer(Mapping, represent_mapping)
 
-    def __init__(
-        self, config: TreestampsConfig, printer: Printer | None = None
-    ) -> None:
+    def __init__(self, config: TreestampsConfig) -> None:
         """Initialize instance variables."""
         # config
         self._config: TreestampsConfig = config
@@ -77,7 +74,6 @@ class TreestampsInit(TreestampsBase):
         self._consumed_paths: set[Path] = set()
         self._timestamps: dict[Path, float] = {}
         self._changed: bool = False
-        self._printer: Printer = printer or Printer(config.verbose)
 
     def get_relative_path_str(self, abs_path: Path) -> str:
         """Get the path string relative to the root_dir."""

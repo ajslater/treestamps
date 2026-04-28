@@ -2,7 +2,6 @@
 
 from collections.abc import Mapping
 from pathlib import Path
-from warnings import warn
 
 from ruamel.yaml.comments import CommentedMap
 
@@ -52,7 +51,8 @@ class TreestampsLoad(TreestampsGet):
                 if old_ts is None or ts > old_ts:
                     self._timestamps[abs_path] = ts
         except Exception as exc:
-            self._printer.warn(f"Invalid timestamp for {path_str}: {ts}", exc)
+            if self._config.verbose:
+                print(f"Invalid timestamp for {path_str}: {ts}", exc)  # noqa: T201
 
     def load_map(self, timestamps_root: Path, yaml: Mapping) -> None:
         """Load timestamps from a dict."""
@@ -73,25 +73,20 @@ class TreestampsLoad(TreestampsGet):
         for path_str, ts in entries.items():
             self._load_timestamp_entry(timestamps_root, path_str, ts)
 
-    def loads(self, timestamps_root: Path, yaml: str | bytes) -> None:
+    def loads(self, timestamps_root: Path, yaml: str | bytes) -> bool:
         """Load timestamps from a string."""
-        try:
-            if isinstance(yaml, bytes):
-                yaml = yaml.decode("utf-8")
-            yaml_dict = self._YAML.load(yaml)
-            self.load_map(timestamps_root, yaml_dict)
-        except Exception as exc:
-            self._printer.error("parsing timestamps yaml string", exc)
+        if isinstance(yaml, bytes):
+            yaml = yaml.decode("utf-8")
+        yaml_dict = self._YAML.load(yaml)
+        self.load_map(timestamps_root, yaml_dict)
+        return True
 
-    def loadf(self, timestamps_path: Path | str) -> None:
+    def loadf(self, timestamps_path: Path | str) -> bool:
         """Load timestamps from a file."""
-        try:
-            timestamps_path = Path(timestamps_path)
-            yaml_dict = self._YAML.load(timestamps_path)
-            self.load_map(timestamps_path.parent, yaml_dict)
-            self._printer.load("Read timestamps from", timestamps_path)
-        except Exception as exc:
-            self._printer.error(f"Parsing timestamps file: {timestamps_path}", exc)
+        timestamps_path = Path(timestamps_path)
+        yaml_dict = self._YAML.load(timestamps_path)
+        self.load_map(timestamps_path.parent, yaml_dict)
+        return True
 
     def _consume_child_timestamps(self, path: Path) -> None:
         """Consume a child timestamp and add its values to our root."""
@@ -102,7 +97,8 @@ class TreestampsLoad(TreestampsGet):
             if path != self._dump_path:
                 self._consumed_paths.add(path)
         except Exception as exc:
-            self._printer.warn(f"Reading child timestamps from {path}", exc)
+            if self._config.verbose:
+                print(f"Error reading child timestamps from {path}", exc)  # noqa: T201
 
     def _consume_all_child_timestamps(self, path: Path) -> None:
         """Recursively consume all timestamps and wal files."""
@@ -114,29 +110,33 @@ class TreestampsLoad(TreestampsGet):
             for dir_entry in path.iterdir():
                 self._consume_all_child_timestamps(dir_entry)
         except Exception as exc:
-            self._printer.warn("Reading all child timestamps", exc)
+            if self._config.verbose:
+                print("Error reading child timestamps", exc)  # noqa: T201
 
     def _load_parent_timestamps(self, path: Path) -> None:
+        """Load a parent timestamp."""
+        try:
+            if path.is_file():
+                self.loadf(path)
+        except Exception as exc:
+            if self._config.verbose:
+                print(f"Error reading parent timestamps from {path}", exc)  # noqa: T201
+
+    def _load_all_parent_timestamps(self, path: Path) -> None:
         """Recursively load timestamps from all parents."""
-        if path.parent == path.parent.parent or self._is_path_skipped(path):
-            return
-        parent = path.parent
-        timestamp_paths = (parent / self._filename, parent / self._wal_filename)
-        for timestamp_path in timestamp_paths:
-            if timestamp_path.is_file():
-                self.loadf(timestamp_path)
-        self._load_parent_timestamps(parent)
+        try:
+            if path.parent == path.parent.parent or self._is_path_skipped(path):
+                return
+            parent = path.parent
+            timestamp_paths = (parent / self._filename, parent / self._wal_filename)
+            for timestamp_path in timestamp_paths:
+                self._load_parent_timestamps(timestamp_path)
+            self._load_all_parent_timestamps(parent)
+        except Exception as exc:
+            if self._config.verbose:
+                print("Error loading parent timestamps", exc)  # noqa: T201
 
     def loadf_tree(self) -> None:
         """Load all timestamp files up and down this tree."""
-        self._load_parent_timestamps(self.root_dir)
+        self._load_all_parent_timestamps(self.root_dir)
         self._consume_all_child_timestamps(self.root_dir)
-
-    def load(self) -> None:
-        """Alias for Load all timestamps."""
-        warn(
-            "Replaced by Treestamps.loadf_tree()",
-            PendingDeprecationWarning,
-            stacklevel=2,
-        )
-        self.loadf_tree()

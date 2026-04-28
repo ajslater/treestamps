@@ -1,5 +1,14 @@
 # 📰 Treestamps News
 
+## v4.0.0
+
+- Remove most printing and progress from treestamps. This is now the
+  responsibility of treestamps users. Verbosity quiets the few remaining load
+  prints on errors.
+- loadf(), loads(), and dumpf() return booleans to help with any logging users
+  might want to do.
+- Remove deprecated load() & dump() methods entirely.
+
 ## v3.0.3
 
 - Fix wal & timestamps file creation to have config at the top

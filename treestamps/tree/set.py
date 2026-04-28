@@ -9,13 +9,13 @@ from treestamps.tree.load import TreestampsLoad
 class TreestampsSet(TreestampsLoad):
     """Set Methods."""
 
-    def _compact_timestamps_below(self, abs_root_path: Path) -> None:
+    def _compact_timestamps_below(self, abs_root_path: Path) -> bool:
         """Compact the timestamp cache below a particular path."""
         if not abs_root_path.is_dir():
-            return
+            return False
         root_timestamp = self._timestamps.get(abs_root_path)
         if root_timestamp is None:
-            return
+            return False
         delete_paths = {
             abs_path
             for abs_path, timestamp in self._timestamps.items()
@@ -23,9 +23,7 @@ class TreestampsSet(TreestampsLoad):
         }
         for del_path in delete_paths:
             del self._timestamps[del_path]
-        self._printer.compact(
-            "Compacted timestamps under", abs_root_path, root_timestamp
-        )
+        return True
 
     def set(
         self,
