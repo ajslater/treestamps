@@ -1,10 +1,9 @@
 """Dump Methods."""
 
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING
 from warnings import warn
 
 from ruamel.yaml import StringIO
-from typing_extensions import deprecated
 
 from treestamps.tree.wal import TreestampsWal
 
@@ -19,11 +18,8 @@ class TreestampsDump(TreestampsWal):
         """Serialize timestamps and config to a dict."""
         yaml = self._serialize_program_config()
         for abs_path, timestamp in self._timestamps.items():
-            try:
-                rel_path_str = self.get_relative_path_str(abs_path)
-                yaml[rel_path_str] = timestamp
-            except Exception as exc:
-                self._printer.warn(f"Serializing {abs_path}", exc)
+            rel_path_str = self.get_relative_path_str(abs_path)
+            yaml[rel_path_str] = timestamp
         return yaml
 
     def dump_dict(self) -> dict:
@@ -39,10 +35,7 @@ class TreestampsDump(TreestampsWal):
             return
         self._consumed_paths.discard(self._dump_path)
         for path in self._consumed_paths:
-            try:
-                path.unlink(missing_ok=True)
-            except Exception as exc:
-                self._printer.warn(f"Removing old timestamp {path}", exc)
+            path.unlink(missing_ok=True)
         self._consumed_paths: set[Path] = set()
 
     def dumps(self) -> str:
@@ -58,16 +51,7 @@ class TreestampsDump(TreestampsWal):
         child_consumed_paths = frozenset(self._consumed_paths - root_consumed_paths)
         return bool(child_consumed_paths)
 
-    @overload
-    def dumpf(self) -> None:
-        pass
-
-    @deprecated("Treestamps.dumpf(noop) is deprecated, Use dumpf() instead")
-    @overload
-    def dumpf(self, *, noop: bool) -> None:
-        pass
-
-    def dumpf(self, *, noop: bool | None = None) -> None:
+    def dumpf(self, *, noop: bool | None = None) -> bool:
         """
         Serialize timestamps and dump to file.
 
@@ -89,17 +73,20 @@ class TreestampsDump(TreestampsWal):
             or not self._dump_path.exists()
             or self._were_child_timestamps_consumed()
         )
+        dumped = False
         if changed:
             yaml = self.dump_dict()
-            self._YAML.dump(yaml, self._dump_path)
-            self._printer.save("Saved timestamps for", self.root_dir)
+            # Atomic rename: write to a sibling temp file then os.replace, so
+            # a crash mid-dump can't truncate the existing snapshot.
+            tmp_path = self._dump_path.with_suffix(self._dump_path.suffix + ".tmp")
+            try:
+                self._YAML.dump(yaml, tmp_path)
+                tmp_path.replace(self._dump_path)
+            finally:
+                tmp_path.unlink(missing_ok=True)
+            dumped = True
         else:
             self._close_wal()
-            self._printer.skip("updating timestamps for", self.root_dir)
         self.cleanup_old_timestamps()
         self._changed = False
-
-    def dump(self) -> None:
-        """Compatibility alias for dumpf()."""
-        warn("Replaced by Treestamps.dumpf()", PendingDeprecationWarning, stacklevel=2)
-        self.dumpf()
+        return dumped

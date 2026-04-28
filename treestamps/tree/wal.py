@@ -1,5 +1,6 @@
 """Write-Ahead Log operations."""
 
+import re
 from contextlib import suppress
 from pathlib import Path
 from types import MappingProxyType
@@ -7,6 +8,81 @@ from types import MappingProxyType
 from ruamel.yaml import StringIO
 
 from treestamps.tree.init import TreestampsInit
+
+# Code points below this are control characters; not safe in single-quoted YAML.
+_ASCII_PRINTABLE_MIN: int = 0x20
+
+# Keys matching this regex are syntactically valid as bare YAML plain scalars
+# in a `key: value` mapping line: ASCII letters/digits, path chars, and a few
+# common punctuation characters that have no YAML structural meaning.
+_PLAIN_SCALAR_RE = re.compile(r"^[A-Za-z0-9_./+\-=()][A-Za-z0-9_./+\-=() ]*$")
+# Plain-looking strings YAML 1.1 reads back as something other than a string.
+_PLAIN_RESERVED: frozenset[str] = frozenset(
+    {
+        "",
+        "~",
+        "null",
+        "Null",
+        "NULL",
+        "true",
+        "True",
+        "TRUE",
+        "false",
+        "False",
+        "FALSE",
+        "yes",
+        "Yes",
+        "YES",
+        "no",
+        "No",
+        "NO",
+        "on",
+        "On",
+        "ON",
+        "off",
+        "Off",
+        "OFF",
+    }
+)
+# Patterns that YAML 1.1 safe_load resolves to non-string scalars (int, float,
+# date, timestamp). Keys matching any of these must be quoted to round-trip
+# as strings. Underscores act as digit separators in YAML 1.1 numeric scalars.
+_NON_STRING_SCALAR_PATTERNS = (
+    r"[+\-]?[0-9][0-9_]*",  # int (possibly signed, with _ separators)
+    r"0[xX][0-9a-fA-F_]+",  # hex int
+    r"0[oO][0-7_]+",  # octal int
+    r"0[bB][01_]+",  # binary int
+    r"[+\-]?(\d+\.\d*|\.\d+)([eE][+\-]?\d+)?",  # float
+    r"[+\-]?\d+[eE][+\-]?\d+",  # scientific float
+    r"[+\-]?\.(inf|Inf|INF|nan|NaN|NAN)",  # +/- infinity, NaN
+    r"\d{4}-\d{1,2}-\d{1,2}([Tt ].*)?",  # date / timestamp
+)
+_NON_STRING_SCALAR_RE = re.compile("^(" + "|".join(_NON_STRING_SCALAR_PATTERNS) + ")$")
+
+
+def _quote_wal_key(key: str) -> str | None:
+    """
+    Return a YAML-mapping-key form of ``key`` for a WAL line.
+
+    Returns ``None`` if the key contains control characters or newlines —
+    callers should fall back to a full YAML dump in that case.
+    """
+    # Plain scalar fast path (the common case for filesystem paths).
+    if (
+        key
+        and key not in _PLAIN_RESERVED
+        and _PLAIN_SCALAR_RE.match(key)
+        and not _NON_STRING_SCALAR_RE.match(key)
+        and not key.endswith(" ")
+        and ": " not in key
+        and " #" not in key
+    ):
+        return key
+    # Single-quoted style: safe for any printable text. Single quotes inside
+    # the value are escaped by doubling them; no other escapes apply.
+    if "\n" in key or any(ord(c) < _ASCII_PRINTABLE_MIN for c in key):
+        return None
+    return "'" + key.replace("'", "''") + "'"
 
 
 class TreestampsWal(TreestampsInit):
@@ -32,10 +108,14 @@ class TreestampsWal(TreestampsInit):
         """Create a yaml dicitionary as a list element entry line."""
         path_str = self.get_relative_path_str(abs_path)
 
-        # Use YAML library to serialize the entry so all special characters
-        # are handled correctly (colons, #, [], {}, quotes, etc.)
+        # Hot path: hand-format the key/value mapping to skip the per-call
+        # YAML emitter setup. Only fall back to ruamel for keys with control
+        # characters / newlines, which file paths essentially never contain.
+        quoted = _quote_wal_key(path_str)
+        if quoted is not None:
+            return f"- {quoted}: {mtime}\n"
         with StringIO() as buf:
-            self._YAML.dump({path_str: mtime}, buf)
+            self._WAL_LINE_YAML.dump({path_str: mtime}, buf)
             yaml_line = buf.getvalue().rstrip("\n")
         return f"- {yaml_line}\n"
 
@@ -54,5 +134,6 @@ class TreestampsWal(TreestampsInit):
             try:
                 entries.update(wal_entry)
             except Exception as exc:
-                self._printer.warn(f"loading WAL entry: {wal_entry}", exc)
+                if self._config.verbose:
+                    print(f"Error loading WAL entry: {wal_entry} - {exc}")  # noqa: T201
         return MappingProxyType(entries)

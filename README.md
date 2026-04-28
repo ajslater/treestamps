@@ -19,6 +19,7 @@ Treestamps gives you:
 - Automatic invalidation when config changes
 - No database dependency (just YAML files)
 - Safe writes via WAL (write-ahead log)
+- Quiet by default — your program owns user-facing output
 
 ## 🧠 Mental model
 
@@ -58,7 +59,7 @@ if ts.get("img001.jpg") is None:
     process("img001.jpg")
     ts.set("img001.jpg")
 
-gs.dump()
+gs.dumpf()
 ```
 
 ### Skip unchanged files
@@ -131,14 +132,14 @@ Treestamps uses two files per root directory:
 2. Replay `.wal.yaml` (if exists)
 3. Serve reads/writes in memory
 4. Append writes to WAL
-5. On `dump()`:
+5. On `dumpf()`:
     - Merge everything
     - Write `.yaml`
     - Delete WAL
 
-## 💾 When to call `dump()`
+## 💾 When to call `dumpf()`
 
-`dump()` commits the in memory treestamps data to disk.
+`dumpf()` commits the in memory treestamps data to disk.
 
 ### Call it when
 
@@ -150,6 +151,30 @@ Treestamps uses two files per root directory:
 
 - After every file (too slow)
 - If the run failed (you may want to discard progress)
+
+## 🤫 Output and progress
+
+Treestamps does not print progress, status, or success messages. Reporting
+what's happening to your users is your program's job.
+
+The only output Treestamps emits is a handful of error messages from `loadf()`,
+`loads()`, and the WAL load path when YAML or timestamp entries can't be parsed.
+Set `verbose=0` on your config to suppress those too.
+
+### Reporting from return values
+
+`Treestamps.loadf()`, `Treestamps.loads()`, and `Treestamps.dumpf()` return a
+`bool` so you can drive your own logging or progress UI:
+
+- `loadf()` / `loads()` — `True` on a successful load
+- `dumpf()` — `True` if a write to disk actually happened, `False` if there was
+  nothing new to commit (no `set()` since the last dump and no consumed child
+  timestamp files)
+
+```python
+if ts.dumpf():
+    print(f"Saved timestamps for {top_path}")
+```
 
 ## 🧨 Error handling
 
@@ -184,6 +209,7 @@ GrovestampsConfig(
     program_name: str,
     paths: Iterable[str | Path],
     program_config: dict = None,
+    verbose: int = 0,
     wal: bool = True,
 )
 ```
@@ -208,6 +234,11 @@ GrovestampsConfig(
 - Arbitrary dict
 - Included in hash/signature
 - Changing it invalidates all timestamps
+
+#### `verbose`
+
+- `0` (default): silent — no output at all
+- `>0`: print error messages from load and WAL load failures
 
 #### `wal` (if supported)
 
@@ -279,11 +310,12 @@ Treestamps is ideal for anything that
 
 - Did `program_config` change?
 - Did `program_name` change?
-- Are you calling `dump()`?
+- Are you calling `dumpf()`?
 
 ### “Timestamps not persisting”
 
-- Ensure `dump()` is called
+- Ensure `dumpf()` is called (and check its return value — `False` means nothing
+  was written)
 - Check write permissions in root directories
 
 ### “Unexpected invalidation”
@@ -293,7 +325,7 @@ Treestamps is ideal for anything that
 
 ### “WAL file keeps growing”
 
-- You’re not calling `dump()`
+- You’re not calling `dumpf()`
 - WAL is expected to grow until committed
 
 ### “Files moved or renamed”
