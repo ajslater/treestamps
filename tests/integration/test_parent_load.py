@@ -53,6 +53,9 @@ class TestParentLoad(BaseTestDir):
         # Parent yaml lists the parent dir itself as the only entry.
         ts = 1_700_000_000.0
         self._write_parent_yaml(self.TMP_ROOT, str(self.TMP_ROOT), ts)
+        parent_yaml = self.TMP_ROOT / TS_FN
+        parent_mtime_before = parent_yaml.stat().st_mtime
+        parent_bytes_before = parent_yaml.read_bytes()
 
         config = GrovestampsConfig(
             program_name=PROGRAM_NAME,
@@ -72,3 +75,10 @@ class TestParentLoad(BaseTestDir):
         # Child yaml should now exist with a single root-relative entry.
         child_yaml = child_dir / TS_FN
         assert child_yaml.exists()
+
+        # The parent yaml MUST NOT have been written or deleted —
+        # treestamps may load above-root entries but only writes to its
+        # own root_dir's stamp file.
+        assert parent_yaml.exists()
+        assert parent_yaml.stat().st_mtime == parent_mtime_before
+        assert parent_yaml.read_bytes() == parent_bytes_before
