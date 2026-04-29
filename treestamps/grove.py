@@ -131,10 +131,13 @@ class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
 
     # Dump methods
 
-    def dumpf(self) -> None:
+    def dumpf(self) -> tuple[Path, ...]:
         """Dump all treestamps."""
-        for treestamps in self._trees.values():
-            treestamps.dumpf()
+        dumped = []
+        for path, treestamps in self._trees.items():
+            if treestamps.dumpf():
+                dumped.append(path)
+        return tuple(sorted(dumped))
 
     def dumps(self) -> dict[Path, str]:
         """Dump all treestamps to dict as strings."""

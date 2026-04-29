@@ -1,5 +1,9 @@
 # 📰 Treestamps News
 
+## v4.0.1
+
+- Grove.dumpf returns a tuple of all paths which dumped treestamps.
+
 ## v4.0.0
 
 - API
