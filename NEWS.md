@@ -2,11 +2,11 @@
 
 ## v4.0.2
 
-- Fix `dumpf` crash when a parent-of-root yaml contains an entry pointing
-  at the parent directory itself. Such entries are now clamped to
-  `root_dir` on load (matching the v3 semantic: a timestamp on an
-  ancestor of the tree applies to the tree as a whole), instead of being
-  stored above-root and crashing `_serialize_timestamps`.
+- Fix `dumpf` crash when a parent-of-root yaml contains an entry pointing at the
+  parent directory itself. Such entries are now clamped to `root_dir` on load
+  (matching the v3 semantic: a timestamp on an ancestor of the tree applies to
+  the tree as a whole), instead of being stored above-root and crashing
+  `_serialize_timestamps`.
 
 ## v4.0.1
 

@@ -30,9 +30,7 @@ class TestParentLoad(BaseTestDir):
         # Custom representer for frozenset (matches treestamps's own dump).
         from ruamel.yaml import SafeRepresenter
 
-        yaml_obj.representer.add_representer(
-            frozenset, SafeRepresenter.represent_set
-        )
+        yaml_obj.representer.add_representer(frozenset, SafeRepresenter.represent_set)
         yaml_obj.dump(yaml, parent_dir / TS_FN)
 
     def test_parent_yaml_entry_above_root_dumpf(self) -> None:
