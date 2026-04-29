@@ -77,7 +77,18 @@ class TreestampsLoad(TreestampsGet):
     ) -> None:
         """Load a single timestamp entry into the cache."""
         try:
-            if abs_path := self._get_absolute_path(timestamps_root, path_str):
+            # Anchor relative entries to the yaml's source dir, then validate
+            # against this tree's ``root_dir``. Using ``timestamps_root`` for
+            # validation lets above-root absolute entries from a parent yaml
+            # leak in (``path == timestamps_root`` is trivially relative to
+            # itself), which then crashes ``dumpf`` because the entry can't
+            # be made relative to ``self.root_dir``. Clamping to
+            # ``self.root_dir`` is the correct semantic: a timestamp set on
+            # an ancestor of the tree applies to the tree as a whole.
+            path = Path(path_str)
+            if not path.is_absolute():
+                path = (timestamps_root / path).absolute()
+            if abs_path := self._get_absolute_path(self.root_dir, path):
                 # Compare against an exact-key entry only — public get() walks
                 # ancestors which is the wrong semantic at load time.
                 old_ts = self._timestamps.get(abs_path)
