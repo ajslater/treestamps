@@ -60,15 +60,9 @@ _NON_STRING_SCALAR_PATTERNS = (
 _NON_STRING_SCALAR_RE = re.compile("^(" + "|".join(_NON_STRING_SCALAR_PATTERNS) + ")$")
 
 
-def _quote_wal_key(key: str) -> str | None:
-    """
-    Return a YAML-mapping-key form of ``key`` for a WAL line.
-
-    Returns ``None`` if the key contains control characters or newlines —
-    callers should fall back to a full YAML dump in that case.
-    """
-    # Plain scalar fast path (the common case for filesystem paths).
-    if (
+def _is_plain_scalar_key(key: str) -> bool:
+    """Whether ``key`` is safe to emit as a bare YAML plain scalar mapping key."""
+    return bool(
         key
         and key not in _PLAIN_RESERVED
         and _PLAIN_SCALAR_RE.match(key)
@@ -76,7 +70,17 @@ def _quote_wal_key(key: str) -> str | None:
         and not key.endswith(" ")
         and ": " not in key
         and " #" not in key
-    ):
+    )
+
+
+def _quote_wal_key(key: str) -> str | None:
+    """
+    Return a YAML-mapping-key form of ``key`` for a WAL line.
+
+    Returns ``None`` if the key contains control characters or newlines —
+    callers should fall back to a full YAML dump in that case.
+    """
+    if _is_plain_scalar_key(key):
         return key
     # Single-quoted style: safe for any printable text. Single quotes inside
     # the value are escaped by doubling them; no other escapes apply.
