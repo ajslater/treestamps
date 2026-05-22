@@ -23,7 +23,7 @@ class TestCycle(BaseTestDir):
     ) -> dict[Path, float]:
         gs = Grovestamps(config)
 
-        times = {}
+        times: dict[Path, float] = {}
         for subpath in subpaths:
             ts = gs.get(subpath)
             if not ts:
@@ -39,7 +39,9 @@ class TestCycle(BaseTestDir):
 
             for name in names:
                 path = subpath / name
-                times[path] = ts.set(path)
+                mtime = ts.set(path)
+                assert mtime is not None
+                times[path] = mtime
 
         gs.dumpf()
         return times
