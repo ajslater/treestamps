@@ -51,6 +51,7 @@ __snapshots__
 *.py[cod]
 *.pyc
 *.sage.py
+*.sh
 *.so
 *.spec
 *~

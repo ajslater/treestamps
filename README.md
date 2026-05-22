@@ -108,7 +108,7 @@ Treestamps uses two files per root directory:
 
 ### 1. WAL file (write-ahead log)
 
-```
+```sh
 .MyProgram_treestamps.wal.yaml
 ```
 
@@ -118,7 +118,7 @@ Treestamps uses two files per root directory:
 
 ### 2. Final snapshot
 
-```
+```sh
 .MyProgram_treestamps.yaml
 ```
 
@@ -220,8 +220,8 @@ GrovestampsConfig(
 
 - Used in filenames:
 
-    ```
-    .<program_name>_treestamps.yaml
+    ```sh
+    . < program_name > _treestamps.yaml
     ```
 
 #### `paths`
