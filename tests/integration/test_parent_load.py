@@ -45,13 +45,13 @@ class TestParentLoad(BaseTestDir):
         ``abs_path.relative_to(self.root_dir)`` and raised ``ValueError``
         because the entry was outside the tree.
         """
-        child_dir = self.TMP_ROOT / "child"
+        child_dir = self.tmp_root / "child"
         child_dir.mkdir()
 
         # Parent yaml lists the parent dir itself as the only entry.
         ts = 1_700_000_000.0
-        self._write_parent_yaml(self.TMP_ROOT, str(self.TMP_ROOT), ts)
-        parent_yaml = self.TMP_ROOT / TS_FN
+        self._write_parent_yaml(self.tmp_root, str(self.tmp_root), ts)
+        parent_yaml = self.tmp_root / TS_FN
         parent_mtime_before = parent_yaml.stat().st_mtime
         parent_bytes_before = parent_yaml.read_bytes()
 
