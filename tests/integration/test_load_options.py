@@ -107,6 +107,28 @@ class TestLoadOptions(BaseTestDir):
         gs = Grovestamps(config)
         assert len(gs) == 0
 
+    def test_file_rooted_tree_leaves_sibling_subdir_stamps(self) -> None:
+        """A file top path must not consume stamp files in sibling subdirs."""
+        root = self.tmp_root
+        # The root dir's own stamp file is written before the subdir exists.
+        root_stamp = self._write_child_stamps(root, "rfile", STAMP_TS)
+        target = root / "target.txt"
+        target.touch()
+        sub = root / "sub"
+        sub.mkdir()
+        sub_stamp = self._write_child_stamps(sub, "sfile", STAMP_TS)
+
+        config = GrovestampsConfig(PROGRAM_NAME, paths=(target,), check_config=False)
+        gs = Grovestamps(config)
+        ts = gs[target]
+        # The root dir's own stamps still load; the subdir's do not.
+        assert ts.get(root / "rfile") == STAMP_TS
+        assert ts.get(sub / "sfile") is None
+        assert ts.set(target, STAMP_TS) == STAMP_TS
+        gs.dumpf()
+        assert sub_stamp.exists()
+        assert root_stamp.exists()
+
     def test_check_config_invalidation(self) -> None:
         """A changed program_config must discard stamps unless check_config is off."""
         subpath = self.tmp_root / "cc"

@@ -146,24 +146,28 @@ class TreestampsLoad(TreestampsGet):
             logger.warning("Error reading child timestamps from %s: %s", path, exc)
 
     def _consume_all_child_timestamps(self, path: Path) -> None:
-        """Recursively consume all timestamps and wal files."""
-        try:
-            if self._is_path_skipped(path):
-                return
-            stamp_names = (self._filename, self._wal_filename)
-            subdirs: list[Path] = []
-            with os.scandir(path) as entries:
-                for entry in entries:
-                    # DirEntry caches d_type from readdir on POSIX, so these
-                    # checks avoid extra stat() calls in the common case.
-                    if entry.is_dir(follow_symlinks=self._config.symlinks):
-                        subdirs.append(Path(entry.path))
-                    elif entry.name in stamp_names:
-                        self._consume_child_timestamps(Path(entry.path))
-            for subdir in subdirs:
-                self._consume_all_child_timestamps(subdir)
-        except OSError as exc:
-            logger.warning("Error scanning %s for child timestamps: %s", path, exc)
+        """Consume all timestamps and wal files below a path."""
+        # Iterative walk with an explicit stack: deep trees would blow
+        # Python's recursion limit.
+        stamp_names = (self._filename, self._wal_filename)
+        dirs = [path]
+        while dirs:
+            subdir = dirs.pop()
+            try:
+                if self._is_path_skipped(subdir):
+                    continue
+                with os.scandir(subdir) as entries:
+                    for entry in entries:
+                        # DirEntry caches d_type from readdir on POSIX, so
+                        # these checks avoid extra stat() calls commonly.
+                        if entry.is_dir(follow_symlinks=self._config.symlinks):
+                            dirs.append(Path(entry.path))
+                        elif entry.name in stamp_names:
+                            self._consume_child_timestamps(Path(entry.path))
+            except OSError as exc:
+                logger.warning(
+                    "Error scanning %s for child timestamps: %s", subdir, exc
+                )
 
     def _load_parent_timestamps(self, path: Path) -> None:
         """Load a parent timestamp."""
@@ -190,4 +194,12 @@ class TreestampsLoad(TreestampsGet):
     def loadf_tree(self) -> None:
         """Load all timestamp files up and down this tree."""
         self._load_all_parent_timestamps(self.root_dir)
-        self._consume_all_child_timestamps(self.root_dir)
+        if self._config.path.is_dir():
+            self._consume_all_child_timestamps(self.root_dir)
+        else:
+            # File-rooted tree: only the root dir's own stamp files matter.
+            # Don't scan (and later delete) stamp files in sibling subdirs.
+            for name in (self._filename, self._wal_filename):
+                stamp_path = self.root_dir / name
+                if stamp_path.is_file():
+                    self._consume_child_timestamps(stamp_path)

@@ -1,5 +1,6 @@
 """Set Methods."""
 
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -16,11 +17,14 @@ class TreestampsSet(TreestampsLoad):
         root_timestamp = self._timestamps.get(abs_root_path)
         if root_timestamp is None:
             return False
-        delete_paths = {
+        # String prefix compare is much cheaper than Path.is_relative_to
+        # per entry; keys are already normalized absolute paths.
+        prefix = f"{abs_root_path}{os.sep}"
+        delete_paths = tuple(
             abs_path
             for abs_path, timestamp in self._timestamps.items()
-            if abs_path.is_relative_to(abs_root_path) and timestamp < root_timestamp
-        }
+            if timestamp < root_timestamp and str(abs_path).startswith(prefix)
+        )
         for del_path in delete_paths:
             del self._timestamps[del_path]
         return True
