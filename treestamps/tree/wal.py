@@ -1,13 +1,15 @@
 """Write-Ahead Log operations."""
 
+import logging
 import re
-from contextlib import suppress
 from pathlib import Path
 from types import MappingProxyType
 
 from ruamel.yaml import StringIO
 
 from treestamps.tree.init import TreestampsInit
+
+logger = logging.getLogger(__name__)
 
 # Code points below this are control characters; not safe in single-quoted YAML.
 _ASCII_PRINTABLE_MIN: int = 0x20
@@ -96,8 +98,8 @@ class TreestampsWal(TreestampsInit):
 
     def _close_wal(self) -> None:
         """Close the write ahead log."""
-        with suppress(AttributeError):
-            self._wal.close()  # pyright: ignore[reportOptionalMemberAccess], #ty: ignore[unresolved-attribute]
+        if self._wal is not None:
+            self._wal.close()
         self._wal = None
 
     def _dumpf_init_wal(self) -> None:
@@ -137,7 +139,6 @@ class TreestampsWal(TreestampsInit):
         for wal_entry in wal:
             try:
                 entries.update(wal_entry)
-            except Exception as exc:
-                if self._config.verbose:
-                    print(f"Error loading WAL entry: {wal_entry} - {exc}")  # noqa: T201
+            except (TypeError, ValueError) as exc:
+                logger.warning("Error loading WAL entry: %s - %s", wal_entry, exc)
         return MappingProxyType(entries)

@@ -1,5 +1,6 @@
 """Load methods."""
 
+import logging
 import os
 import re
 from collections.abc import Mapping
@@ -10,6 +11,8 @@ from ruamel.yaml.comments import CommentedMap
 
 from treestamps.tree.config import TreestampsConfig
 from treestamps.tree.get import TreestampsGet
+
+logger = logging.getLogger(__name__)
 
 
 class TreestampsLoad(TreestampsGet):
@@ -94,9 +97,9 @@ class TreestampsLoad(TreestampsGet):
             old_ts = self._timestamps.get(abs_path)
             if old_ts is None or ts > old_ts:
                 self._timestamps[abs_path] = ts
-        except Exception as exc:
-            if self._config.verbose:
-                print(f"Invalid timestamp for {path_str}: {ts}", exc)  # noqa: T201
+        except (TypeError, ValueError) as exc:
+            # ValueError also covers entries outside this tree's root.
+            logger.warning("Invalid timestamp for %s: %s: %s", path_str, ts, exc)
 
     def load_map(self, timestamps_root: Path, yaml: Mapping) -> None:
         """Load timestamps from a dict."""
@@ -139,8 +142,8 @@ class TreestampsLoad(TreestampsGet):
             if path != self._dump_path:
                 self._consumed_paths.add(path)
         except Exception as exc:
-            if self._config.verbose:
-                print(f"Error reading child timestamps from {path}", exc)  # noqa: T201
+            # Foreign stamp files may contain anything; stay broad.
+            logger.warning("Error reading child timestamps from %s: %s", path, exc)
 
     def _consume_all_child_timestamps(self, path: Path) -> None:
         """Recursively consume all timestamps and wal files."""
@@ -159,9 +162,8 @@ class TreestampsLoad(TreestampsGet):
                         self._consume_child_timestamps(Path(entry.path))
             for subdir in subdirs:
                 self._consume_all_child_timestamps(subdir)
-        except Exception as exc:
-            if self._config.verbose:
-                print("Error reading child timestamps", exc)  # noqa: T201
+        except OSError as exc:
+            logger.warning("Error scanning %s for child timestamps: %s", path, exc)
 
     def _load_parent_timestamps(self, path: Path) -> None:
         """Load a parent timestamp."""
@@ -169,8 +171,8 @@ class TreestampsLoad(TreestampsGet):
             if path.is_file():
                 self.loadf(path)
         except Exception as exc:
-            if self._config.verbose:
-                print(f"Error reading parent timestamps from {path}", exc)  # noqa: T201
+            # Foreign stamp files may contain anything; stay broad.
+            logger.warning("Error reading parent timestamps from %s: %s", path, exc)
 
     def _load_all_parent_timestamps(self, path: Path) -> None:
         """Recursively load timestamps from all parents."""
@@ -182,9 +184,8 @@ class TreestampsLoad(TreestampsGet):
             for timestamp_path in timestamp_paths:
                 self._load_parent_timestamps(timestamp_path)
             self._load_all_parent_timestamps(parent)
-        except Exception as exc:
-            if self._config.verbose:
-                print("Error loading parent timestamps", exc)  # noqa: T201
+        except OSError as exc:
+            logger.warning("Error loading parent timestamps above %s: %s", path, exc)
 
     def loadf_tree(self) -> None:
         """Load all timestamp files up and down this tree."""
