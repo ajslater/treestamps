@@ -11,10 +11,12 @@ classifiers = [
 dependencies = ["ruamel.yaml>=0.19,<=1.0", "typing-extensions~=4.13"]
 description = "Create timestamp records for recursive operations on directory trees."
 keywords = ["directory", "library", "recursive", "timestamps"]
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.10"
 name = "treestamps"
-version = "4.0.2"
+version = "4.1.0"
 [[project.authors]]
 name = "AJ Slater"
 email = "aj@slater.net"
@@ -64,9 +66,6 @@ build-backend = "uv_build"
 module-root = ""
 source-include = [
   ".*ignore",
-  ".circlci/**",
-  ".env.platforms",
-  ".picopt_treestamps.yaml",
   ".readthedocs.yaml",
   ".remarkignore",
   ".shellcheckrc",
@@ -74,31 +73,19 @@ source-include = [
   "NEWS.md",
   "bin/**",
   "bun.lock",
-  "ci/**",
   "compose.yaml",
-  "docs/DOCKER.md",
-  "docs/NEWS",
   "docs/NEWS.md",
   "docs/README.md",
-  "docs/WINDOWS.md",
   "docs/requirements.txt",
   "docs/style.css",
-  "docs/style.material.css",
-  "docs/style.mkdocs.css",
-  "docs/style.readthedocs.css",
   "eslint.config.js",
-  "frontend/**",
-  "img/**",
-  "mkdocks.yml",
   "mkdocs.yml",
-  "mock_comics/**",
-  "package-lock.json",
   "package.json",
   "tests/**",
   "uv.lock",
   "vulture_ignorelist.py",
 ]
-source-exclude = ["**/*\\~", "**/.DS_Store", "frontend/node_modules"]
+source-exclude = ["**/*\\~", "**/.DS_Store"]
 wheel-exclude = ["**/*\\~", "**/.DS_Store"]
 
 [tool.basedpyright]

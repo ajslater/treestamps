@@ -3,7 +3,6 @@
 import logging
 import re
 from pathlib import Path
-from types import MappingProxyType
 
 from ruamel.yaml import StringIO
 
@@ -111,7 +110,7 @@ class TreestampsWal(TreestampsInit):
         self._wal.write(self._WAL_HEADER)
 
     def _create_wal_entry(self, abs_path: Path, mtime: float) -> str:
-        """Create a yaml dicitionary as a list element entry line."""
+        """Create a yaml dictionary as a list element entry line."""
         path_str = self.get_relative_path_str(abs_path)
 
         # Hot path: hand-format the key/value mapping to skip the per-call
@@ -132,13 +131,13 @@ class TreestampsWal(TreestampsInit):
         wal_entry = self._create_wal_entry(abs_path, mtime)
         self._wal.write(wal_entry)  # pyright: ignore[reportOptionalMemberAccess], #ty: ignore[unresolved-attribute]
 
-    def pop_wal_entries(self, yaml_dict: dict) -> MappingProxyType:
+    def pop_wal_entries(self, yaml_dict: dict) -> dict[str, float]:
         """Pop off wal entries."""
         wal = yaml_dict.pop(self._WAL_TAG, ())
-        entries = {}
+        entries: dict[str, float] = {}
         for wal_entry in wal:
             try:
                 entries.update(wal_entry)
             except (TypeError, ValueError) as exc:
                 logger.warning("Error loading WAL entry: %s - %s", wal_entry, exc)
-        return MappingProxyType(entries)
+        return entries

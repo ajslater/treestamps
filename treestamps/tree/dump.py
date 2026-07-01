@@ -1,14 +1,10 @@
 """Dump Methods."""
 
-from typing import TYPE_CHECKING
 from warnings import warn
 
 from ruamel.yaml import StringIO
 
 from treestamps.tree.wal import TreestampsWal
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 class TreestampsDump(TreestampsWal):
@@ -36,7 +32,7 @@ class TreestampsDump(TreestampsWal):
         self._consumed_paths.discard(self._dump_path)
         for path in self._consumed_paths:
             path.unlink(missing_ok=True)
-        self._consumed_paths: set[Path] = set()
+        self._consumed_paths = set()
 
     def dumps(self) -> str:
         """Dump to string."""

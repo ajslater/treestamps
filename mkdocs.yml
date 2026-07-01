@@ -21,8 +21,8 @@ plugins:
   - mkapi
 site_author: AJ
 site_description:
-  The Nudebomb recursively strips matroska media files of unwanted
-  audio and subtitle tracks.
+  Treestamps records per-file timestamps for recursive operations on
+  directory trees so programs can skip unchanged files.
 site_name: Treestamps
 theme:
   color_mode: dark

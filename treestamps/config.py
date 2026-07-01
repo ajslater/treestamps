@@ -1,6 +1,5 @@
 """Treestamps Config methods."""
 
-from abc import ABC
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -10,7 +9,7 @@ from ruamel.yaml.comments import CommentedMap, CommentedSet
 
 
 @dataclass
-class CommonConfig(ABC):
+class CommonConfig:
     """Common Config meant to be subclassed."""
 
     program_name: str

@@ -53,7 +53,7 @@ config = GrovestampsConfig(
 
 gs = Grovestamps(config)
 
-ts = gs[Path("/data/photos")].get()
+ts = gs[Path("/data/photos")]
 
 if ts.get("img001.jpg") is None:
     process("img001.jpg")
@@ -210,7 +210,6 @@ GrovestampsConfig(
     paths: Iterable[str | Path],
     program_config: dict = None,
     verbose: int = 0,
-    wal: bool = True,
 )
 ```
 
@@ -237,37 +236,44 @@ GrovestampsConfig(
 
 #### `verbose`
 
-- `0` (default): silent — no output at all
-- `>0`: print error messages from load and WAL load failures
-
-#### `wal` (if supported)
-
-- Enables/disables WAL behavior
-- Disabling may reduce safety but simplify writes
+- Retained for compatibility; no longer gates output
+- Load and WAL errors are reported as warnings through the `treestamps` logger —
+  configure visibility with the standard `logging` module
 
 ## 🧾 YAML file format
 
 ### Snapshot file
 
 ```yaml
-version: 1
-program: MyProgram
-config_hash: abc123
-
-timestamps:
-    img001.jpg: 1700000000.123
-    img002.jpg: 1700000001.456
+config:
+    quality: 90
+treestamps_config:
+    ignore: !!set {}
+    symlinks: true
+img001.jpg: 1700000000.123
+img002.jpg: 1700000001.456
 ```
+
+The `config` key holds the program config (the keys selected by
+`program_config_keys`); `treestamps_config` records the `ignore` and `symlinks`
+options. If either mismatches the running config, the file's timestamps are
+discarded (unless `check_config=False`). All remaining keys are path-to-mtime
+timestamp entries.
 
 ### WAL file
 
+The WAL starts with the same config header, followed by a `wal` list that gets
+one appended entry per `set()`:
+
 ```yaml
-- set:
-      path: img003.jpg
-      time: 1700000002.789
-- set:
-      path: img004.jpg
-      time: 1700000003.000
+config:
+    quality: 90
+treestamps_config:
+    ignore: !!set {}
+    symlinks: true
+wal:
+    - img003.jpg: 1700000002.789
+    - img004.jpg: 1700000003.0
 ```
 
 ### Notes
