@@ -34,8 +34,6 @@ class TreestampsSet(TreestampsLoad):
     ) -> float | None:
         """Record the timestamp."""
         abs_path = self._get_absolute_path(self.root_dir, path)
-        if not abs_path:
-            return None
 
         # Should we do the set?
         old_mtime = self._timestamps.get(abs_path)
@@ -69,8 +67,7 @@ class TreestampsSet(TreestampsLoad):
         subdirectory regardless of whether anything in it was modified.
         """
         abs_path = self._get_absolute_path(self.root_dir, path)
-        if abs_path:
-            self._compact_timestamps_below(abs_path)
+        self._compact_timestamps_below(abs_path)
 
     def compact_top(self):
         """Compact the top dir."""

@@ -17,8 +17,6 @@ class TreestampsGet(TreestampsDump):
         """Get the timestamps up the directory tree. All the way to root."""
         mtime: float | None = None
         abs_path = self._get_absolute_path(self.root_dir, path)
-        if not abs_path:
-            return mtime
 
         # Walk up the tree to get the maximum time. We must walk past
         # root_dir because _load_all_parent_timestamps may have loaded

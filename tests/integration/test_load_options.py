@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from tests import PROGRAM
 from tests.integration.base_test import BaseTestDir
 from treestamps.grove import Grovestamps, GrovestampsConfig
@@ -149,10 +147,6 @@ class TestLoadOptions(BaseTestDir):
         gs3 = Grovestamps(config3)
         assert gs3[subpath].get(path) == STAMP_TS
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="asdict() cannot deepcopy nested MappingProxyType program_config",
-    )
     def test_program_config_nested_roundtrip(self) -> None:
         """A nested program_config must dump, reload, and compare as matching."""
         subpath = self.tmp_root / "nested"

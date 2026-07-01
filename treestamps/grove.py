@@ -1,8 +1,7 @@
 """A Mapping of Treestamps."""
 
 from collections.abc import Iterable, Iterator, Mapping
-from copy import copy
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -42,12 +41,17 @@ class GrovestampsConfig(CommonConfig):
 
     def get_treestamps_config_dict(self) -> dict[str, Any]:
         """Get a treestamps style config dict from this config."""
-        config = copy(self)
-        if config.program_config is not None:
-            config.program_config = dict(config.program_config)
-        config_dict = asdict(config)
-        config_dict.pop("paths", None)
-        return config_dict
+        # Explicit fields instead of asdict(): its deepcopy chokes on the
+        # nested MappingProxyType values normalize_config produces.
+        return {
+            "program_name": self.program_name,
+            "verbose": self.verbose,
+            "symlinks": self.symlinks,
+            "ignore": self.ignore,
+            "check_config": self.check_config,
+            "program_config": self.program_config,
+            "program_config_keys": self.program_config_keys,
+        }
 
 
 class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
@@ -61,7 +65,7 @@ class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
         treestamps_config_dict = self._config.get_treestamps_config_dict()
 
         for top_path in self._config.paths:
-            root_dir = self.get_dir(top_path)
+            root_dir = self._tree_key(top_path)
             if root_dir in self._trees:
                 continue
             tree_config = TreestampsConfig(
@@ -76,10 +80,15 @@ class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
 
     # Mapping interface
 
+    @classmethod
+    def _tree_key(cls, path: Path | str) -> Path:
+        """Normalize a top path the same way Treestamps computes its root_dir."""
+        return cls.get_dir(Path(path)).absolute()
+
     @override
     def __getitem__(self, key: Path) -> Treestamps:
         """Get a Treestamps by its root path."""
-        return self._trees[key]
+        return self._trees[self._tree_key(key)]
 
     @override
     def __iter__(self) -> Iterator[Path]:
@@ -95,25 +104,28 @@ class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
 
     def load(self, path: str | Path, yaml: Mapping | str | bytes | Path) -> None:
         """Load a timestamp yaml dict into the correct treestamps."""
-        path = Path(path)
+        path = Path(path).absolute()
         if not path.is_dir():
             path = path.parent
-        for top_path, treestamps in self._trees.items():
-            if path.is_relative_to(top_path):
-                match yaml:
-                    case Mapping():
-                        treestamps.load_map(path, yaml)
-                    case str() | bytes():
-                        treestamps.loads(path, yaml)
-                    case Path():
-                        treestamps.loadf(path)
-                break
-        else:
+        # With nested top paths the deepest matching tree owns the yaml.
+        matches = (
+            top_path for top_path in self._trees if path.is_relative_to(top_path)
+        )
+        top_path = max(matches, key=lambda match: len(match.parts), default=None)
+        if top_path is None:
             reason = (
                 f"load dict to {path} is not relative to any "
                 f"Grovestamps path: {tuple(self._trees.keys())}"
             )
             raise ValueError(reason)
+        treestamps = self._trees[top_path]
+        match yaml:
+            case Mapping():
+                treestamps.load_map(path, yaml)
+            case str() | bytes():
+                treestamps.loads(path, yaml)
+            case Path():
+                treestamps.loadf(yaml)
 
     def load_map(self, grove: Mapping[Path, Mapping | str | bytes | Path]) -> None:
         """Load a grove of treestamps from a mapping."""
@@ -163,11 +175,11 @@ class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
         compact: bool = False,
     ) -> None:
         """Set timestamp in tree."""
-        self._trees[top_path].set(path, mtime, compact=compact)
+        self[top_path].set(path, mtime, compact=compact)
 
     def compact(self, top_path: Path, path: Path) -> None:
         """Compact timestamps in tree."""
-        self._trees[top_path].compact(path)
+        self[top_path].compact(path)
 
     def compact_top_paths(self):
         """Compact all timestamps in all trees."""
@@ -178,4 +190,4 @@ class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
 
     def get_timestamp(self, top_path: Path, path: Path | str) -> float | None:
         """Get a timestamp from the tree keyed by top_path."""
-        return self._trees[top_path].get(path)
+        return self[top_path].get(path)

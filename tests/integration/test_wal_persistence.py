@@ -1,7 +1,5 @@
 """WAL entries must survive dumps()/dump_dict() without a snapshot."""
 
-import pytest
-
 from tests import PROGRAM
 from tests.integration.base_test import BaseTestDir
 from treestamps.grove import Grovestamps, GrovestampsConfig
@@ -16,10 +14,6 @@ SECOND_TS = 150.0
 class TestWalPersistence(BaseTestDir):
     """dumps() and dump_dict() are pure serialization; they must not damage the WAL."""
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="dump_dict() closes the WAL so the next set() truncates it on disk",
-    )
     def test_wal_survives_dumps(self) -> None:
         """Entries WAL'd before a dumps() call must survive a crash after it."""
         config = GrovestampsConfig(PROGRAM_NAME, paths=(self.tmp_root,))

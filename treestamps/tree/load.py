@@ -88,12 +88,12 @@ class TreestampsLoad(TreestampsGet):
             path = Path(path_str)
             if not path.is_absolute():
                 path = (timestamps_root / path).absolute()
-            if abs_path := self._get_absolute_path(self.root_dir, path):
-                # Compare against an exact-key entry only — public get() walks
-                # ancestors which is the wrong semantic at load time.
-                old_ts = self._timestamps.get(abs_path)
-                if old_ts is None or ts > old_ts:
-                    self._timestamps[abs_path] = ts
+            abs_path = self._get_absolute_path(self.root_dir, path)
+            # Compare against an exact-key entry only — public get() walks
+            # ancestors which is the wrong semantic at load time.
+            old_ts = self._timestamps.get(abs_path)
+            if old_ts is None or ts > old_ts:
+                self._timestamps[abs_path] = ts
         except Exception as exc:
             if self._config.verbose:
                 print(f"Invalid timestamp for {path_str}: {ts}", exc)  # noqa: T201

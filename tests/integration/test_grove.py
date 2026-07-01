@@ -23,10 +23,6 @@ class TestGrove(BaseTestDir):
         """Run each test from inside the tmp dir so relative paths resolve there."""
         monkeypatch.chdir(tmp_path)
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="Grove keys trees by the as-given path; absolute lookups miss",
-    )
     def test_relative_config_absolute_lookup(self) -> None:
         """Trees configured with relative paths must be reachable by absolute path."""
         (self.tmp_root / "data").mkdir()
@@ -38,16 +34,25 @@ class TestGrove(BaseTestDir):
         gs.compact(abs_dir, abs_dir)
         assert set(gs) == {abs_dir}
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="Grove.load routes to the first matching tree, not the deepest",
-    )
     def test_load_routes_to_deepest_tree(self) -> None:
         """With nested top paths, load() must pick the deepest matching tree."""
         outer = self.tmp_root / "outer"
         inner = outer / "inner"
         inner.mkdir(parents=True)
-        config = GrovestampsConfig(PROGRAM_NAME, paths=(outer, inner))
+        config = GrovestampsConfig(
+            PROGRAM_NAME, paths=(outer, inner), check_config=False
+        )
         gs = Grovestamps(config)
         gs.load(inner, {"file": LOAD_TS})
         assert gs[inner].get(inner / "file") == LOAD_TS
+
+    def test_loadf_routes_file_to_tree(self) -> None:
+        """Grovestamps.loadf must parse the given file, not its directory."""
+        data = self.tmp_root / "data"
+        data.mkdir()
+        config = GrovestampsConfig(PROGRAM_NAME, paths=(data,), check_config=False)
+        gs = Grovestamps(config)
+        stamp_file = data / "external.yaml"
+        stamp_file.write_text(f"file: {LOAD_TS}\n")
+        gs.loadf(stamp_file)
+        assert gs[data].get(data / "file") == LOAD_TS
