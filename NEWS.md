@@ -1,5 +1,34 @@
 # 📰 Treestamps News
 
+## v4.1.0
+
+### Fixes
+
+- Fix WAL data loss: `dumps()` and `dump_dict()` closed the WAL, so the next
+  `set()` truncated the on-disk WAL, destroying entries not yet in a snapshot.
+- Fix `Grovestamps` created with relative paths: trees are now keyed by their
+  absolute root dir, so relative and absolute lookups both work.
+- Fix `Grovestamps.load()` with nested top paths: yaml now loads into the
+  deepest matching tree instead of the first.
+- Fix `Grovestamps.loadf()`, which tried to parse the file's parent directory
+  instead of the file.
+- Fix crash on `Grovestamps` construction and dump when `program_config`
+  contains nested dicts, lists, or tuples.
+- Load and WAL errors are now reported through the `treestamps` logger instead
+  of `verbose`-gated prints. The `verbose` config field remains but no longer
+  gates output.
+- Trees rooted at a file no longer consume (and delete on dump) stamp files
+  found in subdirectories of the file's parent.
+
+### Performance
+
+- `get()` stops walking ancestors at the tree root instead of the filesystem
+  root.
+- `compact()` scans the timestamp map with cheap string prefix compares.
+- Grove-created trees no longer re-normalize the program config per tree.
+- Child stamp scanning is iterative, so very deep trees can't hit Python's
+  recursion limit.
+
 ## v4.0.2
 
 - Fix `dumpf` crash when a parent-of-root yaml contains an entry pointing at the

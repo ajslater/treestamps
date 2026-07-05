@@ -1,13 +1,14 @@
 """Write-Ahead Log operations."""
 
+import logging
 import re
-from contextlib import suppress
 from pathlib import Path
-from types import MappingProxyType
 
 from ruamel.yaml import StringIO
 
 from treestamps.tree.init import TreestampsInit
+
+logger = logging.getLogger(__name__)
 
 # Code points below this are control characters; not safe in single-quoted YAML.
 _ASCII_PRINTABLE_MIN: int = 0x20
@@ -60,15 +61,9 @@ _NON_STRING_SCALAR_PATTERNS = (
 _NON_STRING_SCALAR_RE = re.compile("^(" + "|".join(_NON_STRING_SCALAR_PATTERNS) + ")$")
 
 
-def _quote_wal_key(key: str) -> str | None:
-    """
-    Return a YAML-mapping-key form of ``key`` for a WAL line.
-
-    Returns ``None`` if the key contains control characters or newlines —
-    callers should fall back to a full YAML dump in that case.
-    """
-    # Plain scalar fast path (the common case for filesystem paths).
-    if (
+def _is_plain_scalar_key(key: str) -> bool:
+    """Whether ``key`` is safe to emit as a bare YAML plain scalar mapping key."""
+    return bool(
         key
         and key not in _PLAIN_RESERVED
         and _PLAIN_SCALAR_RE.match(key)
@@ -76,7 +71,17 @@ def _quote_wal_key(key: str) -> str | None:
         and not key.endswith(" ")
         and ": " not in key
         and " #" not in key
-    ):
+    )
+
+
+def _quote_wal_key(key: str) -> str | None:
+    """
+    Return a YAML-mapping-key form of ``key`` for a WAL line.
+
+    Returns ``None`` if the key contains control characters or newlines —
+    callers should fall back to a full YAML dump in that case.
+    """
+    if _is_plain_scalar_key(key):
         return key
     # Single-quoted style: safe for any printable text. Single quotes inside
     # the value are escaped by doubling them; no other escapes apply.
@@ -92,8 +97,8 @@ class TreestampsWal(TreestampsInit):
 
     def _close_wal(self) -> None:
         """Close the write ahead log."""
-        with suppress(AttributeError):
-            self._wal.close()  # pyright: ignore[reportOptionalMemberAccess], #ty: ignore[unresolved-attribute]
+        if self._wal is not None:
+            self._wal.close()
         self._wal = None
 
     def _dumpf_init_wal(self) -> None:
@@ -105,7 +110,7 @@ class TreestampsWal(TreestampsInit):
         self._wal.write(self._WAL_HEADER)
 
     def _create_wal_entry(self, abs_path: Path, mtime: float) -> str:
-        """Create a yaml dicitionary as a list element entry line."""
+        """Create a yaml dictionary as a list element entry line."""
         path_str = self.get_relative_path_str(abs_path)
 
         # Hot path: hand-format the key/value mapping to skip the per-call
@@ -126,14 +131,13 @@ class TreestampsWal(TreestampsInit):
         wal_entry = self._create_wal_entry(abs_path, mtime)
         self._wal.write(wal_entry)  # pyright: ignore[reportOptionalMemberAccess], #ty: ignore[unresolved-attribute]
 
-    def pop_wal_entries(self, yaml_dict: dict) -> MappingProxyType:
+    def pop_wal_entries(self, yaml_dict: dict) -> dict[str, float]:
         """Pop off wal entries."""
         wal = yaml_dict.pop(self._WAL_TAG, ())
-        entries = {}
+        entries: dict[str, float] = {}
         for wal_entry in wal:
             try:
                 entries.update(wal_entry)
-            except Exception as exc:
-                if self._config.verbose:
-                    print(f"Error loading WAL entry: {wal_entry} - {exc}")  # noqa: T201
-        return MappingProxyType(entries)
+            except (TypeError, ValueError) as exc:
+                logger.warning("Error loading WAL entry: %s - %s", wal_entry, exc)
+        return entries

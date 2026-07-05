@@ -37,11 +37,8 @@ class TestAbsolutePath:
         config = TreestampsConfig(program_name="test", path=root, verbose=2)
         treestamps = Treestamps(config=config)
         test_path = root
-        try:
+        with pytest.raises(ValueError, match="outside"):
             treestamps._get_absolute_path(test_path, "/tmp")  # noqa: S108
-            assert pytest.fail("should throw an exception")
-        except ValueError:
-            assert pytest.raises(ValueError, match="outside")
 
     def test_absolute_path_subpath_parent(self) -> None:
         """Test absolute paths."""

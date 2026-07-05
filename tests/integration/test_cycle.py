@@ -13,6 +13,9 @@ __all__ = ()
 PROGRAM_NAME = f"{PROGRAM}-tests"
 TS_FN = f".{PROGRAM_NAME}_treestamps.yaml"
 TS_FILE_SOURCE = Path(__file__).parent / "test_timestamp.yaml"
+CHILD_TS = 100.0
+CHILD_TS_NEWER = 150.0
+DIR_TS = 200.0
 
 
 class TestCycle(BaseTestDir):
@@ -23,7 +26,7 @@ class TestCycle(BaseTestDir):
     ) -> dict[Path, float]:
         gs = Grovestamps(config)
 
-        times = {}
+        times: dict[Path, float] = {}
         for subpath in subpaths:
             ts = gs.get(subpath)
             if not ts:
@@ -39,7 +42,9 @@ class TestCycle(BaseTestDir):
 
             for name in names:
                 path = subpath / name
-                times[path] = ts.set(path)
+                mtime = ts.set(path)
+                assert mtime is not None
+                times[path] = mtime
 
         gs.dumpf()
         return times
@@ -69,11 +74,10 @@ class TestCycle(BaseTestDir):
 
         for path, ts in gs.items():
             ts.set(path, compact=True)
-        # untested :/
 
     def test_wal_roundtrip_special_chars(self) -> None:
         """Test WAL survives crash with special-character paths."""
-        subpath = self.TMP_ROOT / "wal_test"
+        subpath = self.tmp_root / "wal_test"
         subpath.mkdir()
 
         config = GrovestampsConfig(PROGRAM_NAME, paths=(subpath,), verbose=0)
@@ -111,13 +115,41 @@ class TestCycle(BaseTestDir):
                 f"WAL mismatch for {path}: {loaded} != {expected}"
             )
 
+    def test_compact(self) -> None:
+        """Compact prunes older child entries below a dir stamp."""
+        subpath = self.tmp_root / "compact"
+        subpath.mkdir()
+        config = GrovestampsConfig(PROGRAM_NAME, paths=(subpath,))
+        gs = Grovestamps(config)
+        ts = gs[subpath]
+        assert ts.set(subpath / "a", CHILD_TS) == CHILD_TS
+        assert ts.set(subpath / "b", CHILD_TS_NEWER) == CHILD_TS_NEWER
+        assert ts.set(subpath, DIR_TS) == DIR_TS
+        ts.compact(subpath)
+        assert ts._timestamps == {subpath: DIR_TS}
+        # Children still resolve through the dir stamp.
+        assert ts.get(subpath / "a") == DIR_TS
+
+    def test_compact_top(self) -> None:
+        """Compact_top_paths prunes entries below each tree root."""
+        subpath = self.tmp_root / "compact_top"
+        deep = subpath / "deep"
+        deep.mkdir(parents=True)
+        config = GrovestampsConfig(PROGRAM_NAME, paths=(subpath,))
+        gs = Grovestamps(config)
+        ts = gs[subpath]
+        assert ts.set(deep / "x", CHILD_TS) == CHILD_TS
+        assert ts.set(subpath, DIR_TS) == DIR_TS
+        gs.compact_top_paths()
+        assert ts._timestamps == {subpath: DIR_TS}
+
     def test_set_dump_load_get(self) -> None:
         """Test it all."""
         # Make subdirs
         subdirs = ("a", "b", "c")
         subpaths = []
         for subdir in subdirs:
-            subpath = self.TMP_ROOT / subdir
+            subpath = self.tmp_root / subdir
             subpath.mkdir()
             subpaths.append(subpath)
 
@@ -139,7 +171,7 @@ class TestCycle(BaseTestDir):
             assert stamp_path.exists()
             # shutil.copy(stamp_path, "/tmp/") examine
 
-        root_ts_path = self.TMP_ROOT / TS_FN
+        root_ts_path = self.tmp_root / TS_FN
         _ = shutil.copy(TS_FILE_SOURCE, root_ts_path)
         print(root_ts_path.read_text())
         self._load(config, subpaths, times)

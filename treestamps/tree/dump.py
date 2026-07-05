@@ -1,14 +1,10 @@
 """Dump Methods."""
 
-from typing import TYPE_CHECKING
 from warnings import warn
 
 from ruamel.yaml import StringIO
 
 from treestamps.tree.wal import TreestampsWal
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 class TreestampsDump(TreestampsWal):
@@ -25,9 +21,9 @@ class TreestampsDump(TreestampsWal):
     def dump_dict(self) -> dict:
         """Serialize timestamps and dump to a dict."""
         # NOTE Does not cleanup old timestamps from disk
-        yaml = self._serialize_timestamps()
-        self._close_wal()
-        return yaml
+        # Pure serialization: the WAL stays open and on disk so entries
+        # survive a crash until dumpf() persists a real snapshot.
+        return self._serialize_timestamps()
 
     def cleanup_old_timestamps(self) -> None:
         """Cleanup old timestamps from the disk."""
@@ -36,7 +32,7 @@ class TreestampsDump(TreestampsWal):
         self._consumed_paths.discard(self._dump_path)
         for path in self._consumed_paths:
             path.unlink(missing_ok=True)
-        self._consumed_paths: set[Path] = set()
+        self._consumed_paths = set()
 
     def dumps(self) -> str:
         """Dump to string."""
@@ -84,6 +80,8 @@ class TreestampsDump(TreestampsWal):
                 tmp_path.replace(self._dump_path)
             finally:
                 tmp_path.unlink(missing_ok=True)
+            # Only close the WAL once the snapshot is safely on disk.
+            self._close_wal()
             dumped = True
         else:
             self._close_wal()

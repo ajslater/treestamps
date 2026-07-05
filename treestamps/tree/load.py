@@ -1,5 +1,6 @@
 """Load methods."""
 
+import logging
 import os
 import re
 from collections.abc import Mapping
@@ -10,6 +11,8 @@ from ruamel.yaml.comments import CommentedMap
 
 from treestamps.tree.config import TreestampsConfig
 from treestamps.tree.get import TreestampsGet
+
+logger = logging.getLogger(__name__)
 
 
 class TreestampsLoad(TreestampsGet):
@@ -88,15 +91,15 @@ class TreestampsLoad(TreestampsGet):
             path = Path(path_str)
             if not path.is_absolute():
                 path = (timestamps_root / path).absolute()
-            if abs_path := self._get_absolute_path(self.root_dir, path):
-                # Compare against an exact-key entry only — public get() walks
-                # ancestors which is the wrong semantic at load time.
-                old_ts = self._timestamps.get(abs_path)
-                if old_ts is None or ts > old_ts:
-                    self._timestamps[abs_path] = ts
-        except Exception as exc:
-            if self._config.verbose:
-                print(f"Invalid timestamp for {path_str}: {ts}", exc)  # noqa: T201
+            abs_path = self._get_absolute_path(self.root_dir, path)
+            # Compare against an exact-key entry only — public get() walks
+            # ancestors which is the wrong semantic at load time.
+            old_ts = self._timestamps.get(abs_path)
+            if old_ts is None or ts > old_ts:
+                self._timestamps[abs_path] = ts
+        except (TypeError, ValueError) as exc:
+            # ValueError also covers entries outside this tree's root.
+            logger.warning("Invalid timestamp for %s: %s: %s", path_str, ts, exc)
 
     def load_map(self, timestamps_root: Path, yaml: Mapping) -> None:
         """Load timestamps from a dict."""
@@ -139,29 +142,32 @@ class TreestampsLoad(TreestampsGet):
             if path != self._dump_path:
                 self._consumed_paths.add(path)
         except Exception as exc:
-            if self._config.verbose:
-                print(f"Error reading child timestamps from {path}", exc)  # noqa: T201
+            # Foreign stamp files may contain anything; stay broad.
+            logger.warning("Error reading child timestamps from %s: %s", path, exc)
 
     def _consume_all_child_timestamps(self, path: Path) -> None:
-        """Recursively consume all timestamps and wal files."""
-        try:
-            if self._is_path_skipped(path):
-                return
-            stamp_names = (self._filename, self._wal_filename)
-            subdirs: list[Path] = []
-            with os.scandir(path) as entries:
-                for entry in entries:
-                    # DirEntry caches d_type from readdir on POSIX, so these
-                    # checks avoid extra stat() calls in the common case.
-                    if entry.is_dir(follow_symlinks=self._config.symlinks):
-                        subdirs.append(Path(entry.path))
-                    elif entry.name in stamp_names:
-                        self._consume_child_timestamps(Path(entry.path))
-            for subdir in subdirs:
-                self._consume_all_child_timestamps(subdir)
-        except Exception as exc:
-            if self._config.verbose:
-                print("Error reading child timestamps", exc)  # noqa: T201
+        """Consume all timestamps and wal files below a path."""
+        # Iterative walk with an explicit stack: deep trees would blow
+        # Python's recursion limit.
+        stamp_names = (self._filename, self._wal_filename)
+        dirs = [path]
+        while dirs:
+            subdir = dirs.pop()
+            try:
+                if self._is_path_skipped(subdir):
+                    continue
+                with os.scandir(subdir) as entries:
+                    for entry in entries:
+                        # DirEntry caches d_type from readdir on POSIX, so
+                        # these checks avoid extra stat() calls commonly.
+                        if entry.is_dir(follow_symlinks=self._config.symlinks):
+                            dirs.append(Path(entry.path))
+                        elif entry.name in stamp_names:
+                            self._consume_child_timestamps(Path(entry.path))
+            except OSError as exc:
+                logger.warning(
+                    "Error scanning %s for child timestamps: %s", subdir, exc
+                )
 
     def _load_parent_timestamps(self, path: Path) -> None:
         """Load a parent timestamp."""
@@ -169,8 +175,8 @@ class TreestampsLoad(TreestampsGet):
             if path.is_file():
                 self.loadf(path)
         except Exception as exc:
-            if self._config.verbose:
-                print(f"Error reading parent timestamps from {path}", exc)  # noqa: T201
+            # Foreign stamp files may contain anything; stay broad.
+            logger.warning("Error reading parent timestamps from %s: %s", path, exc)
 
     def _load_all_parent_timestamps(self, path: Path) -> None:
         """Recursively load timestamps from all parents."""
@@ -182,11 +188,18 @@ class TreestampsLoad(TreestampsGet):
             for timestamp_path in timestamp_paths:
                 self._load_parent_timestamps(timestamp_path)
             self._load_all_parent_timestamps(parent)
-        except Exception as exc:
-            if self._config.verbose:
-                print("Error loading parent timestamps", exc)  # noqa: T201
+        except OSError as exc:
+            logger.warning("Error loading parent timestamps above %s: %s", path, exc)
 
     def loadf_tree(self) -> None:
         """Load all timestamp files up and down this tree."""
         self._load_all_parent_timestamps(self.root_dir)
-        self._consume_all_child_timestamps(self.root_dir)
+        if self._config.path.is_dir():
+            self._consume_all_child_timestamps(self.root_dir)
+        else:
+            # File-rooted tree: only the root dir's own stamp files matter.
+            # Don't scan (and later delete) stamp files in sibling subdirs.
+            for name in (self._filename, self._wal_filename):
+                stamp_path = self.root_dir / name
+                if stamp_path.is_file():
+                    self._consume_child_timestamps(stamp_path)

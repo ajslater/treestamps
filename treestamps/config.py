@@ -1,6 +1,5 @@
 """Treestamps Config methods."""
 
-from abc import ABC
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -10,7 +9,7 @@ from ruamel.yaml.comments import CommentedMap, CommentedSet
 
 
 @dataclass
-class CommonConfig(ABC):
+class CommonConfig:
     """Common Config meant to be subclassed."""
 
     program_name: str
@@ -44,8 +43,12 @@ class CommonConfig(ABC):
         self.ignore = frozenset(self.ignore)
         self.program_config_keys = frozenset(self.program_config_keys)
 
-        # Filter dict by keys
-        if self.program_config is not None:
+        # Filter dict by keys. A MappingProxyType marks a program_config
+        # that is already filtered and normalized (only this method creates
+        # them), so Grove-created tree configs skip re-normalization.
+        if self.program_config is not None and not isinstance(
+            self.program_config, MappingProxyType
+        ):
             filtered_program_config = {
                 k: v
                 for k, v in self.program_config.items()
