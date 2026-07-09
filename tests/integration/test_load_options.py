@@ -1,6 +1,9 @@
 """Ignore globs, the symlinks option, and config-mismatch invalidation."""
 
+import logging
 from pathlib import Path
+
+import pytest
 
 from tests import PROGRAM
 from tests.integration.base_test import BaseTestDir
@@ -129,8 +132,9 @@ class TestLoadOptions(BaseTestDir):
         assert sub_stamp.exists()
         assert root_stamp.exists()
 
-    def test_check_config_invalidation(self) -> None:
+    def test_check_config_invalidation(self, caplog: pytest.LogCaptureFixture) -> None:
         """A changed program_config must discard stamps unless check_config is off."""
+        caplog.set_level(logging.WARNING, logger="treestamps.tree.load")
         subpath = self.tmp_root / "cc"
         subpath.mkdir()
         path = subpath / "file"
@@ -144,11 +148,12 @@ class TestLoadOptions(BaseTestDir):
         assert gs1[subpath].set(path, STAMP_TS) == STAMP_TS
         gs1.dumpf()
 
-        # Same config: stamps are kept.
+        # Same config: stamps are kept, silently.
         gs1b = Grovestamps(config1)
         assert gs1b[subpath].get(path) == STAMP_TS
+        assert not caplog.records
 
-        # Changed config: stamps are discarded.
+        # Changed config: stamps are discarded with a warning naming the key.
         config2 = GrovestampsConfig(
             PROGRAM_NAME,
             paths=(subpath,),
@@ -157,8 +162,15 @@ class TestLoadOptions(BaseTestDir):
         )
         gs2 = Grovestamps(config2)
         assert gs2[subpath].get(path) is None
+        warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+        assert len(warnings) == 1
+        message = warnings[0].getMessage()
+        assert "config mismatch" in message
+        assert "quality" in message
+        assert str(subpath) in message
 
-        # Changed config with check_config off: stamps are kept.
+        # Changed config with check_config off: stamps are kept, silently.
+        caplog.clear()
         config3 = GrovestampsConfig(
             PROGRAM_NAME,
             paths=(subpath,),
@@ -168,6 +180,7 @@ class TestLoadOptions(BaseTestDir):
         )
         gs3 = Grovestamps(config3)
         assert gs3[subpath].get(path) == STAMP_TS
+        assert not caplog.records
 
     def test_program_config_nested_roundtrip(self) -> None:
         """A nested program_config must dump, reload, and compare as matching."""

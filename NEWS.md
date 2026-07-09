@@ -1,5 +1,13 @@
 # 📰 Treestamps News
 
+## v4.1.1
+
+### Fixes
+
+- Stamps discarded because of a `check_config` mismatch now log a warning naming
+  the stamp file and the specific differing config keys, instead of being
+  silently dropped.
+
 ## v4.1.0
 
 ### Fixes
