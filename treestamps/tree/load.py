@@ -6,6 +6,7 @@ import re
 from collections.abc import Mapping
 from fnmatch import translate
 from pathlib import Path
+from typing import Any, Final
 
 from ruamel.yaml.comments import CommentedMap
 
@@ -13,6 +14,8 @@ from treestamps.tree.config import TreestampsConfig
 from treestamps.tree.get import TreestampsGet
 
 logger = logging.getLogger(__name__)
+
+_MISSING: Final = object()
 
 
 class TreestampsLoad(TreestampsGet):
@@ -53,27 +56,62 @@ class TreestampsLoad(TreestampsGet):
         return not self._config.symlinks and path.is_symlink()
 
     @classmethod
-    def _load_pop_and_compare_config(
+    def _config_diff_keys(
         cls,
         yaml_config: CommentedMap | Mapping | None,
-        compare_config: CommentedMap | Mapping[str, bool] | None,
-    ) -> bool:
-        normalized_config = TreestampsConfig.normalize_config(yaml_config)
-        # Shallow equality!
-        return compare_config == normalized_config
-
-    def _load_pop_config_matches(self, yaml: dict[str, CommentedMap]) -> bool:
-        """Return if the configured and loaded configs match."""
-        yaml_ts_config = yaml.pop(self._TREESTAMPS_CONFIG_TAG, {})
-        yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
-        return not self._config.check_config or (
-            self._load_pop_and_compare_config(
-                yaml_ts_config, self._config.get_config_dict()
-            )
-            and self._load_pop_and_compare_config(
-                yaml_program_config, self._config.program_config
+        current_config: Mapping | None,
+    ) -> tuple[str, ...]:
+        """Return the keys whose values differ between stored and current config."""
+        normalized: Any = TreestampsConfig.normalize_config(yaml_config)
+        # Shallow equality, as the old comparison did.
+        if current_config == normalized:
+            return ()
+        if not isinstance(normalized, Mapping) or not isinstance(
+            current_config, Mapping
+        ):
+            # One side absent or malformed: every key of whichever side is a
+            # mapping differs.
+            keys: set = set()
+            for side in (normalized, current_config):
+                if isinstance(side, Mapping):
+                    keys |= set(side)
+            # key=str: foreign stamp files may mix key types, which do
+            # not order against each other.
+            return tuple(sorted(keys, key=str)) or ("<entire config>",)
+        return tuple(
+            sorted(
+                (
+                    key
+                    for key in set(normalized) | set(current_config)
+                    if normalized.get(key, _MISSING)
+                    != current_config.get(key, _MISSING)
+                ),
+                key=str,
             )
         )
+
+    def _load_pop_config_matches(
+        self,
+        timestamps_root: Path,
+        yaml: dict[str, CommentedMap],
+        source_path: Path | None = None,
+    ) -> bool:
+        """Return if the configured and loaded configs match; warn on mismatch."""
+        yaml_ts_config = yaml.pop(self._TREESTAMPS_CONFIG_TAG, {})
+        yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
+        if not self._config.check_config:
+            return True
+        diff = self._config_diff_keys(yaml_ts_config, self._config.get_config_dict())
+        diff += self._config_diff_keys(yaml_program_config, self._config.program_config)
+        if not diff:
+            return True
+        logger.warning(
+            "Not loading timestamps from %s into tree %s: config mismatch for: %s",
+            source_path or timestamps_root / self._filename,
+            self.root_dir,
+            ", ".join(sorted({str(key) for key in diff})),
+        )
+        return False
 
     def _load_timestamp_entry(
         self, timestamps_root: Path, path_str: str, ts: float
@@ -101,14 +139,19 @@ class TreestampsLoad(TreestampsGet):
             # ValueError also covers entries outside this tree's root.
             logger.warning("Invalid timestamp for %s: %s: %s", path_str, ts, exc)
 
-    def load_map(self, timestamps_root: Path, yaml: Mapping) -> None:
-        """Load timestamps from a dict."""
+    def load_map(
+        self,
+        timestamps_root: Path,
+        yaml: Mapping,
+        source_path: Path | None = None,
+    ) -> None:
+        """Load timestamps from a dict; source_path names the origin in logs."""
         if not yaml:
             return
 
         yaml = dict(yaml)
         # Pop off config entries and compare configs.
-        if not self._load_pop_config_matches(yaml):
+        if not self._load_pop_config_matches(timestamps_root, yaml, source_path):
             return
         # Pop off the WAL
         wal_entries = self.pop_wal_entries(yaml)
@@ -132,7 +175,8 @@ class TreestampsLoad(TreestampsGet):
         """Load timestamps from a file."""
         timestamps_path = Path(timestamps_path)
         yaml_dict = self._LOAD_YAML.load(timestamps_path)
-        self.load_map(timestamps_path.parent, yaml_dict)
+        # Pass the real file so WAL mismatches aren't blamed on the snapshot.
+        self.load_map(timestamps_path.parent, yaml_dict, timestamps_path)
         return True
 
     def _consume_child_timestamps(self, path: Path) -> None:
