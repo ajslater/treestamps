@@ -75,18 +75,14 @@ class TreestampsLoad(TreestampsGet):
             for side in (normalized, current_config):
                 if isinstance(side, Mapping):
                     keys |= set(side)
-            # key=str: foreign stamp files may mix key types, which do
+            # str(): foreign stamp files may mix key types, which do
             # not order against each other.
-            return tuple(sorted(keys, key=str)) or ("<entire config>",)
+            return tuple(sorted(str(key) for key in keys)) or ("<entire config>",)
         return tuple(
             sorted(
-                (
-                    key
-                    for key in set(normalized) | set(current_config)
-                    if normalized.get(key, _MISSING)
-                    != current_config.get(key, _MISSING)
-                ),
-                key=str,
+                str(key)
+                for key in set(normalized) | set(current_config)
+                if normalized.get(key, _MISSING) != current_config.get(key, _MISSING)
             )
         )
 

@@ -46,9 +46,7 @@ from pathlib import Path
 from treestamps import Grovestamps, GrovestampsConfig
 
 config = GrovestampsConfig(
-    "MyProgram",
-    paths=("/data/photos", "/data/videos"),
-    program_config={"quality": 90}
+    "MyProgram", paths=("/data/photos", "/data/videos"), program_config={"quality": 90}
 )
 
 gs = Grovestamps(config)
@@ -76,17 +74,13 @@ for file in files:
 ### Invalidate when config changes
 
 ```python
-GrovestampsConfig(
-    "MyProgram",
-    paths=("/data",),
-    program_config={"quality": 80}
-)
+GrovestampsConfig("MyProgram", paths=("/data",), program_config={"quality": 80})
 ```
 
 If you later change:
 
 ```python
-program_config={"quality": 90}
+program_config = {"quality": 90}
 ```
 
 👉 All timestamps are invalidated automatically.
