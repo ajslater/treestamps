@@ -1,5 +1,48 @@
 # 📰 Treestamps News
 
+## v5.0.0
+
+### Features
+
+- New `program_config_defaults` config option. When set, missing keys are filled
+  from it on both sides before comparing, so a program that adds or retires a
+  recorded config key no longer invalidates stamp files written before the
+  change. Only keys whose values actually differ invalidate. Defaults are not
+  filtered by `program_config_keys`, so retired keys may keep a default.
+- New `note` config option: extra comment lines for the header that now leads
+  every generated snapshot and WAL file. The header names the writing program
+  and states that the file is machine-written and not a config file. Comments
+  are invisible to the loader, so they never affect comparison.
+- New `program_config_key_labels` config option maps internal config key names
+  to human readable names in config mismatch warnings.
+- New `dir_config_fingerprint()` helper hashes the parsed, canonicalized values
+  of per-directory config files below a tree root. Fold it into a
+  `program_config` so per-directory config edits invalidate their tree. Comment,
+  whitespace, and key-order edits do not change the digest; option value edits,
+  adds, removes, and renames do.
+- New `GrovestampsConfig.tree_config_factory` builds a `TreestampsConfig` per
+  top path, so each tree can record its own resolved program config. Returning
+  `None` skips that tree entirely: no store and no stamp file.
+
+### Changes
+
+- **The `treestamps_config` yaml block is no longer written or compared.** It
+  duplicated `ignore` and `symlinks`, which programs whose file selection
+  depends on them already record in `program_config`. The tag is still popped
+  when loading, so files written by earlier versions load normally. A program
+  that relied on it must add those keys to `program_config_keys`.
+- `TreestampsConfig.get_config_dict()` is removed.
+- `GrovestampsConfig` gained fields, which shifts the position of `paths` for
+  positional construction. Construct configs with keyword arguments.
+
+### Migration
+
+- Upgrading invalidates nothing: the removed block is ignored, and the `config`
+  block is unchanged.
+- Trees processed alternately by 5.0.0 and older versions re-optimize once per
+  version switch, because older versions compare a block 5.0.0 no longer writes.
+  Pin one version per shared tree, or run once with `check_config=False`.
+
 ## v4.1.1
 
 ### Fixes

@@ -39,6 +39,7 @@ class TreestampsDump(TreestampsWal):
         # NOTE Does not cleanup old timestamps from disk
         yaml = self.dump_dict()
         with StringIO() as buf:
+            self._write_header(buf)
             self._YAML.dump(yaml, buf)
             return buf.getvalue()
 
@@ -73,10 +74,13 @@ class TreestampsDump(TreestampsWal):
         if changed:
             yaml = self.dump_dict()
             # Atomic rename: write to a sibling temp file then os.replace, so
-            # a crash mid-dump can't truncate the existing snapshot.
+            # a crash mid-dump can't truncate the existing snapshot. The
+            # header goes inside the temp file, so it shares that atomicity.
             tmp_path = self._dump_path.with_suffix(self._dump_path.suffix + ".tmp")
             try:
-                self._YAML.dump(yaml, tmp_path)
+                with tmp_path.open("w") as stream:
+                    self._write_header(stream)
+                    self._YAML.dump(yaml, stream)
                 tmp_path.replace(self._dump_path)
             finally:
                 tmp_path.unlink(missing_ok=True)

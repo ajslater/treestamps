@@ -104,7 +104,12 @@ class TreestampsWal(TreestampsInit):
     def _dumpf_init_wal(self) -> None:
         """Write current state to a new WAL file on disk."""
         yaml = self._serialize_program_config()
-        self._YAML.dump(yaml, self._wal_path)
+        with self._wal_path.open("w") as stream:
+            self._write_header(stream)
+            # An empty mapping would dump as a complete `{}` document, and
+            # the appended wal entries would then start a second one.
+            if yaml:
+                self._YAML.dump(yaml, stream)
         self._consumed_paths.add(self._wal_path)
         self._wal = self._wal_path.open("a", buffering=1, errors="backslashreplace")
         self._wal.write(self._WAL_HEADER)

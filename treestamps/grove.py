@@ -1,6 +1,6 @@
 """A Mapping of Treestamps."""
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -18,6 +18,11 @@ class GrovestampsConfig(CommonConfig):
     """Grovestamps config."""
 
     paths: Iterable[str | Path] = ()
+    # Called once per top path to build that tree's config. Use it when each
+    # tree records a different resolved program config (per-directory config
+    # files), which the single shared program_config cannot express. Return
+    # None to skip a tree entirely: no store, no stamp file.
+    tree_config_factory: Callable[[Path], TreestampsConfig | None] | None = None
 
     def __post_init__(self) -> None:
         """
@@ -51,6 +56,9 @@ class GrovestampsConfig(CommonConfig):
             "check_config": self.check_config,
             "program_config": self.program_config,
             "program_config_keys": self.program_config_keys,
+            "program_config_defaults": self.program_config_defaults,
+            "program_config_key_labels": self.program_config_key_labels,
+            "note": self.note,
         }
 
 
@@ -63,14 +71,19 @@ class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
         self._trees: dict[Path, Treestamps] = {}
 
         treestamps_config_dict = self._config.get_treestamps_config_dict()
+        factory = self._config.tree_config_factory
 
         for top_path in self._config.paths:
             root_dir = self._tree_key(top_path)
             if root_dir in self._trees:
                 continue
-            tree_config = TreestampsConfig(
-                **treestamps_config_dict, path=Path(top_path)
-            )
+            if factory is None:
+                tree_config = TreestampsConfig(
+                    **treestamps_config_dict, path=Path(top_path)
+                )
+            elif (tree_config := factory(Path(top_path))) is None:
+                # The factory declined this tree: no store, no stamp file.
+                continue
             ts = Treestamps(tree_config)
             ts.loadf_tree()
             self._trees[root_dir] = ts
