@@ -2,11 +2,8 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 from treestamps.config import CommonConfig
-
-_CONFIG_KEYS = ("ignore", "symlinks")
 
 
 @dataclass
@@ -19,10 +16,3 @@ class TreestampsConfig(CommonConfig):
         """Fix types."""
         super().__post_init__()
         self.path = Path(self.path)
-
-    def get_config_dict(self) -> dict[str, Any]:
-        """Return select attributes as a dict."""
-        result = {}
-        for config_key in _CONFIG_KEYS:
-            result[config_key] = getattr(self, config_key)
-        return result

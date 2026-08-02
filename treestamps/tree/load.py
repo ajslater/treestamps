@@ -60,8 +60,25 @@ class TreestampsLoad(TreestampsGet):
         cls,
         yaml_config: CommentedMap | Mapping | None,
         current_config: Mapping | None,
+        defaults: Mapping | None = None,
     ) -> tuple[str, ...]:
-        """Return the keys whose values differ between stored and current config."""
+        """
+        Return the keys whose values differ between stored and current config.
+
+        ``current_config`` and ``defaults`` must already be normalized;
+        ``CommonConfig.__post_init__`` guarantees it for both.
+        """
+        if (
+            defaults is not None
+            and isinstance(yaml_config, Mapping)
+            and isinstance(current_config, Mapping)
+        ):
+            # Fill missing keys on both sides so a key absent from one side
+            # whose other side holds the default compares equal. This is what
+            # lets a program add or retire recorded config keys without
+            # invalidating stamp files that predate the change.
+            yaml_config = {**defaults, **yaml_config}
+            current_config = {**defaults, **current_config}
         normalized: Any = TreestampsConfig.normalize_config(yaml_config)
         # Shallow equality, as the old comparison did.
         if current_config == normalized:
@@ -86,6 +103,10 @@ class TreestampsLoad(TreestampsGet):
             )
         )
 
+    def _config_key_label(self, key: str) -> str:
+        """Return the human readable name for a config key."""
+        return self._config.program_config_key_labels.get(key, key)
+
     def _load_pop_config_matches(
         self,
         timestamps_root: Path,
@@ -93,19 +114,26 @@ class TreestampsLoad(TreestampsGet):
         source_path: Path | None = None,
     ) -> bool:
         """Return if the configured and loaded configs match; warn on mismatch."""
-        yaml_ts_config = yaml.pop(self._TREESTAMPS_CONFIG_TAG, {})
+        # Files written before treestamps 5.0.0 carry a treestamps_config tag.
+        # It is no longer written or compared, but it must keep being popped
+        # or it would be parsed as a timestamp entry.
+        yaml.pop(self._TREESTAMPS_CONFIG_TAG, None)
         yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
         if not self._config.check_config:
             return True
-        diff = self._config_diff_keys(yaml_ts_config, self._config.get_config_dict())
-        diff += self._config_diff_keys(yaml_program_config, self._config.program_config)
+        diff = self._config_diff_keys(
+            yaml_program_config,
+            self._config.program_config,
+            self._config.program_config_defaults,
+        )
         if not diff:
             return True
+        labels = {self._config_key_label(str(key)) for key in diff}
         logger.warning(
             "Not loading timestamps from %s into tree %s: config mismatch for: %s",
             source_path or timestamps_root / self._filename,
             self.root_dir,
-            ", ".join(sorted({str(key) for key in diff})),
+            ", ".join(sorted(labels)),
         )
         return False
 
