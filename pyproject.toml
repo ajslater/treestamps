@@ -16,7 +16,7 @@ requires-python = ">=3.10"
 license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 name = "treestamps"
-version = "5.0.0"
+version = "5.0.1"
 [[project.authors]]
 name = "AJ Slater"
 email = "aj@slater.net"
