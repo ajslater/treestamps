@@ -204,3 +204,93 @@ class TestLoadOptions(BaseTestDir):
         # Same config must compare as matching and keep the stamp.
         gs2 = Grovestamps(config)
         assert gs2[subpath].get(path) == STAMP_TS
+
+    def _quality_config(self, path: Path, quality: int) -> GrovestampsConfig:
+        """Build a config recording a single quality option."""
+        return GrovestampsConfig(
+            PROGRAM_NAME,
+            paths=(path,),
+            program_config={"quality": quality},
+            program_config_keys=("quality",),
+        )
+
+    def test_config_mismatch_snapshot_rewritten_without_sets(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A rejected snapshot must be rewritten even if no timestamps are set."""
+        caplog.set_level(logging.WARNING, logger="treestamps.tree.load")
+        subpath = self.tmp_root / "stale"
+        subpath.mkdir()
+        gs1 = Grovestamps(self._quality_config(subpath, 1))
+        assert gs1[subpath].set(subpath / "file", STAMP_TS) == STAMP_TS
+        gs1.dumpf()
+        stamp_path = subpath / TS_FN
+
+        # Rejected for a config mismatch, and nothing is set this run.
+        config2 = self._quality_config(subpath, 2)
+        gs2 = Grovestamps(config2)
+        assert gs2[subpath].get(subpath / "file") is None
+        assert gs2.dumpf() == (subpath,)
+        assert "quality: 2" in stamp_path.read_text()
+
+        # So the next run loads it silently, and leaves it alone.
+        caplog.clear()
+        gs3 = Grovestamps(config2)
+        assert not caplog.records
+        before = stamp_path.read_bytes()
+        assert gs3.dumpf() == ()
+        assert stamp_path.read_bytes() == before
+
+    def test_config_mismatch_file_rooted_snapshot_rewritten(self) -> None:
+        """A file rooted tree must rewrite its rejected snapshot too."""
+        subpath = self.tmp_root / "filetree"
+        subpath.mkdir()
+        target = subpath / "target.txt"
+        target.touch()
+        gs1 = Grovestamps(self._quality_config(target, 1))
+        assert gs1[subpath].set(target, STAMP_TS) == STAMP_TS
+        gs1.dumpf()
+
+        gs2 = Grovestamps(self._quality_config(target, 2))
+        assert gs2[subpath].get(target) is None
+        assert gs2.dumpf() == (subpath,)
+        assert "quality: 2" in (subpath / TS_FN).read_text()
+
+    def test_parent_config_mismatch_does_not_rewrite_snapshot(self) -> None:
+        """A rejected parent stamp file must not rewrite our own snapshot."""
+        gs_parent = Grovestamps(self._quality_config(self.tmp_root, 1))
+        assert gs_parent[self.tmp_root].set(self.tmp_root / "pfile", STAMP_TS)
+        gs_parent.dumpf()
+
+        sub = self.tmp_root / "sub"
+        sub.mkdir()
+        config2 = self._quality_config(sub, 2)
+        gs = Grovestamps(config2)
+        assert gs[sub].set(sub / "sfile", STAMP_TS) == STAMP_TS
+        gs.dumpf()
+        stamp_path = sub / TS_FN
+        before = stamp_path.read_bytes()
+
+        # The parent still mismatches, but our own snapshot matches.
+        gs2 = Grovestamps(config2)
+        assert gs2[sub].get(sub / "sfile") == STAMP_TS
+        assert gs2.dumpf() == ()
+        assert stamp_path.read_bytes() == before
+
+    def test_loads_config_mismatch_does_not_rewrite_snapshot(self) -> None:
+        """A rejected string load must not rewrite our own snapshot."""
+        subpath = self.tmp_root / "strload"
+        subpath.mkdir()
+        config = self._quality_config(subpath, 2)
+        gs = Grovestamps(config)
+        assert gs[subpath].set(subpath / "file", STAMP_TS) == STAMP_TS
+        gs.dumpf()
+        stamp_path = subpath / TS_FN
+        before = stamp_path.read_bytes()
+
+        gs2 = Grovestamps(config)
+        # Rooted where our own snapshot lives, but sourced from a string.
+        gs2[subpath].loads(subpath, "config:\n  quality: 1\nother: 100.0\n")
+        assert gs2[subpath].get(subpath / "other") is None
+        assert gs2.dumpf() == ()
+        assert stamp_path.read_bytes() == before

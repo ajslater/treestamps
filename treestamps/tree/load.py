@@ -135,6 +135,14 @@ class TreestampsLoad(TreestampsGet):
             self.root_dir,
             ", ".join(sorted(labels)),
         )
+        if source_path == self._dump_path:
+            # Our own snapshot is stale. Force the next dumpf() to rewrite it
+            # with the current config even if no file timestamps are set this
+            # run. Otherwise a run that sets only dir timestamps, or none at
+            # all, leaves the rejected file on disk and this warning repeats
+            # forever. Child stamp files need no flag: they're consumed and
+            # deleted, which forces a dump on its own.
+            self._changed = True
         return False
 
     def _load_timestamp_entry(

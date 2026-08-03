@@ -1,5 +1,14 @@
 # 📰 Treestamps News
 
+## v5.0.1
+
+### Fixes
+
+- A snapshot discarded for a `check_config` mismatch is now rewritten with the
+  current config on the next `dumpf()`, even by a run that sets no file
+  timestamps. Previously such a run left the rejected file on disk unchanged, so
+  the mismatch warning repeated on every subsequent run.
+
 ## v5.0.0
 
 ### Features
