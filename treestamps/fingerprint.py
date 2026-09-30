@@ -38,7 +38,7 @@ def _config_values_chunk(
 
     The contribution is the file's parsed, canonicalized ``section`` — so
     comment, whitespace, and key-order edits don't change the digest, only
-    option values do. Unparseable files (including pathological yaml that
+    option values do. Unparsable files (including pathological yaml that
     exhausts the recursion limit) contribute their raw bytes instead
     (conservative: any edit invalidates).
     """
