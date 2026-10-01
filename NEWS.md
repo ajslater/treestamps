@@ -1,5 +1,14 @@
 # 📰 Treestamps News
 
+## v5.1.0
+
+### Changes
+
+- Require Python 3.11.
+- `Grovestamps.load()` now raises `AssertionError` when passed a `yaml` argument
+  that is not a `Mapping`, `str`, `bytes`, or `Path`. Previously it was silently
+  ignored.
+
 ## v5.0.1
 
 ### Fixes

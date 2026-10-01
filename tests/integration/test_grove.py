@@ -56,3 +56,12 @@ class TestGrove(BaseTestDir):
         stamp_file.write_text(f"file: {LOAD_TS}\n")
         gs.loadf(stamp_file)
         assert gs[data].get(data / "file") == LOAD_TS
+
+    def test_load_rejects_unsupported_yaml_type(self) -> None:
+        """An unsupported yaml type must raise, not be silently ignored."""
+        data = self.tmp_root / "data"
+        data.mkdir()
+        config = GrovestampsConfig(PROGRAM_NAME, paths=(data,), check_config=False)
+        gs = Grovestamps(config)
+        with pytest.raises(AssertionError, match="unreachable"):
+            gs.load(data, LOAD_TS)  # pyright: ignore[reportArgumentType], #ty: ignore[invalid-argument-type]
