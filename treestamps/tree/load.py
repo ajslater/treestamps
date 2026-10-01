@@ -55,6 +55,38 @@ class TreestampsLoad(TreestampsGet):
             return True
         return not self._config.symlinks and path.is_symlink()
 
+    @staticmethod
+    def _fill_config_defaults(
+        yaml_config: CommentedMap | Mapping | None,
+        current_config: Mapping | None,
+        defaults: Mapping | None,
+    ) -> tuple[Any, Any]:
+        """
+        Fill missing keys on both sides with the defaults.
+
+        A key absent from one side whose other side holds the default then
+        compares equal. This is what lets a program add or retire recorded
+        config keys without invalidating stamp files that predate the change.
+        """
+        if (
+            defaults is None
+            or not isinstance(yaml_config, Mapping)
+            or not isinstance(current_config, Mapping)
+        ):
+            return yaml_config, current_config
+        return {**defaults, **yaml_config}, {**defaults, **current_config}
+
+    @staticmethod
+    def _mapping_keys(*sides: Any) -> tuple[str, ...]:
+        """Return the sorted keys of every side that is a mapping."""
+        keys: set = set()
+        for side in sides:
+            if isinstance(side, Mapping):
+                keys |= set(side)
+        # str(): foreign stamp files may mix key types, which do
+        # not order against each other.
+        return tuple(sorted(str(key) for key in keys))
+
     @classmethod
     def _config_diff_keys(
         cls,
@@ -68,17 +100,9 @@ class TreestampsLoad(TreestampsGet):
         ``current_config`` and ``defaults`` must already be normalized;
         ``CommonConfig.__post_init__`` guarantees it for both.
         """
-        if (
-            defaults is not None
-            and isinstance(yaml_config, Mapping)
-            and isinstance(current_config, Mapping)
-        ):
-            # Fill missing keys on both sides so a key absent from one side
-            # whose other side holds the default compares equal. This is what
-            # lets a program add or retire recorded config keys without
-            # invalidating stamp files that predate the change.
-            yaml_config = {**defaults, **yaml_config}
-            current_config = {**defaults, **current_config}
+        yaml_config, current_config = cls._fill_config_defaults(
+            yaml_config, current_config, defaults
+        )
         normalized: Any = TreestampsConfig.normalize_config(yaml_config)
         # Shallow equality, as the old comparison did.
         if current_config == normalized:
@@ -88,13 +112,7 @@ class TreestampsLoad(TreestampsGet):
         ):
             # One side absent or malformed: every key of whichever side is a
             # mapping differs.
-            keys: set = set()
-            for side in (normalized, current_config):
-                if isinstance(side, Mapping):
-                    keys |= set(side)
-            # str(): foreign stamp files may mix key types, which do
-            # not order against each other.
-            return tuple(sorted(str(key) for key in keys)) or ("<entire config>",)
+            return cls._mapping_keys(normalized, current_config) or ("<entire config>",)
         return tuple(
             sorted(
                 str(key)

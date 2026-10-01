@@ -6,6 +6,7 @@ from types import MappingProxyType
 from typing import Any
 
 from ruamel.yaml.comments import CommentedMap, CommentedSet
+from typing_extensions import override
 
 # Characters that would end a yaml comment line and inject content.
 _NOTE_FORBIDDEN_CHARS = ("\n", "\r", "\x85", "\u2028", "\u2029")
@@ -108,6 +109,7 @@ class CommonConfig:
             return type(value)(converted)
         return value
 
+    @override
     def __getstate__(self) -> dict[str, Any]:
         """Convert MappingProxyType to dict for pickling."""
         state = self.__dict__.copy()

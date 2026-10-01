@@ -3,7 +3,7 @@
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, assert_never
 
 from typing_extensions import override
 
@@ -139,6 +139,8 @@ class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
                 treestamps.loads(path, yaml)
             case Path():
                 treestamps.loadf(yaml)
+            case _:
+                assert_never(yaml)
 
     def load_map(self, grove: Mapping[Path, Mapping | str | bytes | Path]) -> None:
         """Load a grove of treestamps from a mapping."""

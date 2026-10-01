@@ -27,6 +27,27 @@ class TestLoadOptions(BaseTestDir):
         gs.dumpf()
         return subdir / TS_FN
 
+    def _quality_config(
+        self, path: Path, quality: int, *, check_config: bool = True
+    ) -> GrovestampsConfig:
+        """Build a config recording a single quality option."""
+        return GrovestampsConfig(
+            PROGRAM_NAME,
+            paths=(path,),
+            program_config={"quality": quality},
+            program_config_keys=("quality",),
+            check_config=check_config,
+        )
+
+    def _dump_quality_stamp(self, quality: int) -> Path:
+        """Stamp a file in a fresh subdir with a recorded quality option."""
+        subpath = self.tmp_root / "cc"
+        subpath.mkdir()
+        gs = Grovestamps(self._quality_config(subpath, quality))
+        assert gs[subpath].set(subpath / "file", STAMP_TS) == STAMP_TS
+        gs.dumpf()
+        return subpath
+
     def test_ignore_name_glob_skips_child_stamps(self) -> None:
         """A single-segment ignore glob must exclude matching dirs from the scan."""
         keep = self.tmp_root / "keep"
@@ -132,36 +153,26 @@ class TestLoadOptions(BaseTestDir):
         assert sub_stamp.exists()
         assert root_stamp.exists()
 
-    def test_check_config_invalidation(self, caplog: pytest.LogCaptureFixture) -> None:
-        """A changed program_config must discard stamps unless check_config is off."""
+    def test_check_config_same_config_keeps_stamps(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """An unchanged program_config must keep stamps, silently."""
         caplog.set_level(logging.WARNING, logger="treestamps.tree.load")
-        subpath = self.tmp_root / "cc"
-        subpath.mkdir()
-        path = subpath / "file"
-        config1 = GrovestampsConfig(
-            PROGRAM_NAME,
-            paths=(subpath,),
-            program_config={"quality": 1},
-            program_config_keys=("quality",),
-        )
-        gs1 = Grovestamps(config1)
-        assert gs1[subpath].set(path, STAMP_TS) == STAMP_TS
-        gs1.dumpf()
+        subpath = self._dump_quality_stamp(1)
 
-        # Same config: stamps are kept, silently.
-        gs1b = Grovestamps(config1)
-        assert gs1b[subpath].get(path) == STAMP_TS
+        gs = Grovestamps(self._quality_config(subpath, 1))
+        assert gs[subpath].get(subpath / "file") == STAMP_TS
         assert not caplog.records
 
-        # Changed config: stamps are discarded with a warning naming the key.
-        config2 = GrovestampsConfig(
-            PROGRAM_NAME,
-            paths=(subpath,),
-            program_config={"quality": 2},
-            program_config_keys=("quality",),
-        )
-        gs2 = Grovestamps(config2)
-        assert gs2[subpath].get(path) is None
+    def test_check_config_changed_config_discards_stamps(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A changed program_config must discard stamps and warn, naming the key."""
+        caplog.set_level(logging.WARNING, logger="treestamps.tree.load")
+        subpath = self._dump_quality_stamp(1)
+
+        gs = Grovestamps(self._quality_config(subpath, 2))
+        assert gs[subpath].get(subpath / "file") is None
         warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
         assert len(warnings) == 1
         message = warnings[0].getMessage()
@@ -169,17 +180,15 @@ class TestLoadOptions(BaseTestDir):
         assert "quality" in message
         assert str(subpath) in message
 
-        # Changed config with check_config off: stamps are kept, silently.
-        caplog.clear()
-        config3 = GrovestampsConfig(
-            PROGRAM_NAME,
-            paths=(subpath,),
-            program_config={"quality": 2},
-            program_config_keys=("quality",),
-            check_config=False,
-        )
-        gs3 = Grovestamps(config3)
-        assert gs3[subpath].get(path) == STAMP_TS
+    def test_check_config_off_keeps_stamps(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A changed program_config with check_config off keeps stamps, silently."""
+        caplog.set_level(logging.WARNING, logger="treestamps.tree.load")
+        subpath = self._dump_quality_stamp(1)
+
+        gs = Grovestamps(self._quality_config(subpath, 2, check_config=False))
+        assert gs[subpath].get(subpath / "file") == STAMP_TS
         assert not caplog.records
 
     def test_program_config_nested_roundtrip(self) -> None:
@@ -204,15 +213,6 @@ class TestLoadOptions(BaseTestDir):
         # Same config must compare as matching and keep the stamp.
         gs2 = Grovestamps(config)
         assert gs2[subpath].get(path) == STAMP_TS
-
-    def _quality_config(self, path: Path, quality: int) -> GrovestampsConfig:
-        """Build a config recording a single quality option."""
-        return GrovestampsConfig(
-            PROGRAM_NAME,
-            paths=(path,),
-            program_config={"quality": quality},
-            program_config_keys=("quality",),
-        )
 
     def test_config_mismatch_snapshot_rewritten_without_sets(
         self, caplog: pytest.LogCaptureFixture

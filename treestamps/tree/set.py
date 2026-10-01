@@ -1,7 +1,7 @@
 """Set Methods."""
 
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from treestamps.tree.load import TreestampsLoad
@@ -42,7 +42,7 @@ class TreestampsSet(TreestampsLoad):
         # Should we do the set?
         old_mtime = self._timestamps.get(abs_path)
         if mtime is None:
-            mtime = datetime.now(tz=timezone.utc).timestamp()
+            mtime = datetime.now(tz=UTC).timestamp()
         if old_mtime is not None and old_mtime >= mtime:
             # No-op: already at or above the requested mtime. Skip both the
             # _changed flag flip and the WAL write.
