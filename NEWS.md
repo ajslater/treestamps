@@ -1,5 +1,13 @@
 # 📰 Treestamps News
 
+## v5.1.1
+
+- Fixes
+
+    - Importing treestamps works on Python 3.11. A config field default that
+      only Python 3.12 and later accept raised `ValueError` at import, so 5.0.0
+      through 5.1.0 could not run on 3.11.
+
 ## v5.1.0
 
 - Changes

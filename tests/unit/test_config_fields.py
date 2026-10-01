@@ -1,11 +1,14 @@
 """Config fields added in 5.0.0: defaults, labels and the header note."""
 
 import pickle
+from dataclasses import fields
 from types import MappingProxyType
 
 import pytest
 
+from treestamps.config import CommonConfig
 from treestamps.grove import GrovestampsConfig
+from treestamps.tree.config import TreestampsConfig
 
 __all__ = ()
 
@@ -100,3 +103,20 @@ class TestNote:
         """A line break would end the comment and inject yaml into the file."""
         with pytest.raises(ValueError, match="line breaks"):
             GrovestampsConfig("Dummy", note=(bad,))
+
+
+class TestFieldDefaults:
+    """Field defaults must import on every supported Python."""
+
+    @pytest.mark.parametrize("config_class", [GrovestampsConfig, TreestampsConfig])
+    def test_no_mappingproxy_defaults(self, config_class: type[CommonConfig]) -> None:
+        """
+        Python 3.11 dataclasses reject unhashable defaults at import.
+
+        mappingproxy only became hashable in 3.12, so a MappingProxyType
+        default passes on newer Pythons and breaks the import on 3.11.
+        """
+        for config_field in fields(config_class):
+            assert not isinstance(config_field.default, MappingProxyType), (
+                config_field.name
+            )

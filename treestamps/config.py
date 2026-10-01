@@ -1,7 +1,7 @@
 """Treestamps Config methods."""
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any
 
@@ -32,7 +32,10 @@ class CommonConfig:
     program_config: Mapping[str, Any] | None = None
     program_config_keys: Iterable[str] = frozenset()
     program_config_defaults: Mapping[str, Any] | None = None
-    program_config_key_labels: Mapping[str, str] = MappingProxyType({})
+    # A factory, not MappingProxyType({}): Python 3.11 dataclasses reject
+    # unhashable defaults, and mappingproxy is unhashable before 3.12.
+    # __post_init__ freezes it.
+    program_config_key_labels: Mapping[str, str] = field(default_factory=dict)
     note: Iterable[str] = ()
 
     @classmethod
