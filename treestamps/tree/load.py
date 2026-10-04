@@ -3,19 +3,30 @@
 import logging
 import os
 import re
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from fnmatch import translate
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, NamedTuple
 
 from ruamel.yaml.comments import CommentedMap
 
 from treestamps.tree.config import TreestampsConfig
 from treestamps.tree.get import TreestampsGet
+from treestamps.tree.report import StampFileReport, TreestampsReport
 
 logger = logging.getLogger(__name__)
 
 _MISSING: Final = object()
+_ENTIRE_CONFIG: Final = "<entire config>"
+
+
+class _ConfigCheck(NamedTuple):
+    """A stamp file's recorded config compared with the current one."""
+
+    has_config: bool
+    diff_keys: tuple[str, ...] = ()
+    diff_labels: tuple[str, ...] = ()
+    discard: bool = False
 
 
 class TreestampsLoad(TreestampsGet):
@@ -112,7 +123,7 @@ class TreestampsLoad(TreestampsGet):
         ):
             # One side absent or malformed: every key of whichever side is a
             # mapping differs.
-            return cls._mapping_keys(normalized, current_config) or ("<entire config>",)
+            return cls._mapping_keys(normalized, current_config) or (_ENTIRE_CONFIG,)
         return tuple(
             sorted(
                 str(key)
@@ -125,6 +136,40 @@ class TreestampsLoad(TreestampsGet):
         """Return the human readable name for a config key."""
         return self._config.program_config_key_labels.get(key, key)
 
+    def _pop_config_check(
+        self, yaml: dict[str, Any], *, always_diff: bool = False
+    ) -> _ConfigCheck:
+        """
+        Pop the config tags off a stamp mapping and decide whether to reject it.
+
+        The one decision both a load and inspect() make. Pure: it neither
+        logs nor touches state. With check_config off nothing is rejected, so
+        a load skips the comparison; always_diff makes it anyway, for reports.
+        """
+        # Files written before treestamps 5.0.0 carry a treestamps_config tag.
+        # It is no longer written or compared, but it must keep being popped
+        # or it would be parsed as a timestamp entry.
+        yaml.pop(self._TREESTAMPS_CONFIG_TAG, None)
+        has_config = self._CONFIG_TAG in yaml
+        yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
+        check_config = self._config.check_config
+        if not check_config and not always_diff:
+            return _ConfigCheck(has_config)
+        try:
+            diff = self._config_diff_keys(
+                yaml_program_config,
+                self._config.program_config,
+                self._config.program_config_defaults,
+            )
+        except Exception:
+            # A hand edited config block whose values don't sort. A checked
+            # load fails on the file; an unchecked one never compares.
+            if check_config:
+                raise
+            diff = (_ENTIRE_CONFIG,)
+        labels = tuple(sorted({self._config_key_label(key) for key in diff}))
+        return _ConfigCheck(has_config, diff, labels, check_config and bool(diff))
+
     def _load_pop_config_matches(
         self,
         timestamps_root: Path,
@@ -132,26 +177,14 @@ class TreestampsLoad(TreestampsGet):
         source_path: Path | None = None,
     ) -> bool:
         """Return if the configured and loaded configs match; warn on mismatch."""
-        # Files written before treestamps 5.0.0 carry a treestamps_config tag.
-        # It is no longer written or compared, but it must keep being popped
-        # or it would be parsed as a timestamp entry.
-        yaml.pop(self._TREESTAMPS_CONFIG_TAG, None)
-        yaml_program_config = yaml.pop(self._CONFIG_TAG, None)
-        if not self._config.check_config:
+        check = self._pop_config_check(yaml)
+        if not check.discard:
             return True
-        diff = self._config_diff_keys(
-            yaml_program_config,
-            self._config.program_config,
-            self._config.program_config_defaults,
-        )
-        if not diff:
-            return True
-        labels = {self._config_key_label(str(key)) for key in diff}
         logger.warning(
             "Not loading timestamps from %s into tree %s: config mismatch for: %s",
             source_path or timestamps_root / self._filename,
             self.root_dir,
-            ", ".join(sorted(labels)),
+            ", ".join(check.diff_labels),
         )
         if source_path == self._dump_path:
             # Our own snapshot is stale. Force the next dumpf() to rewrite it
@@ -239,8 +272,8 @@ class TreestampsLoad(TreestampsGet):
             # Foreign stamp files may contain anything; stay broad.
             logger.warning("Error reading child timestamps from %s: %s", path, exc)
 
-    def _consume_all_child_timestamps(self, path: Path) -> None:
-        """Consume all timestamps and wal files below a path."""
+    def _iter_stamp_paths(self, path: Path) -> Iterator[Path]:
+        """Yield the timestamps and wal files below a path that a load reads."""
         # Iterative walk with an explicit stack: deep trees would blow
         # Python's recursion limit.
         stamp_names = (self._filename, self._wal_filename)
@@ -257,11 +290,16 @@ class TreestampsLoad(TreestampsGet):
                         if entry.is_dir(follow_symlinks=self._config.symlinks):
                             dirs.append(Path(entry.path))
                         elif entry.name in stamp_names:
-                            self._consume_child_timestamps(Path(entry.path))
+                            yield Path(entry.path)
             except OSError as exc:
                 logger.warning(
                     "Error scanning %s for child timestamps: %s", subdir, exc
                 )
+
+    def _consume_all_child_timestamps(self, path: Path) -> None:
+        """Consume all timestamps and wal files below a path."""
+        for stamp_path in self._iter_stamp_paths(path):
+            self._consume_child_timestamps(stamp_path)
 
     def _load_parent_timestamps(self, path: Path) -> None:
         """Load a parent timestamp."""
@@ -297,3 +335,85 @@ class TreestampsLoad(TreestampsGet):
                 stamp_path = self.root_dir / name
                 if stamp_path.is_file():
                     self._consume_child_timestamps(stamp_path)
+
+    def _inspect_stamp_map(self, yaml: Any) -> tuple[_ConfigCheck, int]:
+        """Return a parsed stamp file's config check and timestamp entry count."""
+        if not yaml:
+            # A load skips an empty file without comparing configs.
+            return _ConfigCheck(has_config=False), 0
+        yaml = dict(yaml)
+        check = self._pop_config_check(yaml, always_diff=True)
+        wal_entries, _ = self._pop_wal(yaml)
+        yaml.update(wal_entries)
+        return check, len(yaml)
+
+    def _inspect_stamp_file(self, path: Path) -> StampFileReport:
+        """Report what a load would make of one stamp file, without loading it."""
+        try:
+            mtime = path.stat().st_mtime
+        except FileNotFoundError:
+            return StampFileReport(path)
+        except OSError as exc:
+            return StampFileReport(path, error=f"{type(exc).__name__}: {exc}")
+        try:
+            check, entry_count = self._inspect_stamp_map(self._LOAD_YAML.load(path))
+        except Exception as exc:
+            # Foreign stamp files may contain anything; stay broad, as a load
+            # does. A file a load can't read loses its timestamps.
+            return StampFileReport(
+                path,
+                exists=True,
+                mtime=mtime,
+                would_discard=True,
+                error=f"{type(exc).__name__}: {exc}",
+            )
+        return StampFileReport(
+            path,
+            exists=True,
+            mtime=mtime,
+            entry_count=entry_count,
+            has_config=check.has_config,
+            diff_keys=check.diff_keys,
+            diff_labels=check.diff_labels,
+            would_discard=check.discard,
+        )
+
+    def _inspect(self, *, children: bool) -> TreestampsReport:
+        """Report on this tree's stamp files without loading them."""
+        child_reports = None
+        if children:
+            # Mirror loadf_tree(): a file rooted tree never scans below its
+            # root dir, and the root's own files are reported separately.
+            paths = (
+                self._iter_stamp_paths(self.root_dir)
+                if self._config.path.is_dir()
+                else ()
+            )
+            own_paths = (self._dump_path, self._wal_path)
+            child_reports = tuple(
+                self._inspect_stamp_file(path)
+                for path in sorted(paths)
+                if path not in own_paths
+            )
+        return TreestampsReport(
+            root_dir=self.root_dir,
+            snapshot=self._inspect_stamp_file(self._dump_path),
+            wal=self._inspect_stamp_file(self._wal_path),
+            children=child_reports,
+        )
+
+    @classmethod
+    def inspect(
+        cls, config: TreestampsConfig, *, children: bool = False
+    ) -> TreestampsReport:
+        """
+        Report what the next load would make of a tree's stamp files.
+
+        Read-only: nothing is loaded, consumed, written, or logged, apart from
+        the warning a load also logs for a directory it can't scan. A bad
+        file is reported in its error field rather than raised. With
+        children, also report the stamp files below the root that the next
+        load would absorb.
+        """
+        tree = cls(config)
+        return tree._inspect(children=children)

@@ -1,5 +1,14 @@
 # 📰 Treestamps News
 
+## v5.2.0
+
+- Features
+
+    - New read-only `Treestamps.inspect()` and `Grovestamps.inspect()` report on
+      stamp files without loading them: presence, age, entries, a leftover WAL,
+      and the config keys that would discard each one, optionally for child
+      stamp files too.
+
 ## v5.1.1
 
 - Fixes

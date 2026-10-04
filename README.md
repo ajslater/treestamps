@@ -96,6 +96,24 @@ config = GrovestampsConfig(
 
 Each root gets its own timestamp file, but shares config logic.
 
+### Inspect a tree without loading it
+
+For a `doctor` command, ask what the next run would make of a tree's stamp
+files. Nothing is loaded, consumed, written, or raised.
+
+```python
+report = Treestamps.inspect(tree_config, children=True)
+stamp = report.snapshot
+if stamp.would_discard:
+    print(f"Next run discards {stamp.path}:", stamp.error or stamp.diff_labels)
+if report.wal.exists:
+    print("An interrupted run left a WAL")
+```
+
+`Grovestamps.inspect(config)` reports on every tree that `Grovestamps(config)`
+would build, keyed by tree root. A tree that `tree_config_factory` declined maps
+to `None`.
+
 ## ⚙️ How it works
 
 Treestamps uses two files per root directory:
