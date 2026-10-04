@@ -16,7 +16,7 @@ requires-python = ">=3.11"
 license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 name = "treestamps"
-version = "5.1.1"
+version = "5.2.0"
 
 [[project.authors]]
 name = "AJ Slater"
@@ -101,9 +101,6 @@ wheel-exclude = ["**/*\\~", "**/.DS_Store"]
 
 [tool.basedpyright]
 exclude = [
-  "**/.*",
-  "**/__pycache__",
-  "**/node_modules",
   "dist",
   "frontend",
   "site",
@@ -133,7 +130,7 @@ reportUnusedParameter = false
 [tool.codespell]
 builtin = "clear,code,rare"
 ignore-words-list = "coverd,crate,deque,falsy,iff,ro,searchd,thead,versio,wan,warmup,ws"
-skip = "*.pdf,*.svg,*~,./bun.lock,./dist,./node_modules,./package-lock.json,./package.json,./test-results,./uv.lock,/uv.lock,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,test-results,typings,uv.lock"
+skip = "*.pdf,*.svg,*~,./package-lock.json,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,tasks,test-results,typings,uv.lock"
 
 [tool.complexipy]
 failed = true
@@ -147,8 +144,6 @@ source = ["treestamps"]
 branch = true
 concurrency = ["multiprocessing"]
 omit = [
-  "*/.*",
-  "*__pycache__*",
   "dist/*",
   "frontend/*",
   "node_modules/*",
@@ -177,14 +172,12 @@ pythonpath = ["."]
 asyncio_mode = "strict"
 
 [tool.radon]
-exclude = "*~,.*,.*/*,__pycache__/*,config/*,dist/*,frontend/*,node_modules/*,site/*,test-results/*,typings/*,vulture_ignorelist.py"
+exclude = "*~,config/*,dist/*,frontend/*,node_modules/*,site/*,test-results/*,typings/*,vulture_ignorelist.py"
 
 [tool.ruff]
 builtins = ["ic"]
 extend-exclude = [
   "**/.*",
-  "**/__pycache__",
-  "dist",
   "frontend",
   "site",
   "test-results",
@@ -300,9 +293,6 @@ python-version = "3.11"
 [tool.ty.src]
 exclude = [
   "**/.*",
-  "**/__pycache__",
-  "**/node_modules",
-  "dist",
   "frontend",
   "site",
   "test-results",
@@ -313,7 +303,6 @@ exclude = [
 [tool.vulture]
 exclude = [
   "*/.venv/*",
-  "*/__pycache__/*",
   "*/dist/*",
   "*/frontend/*",
   "*/node_modules/*",

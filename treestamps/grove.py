@@ -11,6 +11,7 @@ from treestamps.base import TreestampsBase
 from treestamps.config import CommonConfig
 from treestamps.tree import Treestamps
 from treestamps.tree.config import TreestampsConfig
+from treestamps.tree.report import TreestampsReport
 
 
 @dataclass
@@ -70,18 +71,8 @@ class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
         self._config: GrovestampsConfig = config
         self._trees: dict[Path, Treestamps] = {}
 
-        treestamps_config_dict = self._config.get_treestamps_config_dict()
-        factory = self._config.tree_config_factory
-
-        for top_path in self._config.paths:
-            root_dir = self._tree_key(top_path)
-            if root_dir in self._trees:
-                continue
-            if factory is None:
-                tree_config = TreestampsConfig(
-                    **treestamps_config_dict, path=Path(top_path)
-                )
-            elif (tree_config := factory(Path(top_path))) is None:
+        for root_dir, tree_config in self._tree_configs(self._config):
+            if tree_config is None:
                 # The factory declined this tree: no store, no stamp file.
                 continue
             ts = Treestamps(tree_config)
@@ -90,6 +81,51 @@ class Grovestamps(Mapping[Path, Treestamps], TreestampsBase):
 
         self.filename: str = self.get_filename(self._config.program_name)
         self.wal_filename: str = self.get_wal_filename(self._config.program_name)
+
+    @classmethod
+    def _tree_configs(
+        cls, config: GrovestampsConfig
+    ) -> Iterator[tuple[Path, TreestampsConfig | None]]:
+        """
+        Yield each top path's tree root and tree config.
+
+        None marks a tree the factory declined. A later top path in an
+        accepted tree is skipped; one in a declined tree asks again.
+        """
+        treestamps_config_dict = config.get_treestamps_config_dict()
+        factory = config.tree_config_factory
+        accepted: set[Path] = set()
+        for top_path in config.paths:
+            root_dir = cls._tree_key(top_path)
+            if root_dir in accepted:
+                continue
+            if factory is None:
+                tree_config = TreestampsConfig(
+                    **treestamps_config_dict, path=Path(top_path)
+                )
+            else:
+                tree_config = factory(Path(top_path))
+            if tree_config is not None:
+                accepted.add(root_dir)
+            yield root_dir, tree_config
+
+    @classmethod
+    def inspect(
+        cls, config: GrovestampsConfig, *, children: bool = False
+    ) -> dict[Path, TreestampsReport | None]:
+        """
+        Report on each tree's stamp files without loading them.
+
+        Keyed by tree root, with the trees Grovestamps(config) would build.
+        None marks a tree the factory declined. See Treestamps.inspect().
+        """
+        reports: dict[Path, TreestampsReport | None] = {}
+        for root_dir, tree_config in cls._tree_configs(config):
+            if tree_config is None:
+                reports.setdefault(root_dir, None)
+            else:
+                reports[root_dir] = Treestamps.inspect(tree_config, children=children)
+        return reports
 
     # Mapping interface
 
