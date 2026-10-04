@@ -3,6 +3,7 @@
 import logging
 import re
 from pathlib import Path
+from typing import Any
 
 from ruamel.yaml import StringIO
 
@@ -136,13 +137,23 @@ class TreestampsWal(TreestampsInit):
         wal_entry = self._create_wal_entry(abs_path, mtime)
         self._wal.write(wal_entry)  # pyright: ignore[reportOptionalMemberAccess], #ty: ignore[unresolved-attribute]
 
-    def pop_wal_entries(self, yaml_dict: dict) -> dict[str, float]:
-        """Pop off wal entries."""
+    def _pop_wal(
+        self, yaml_dict: dict
+    ) -> tuple[dict[str, float], list[tuple[Any, Exception]]]:
+        """Pop off wal entries silently; return them and the malformed ones."""
         wal = yaml_dict.pop(self._WAL_TAG, ())
         entries: dict[str, float] = {}
+        errors: list[tuple[Any, Exception]] = []
         for wal_entry in wal:
             try:
                 entries.update(wal_entry)
             except (TypeError, ValueError) as exc:
-                logger.warning("Error loading WAL entry: %s - %s", wal_entry, exc)
+                errors.append((wal_entry, exc))
+        return entries, errors
+
+    def pop_wal_entries(self, yaml_dict: dict) -> dict[str, float]:
+        """Pop off wal entries."""
+        entries, errors = self._pop_wal(yaml_dict)
+        for wal_entry, exc in errors:
+            logger.warning("Error loading WAL entry: %s - %s", wal_entry, exc)
         return entries
