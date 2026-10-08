@@ -15,6 +15,7 @@ from treestamps import (
     StampFileReport,
     Treestamps,
     TreestampsConfig,
+    TreestampsReport,
 )
 
 __all__ = ()
@@ -194,27 +195,22 @@ class TestInspect(BaseTestDir):
         report = Treestamps.inspect(_config(root, **overrides))
 
         assert not caplog.records
-        assert report.root_dir == root
-        assert report.children is None
-        assert not report.wal.exists
-        stamp = report.snapshot
-        assert stamp.path == root / TS_FN
-        if expected.get("exists", True):
-            assert stamp.exists
-            assert stamp.mtime == stamp.path.stat().st_mtime
-        else:
-            assert not stamp.exists
-            assert stamp.mtime is None
-        if error_type := expected.get("error"):
-            assert stamp.error
-            assert stamp.error.startswith(f"{error_type}: ")
-        else:
-            assert stamp.error is None
-        assert stamp.entry_count == expected.get("entry_count", 0)
-        assert stamp.has_config == expected.get("has_config", False)
-        assert stamp.diff_keys == expected.get("diff_keys", ())
-        assert stamp.diff_labels == expected.get("diff_labels", ())
-        assert stamp.would_discard == expected.get("would_discard", False)
+        fields: dict[str, Any] = {"exists": True, **expected}
+        error_type = fields.pop("error", None)
+        stamp_path = root / TS_FN
+        assert report == TreestampsReport(
+            root,
+            snapshot=StampFileReport(
+                stamp_path,
+                mtime=stamp_path.stat().st_mtime if fields["exists"] else None,
+                # The message varies by parser; only its type prefix is fixed.
+                error=report.snapshot.error if error_type else None,
+                **fields,
+            ),
+            wal=StampFileReport(root / WAL_FN),
+        )
+        if error_type:
+            assert str(report.snapshot.error).startswith(f"{error_type}: ")
 
     @pytest.mark.parametrize("case_id", CASES)
     def test_snapshot_verdict_equals_real_load(
@@ -341,21 +337,24 @@ class TestInspect(BaseTestDir):
         b_wal.write_text("config:\n  quality: 1\nwal:\n  - bw_file: 100.0\n")
         (root / "skip" / TS_FN).write_text("config:\n  quality: 1\nskip_file: 100.0\n")
         config = _config(root, ignore=("skip",))
+        # Each reported child: (the entry it records, would_discard).
+        expected = {
+            a_ts: ("a_file", False),
+            b_ts: ("b_file", True),
+            b_wal: ("bw_file", False),
+        }
 
         report = Treestamps.inspect(config, children=True)
         assert report.children is not None
         children = {child.path: child for child in report.children}
-        assert tuple(children) == tuple(sorted((a_ts, b_ts, b_wal)))
-        assert not children[a_ts].would_discard
-        assert children[b_ts].would_discard
+        assert tuple(children) == tuple(sorted(expected))
         assert children[b_ts].diff_labels == ("Image quality",)
-        assert not children[b_wal].would_discard
 
         ts = _load(config)
-        entries = {a_ts: "a_file", b_ts: "b_file", b_wal: "bw_file"}
-        for path, name in entries.items():
+        for path, (name, discard) in expected.items():
+            assert children[path].would_discard == discard
             loaded = ts.get(path.parent / name) == STAMP_TS
-            assert loaded == (not children[path].would_discard)
+            assert loaded == (not discard)
         assert ts.get(root / "skip" / "skip_file") is None
 
     def test_children_not_scanned_by_default(self) -> None:
