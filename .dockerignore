@@ -8,6 +8,8 @@
 **/test-results
 *Dockerfile
 .claude
+.claude/settings.local.json
+.claude/worktrees
 .coverage*
 .env*
 .git
