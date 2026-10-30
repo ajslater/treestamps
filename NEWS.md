@@ -5,25 +5,25 @@
 ### ✨ Added
 
 - New read-only `Treestamps.inspect()` and `Grovestamps.inspect()` report on
-  stamp files without loading them: presence, age, entries, a leftover WAL,
-  and the config keys that would discard each one, optionally for child
-  stamp files too.
+  stamp files without loading them: presence, age, entries, a leftover WAL, and
+  the config keys that would discard each one, optionally for child stamp files
+  too.
 
 ## v5.1.1
 
 ### 🐛 Fixed
 
-- Importing treestamps works on Python 3.11. A config field default that
-  only Python 3.12 and later accept raised `ValueError` at import, so 5.0.0
-  through 5.1.0 could not run on 3.11.
+- Importing treestamps works on Python 3.11. A config field default that only
+  Python 3.12 and later accept raised `ValueError` at import, so 5.0.0 through
+  5.1.0 could not run on 3.11.
 
 ## v5.1.0
 
 ### 🐛 Fixed
 
-- `Grovestamps.load()` now raises `AssertionError` when passed a `yaml`
-  argument that is not a `Mapping`, `str`, `bytes`, or `Path`. Previously it
-  was silently ignored.
+- `Grovestamps.load()` now raises `AssertionError` when passed a `yaml` argument
+  that is not a `Mapping`, `str`, `bytes`, or `Path`. Previously it was silently
+  ignored.
 
 ### 🧑‍💻 Developer
 
@@ -33,60 +33,58 @@
 
 ### 🐛 Fixed
 
-- A snapshot discarded for a `check_config` mismatch is now rewritten with
-  the current config on the next `dumpf()`, even by a run that sets no file
-  timestamps. Previously such a run left the rejected file on disk
-  unchanged, so the mismatch warning repeated on every subsequent run.
+- A snapshot discarded for a `check_config` mismatch is now rewritten with the
+  current config on the next `dumpf()`, even by a run that sets no file
+  timestamps. Previously such a run left the rejected file on disk unchanged, so
+  the mismatch warning repeated on every subsequent run.
 
 ## v5.0.0
 
 ### ✨ Added
 
-- New `program_config_defaults` config option. When set, missing keys are
-  filled from it on both sides before comparing, so a program that adds or
-  retires a recorded config key no longer invalidates stamp files written
-  before the change. Only keys whose values actually differ invalidate.
-  Defaults are not filtered by `program_config_keys`, so retired keys may
-  keep a default.
-- New `note` config option: extra comment lines for the header that now
-  leads every generated snapshot and WAL file. The header names the writing
-  program and states that the file is machine-written and not a config file.
-  Comments are invisible to the loader, so they never affect comparison.
-- New `program_config_key_labels` config option maps internal config key
-  names to human readable names in config mismatch warnings.
-- New `dir_config_fingerprint()` helper hashes the parsed, canonicalized
-  values of per-directory config files below a tree root. Fold it into a
-  `program_config` so per-directory config edits invalidate their tree.
-  Comment, whitespace, and key-order edits do not change the digest; option
-  value edits, adds, removes, and renames do.
-- New `GrovestampsConfig.tree_config_factory` builds a `TreestampsConfig`
-  per top path, so each tree can record its own resolved program config.
-  Returning `None` skips that tree entirely: no store and no stamp file.
-- **The `treestamps_config` yaml block is no longer written or compared.**
-  It duplicated `ignore` and `symlinks`, which programs whose file selection
-  depends on them already record in `program_config`. The tag is still
-  popped when loading, so files written by earlier versions load normally. A
-  program that relied on it must add those keys to `program_config_keys`.
+- New `program_config_defaults` config option. When set, missing keys are filled
+  from it on both sides before comparing, so a program that adds or retires a
+  recorded config key no longer invalidates stamp files written before the
+  change. Only keys whose values actually differ invalidate. Defaults are not
+  filtered by `program_config_keys`, so retired keys may keep a default.
+- New `note` config option: extra comment lines for the header that now leads
+  every generated snapshot and WAL file. The header names the writing program
+  and states that the file is machine-written and not a config file. Comments
+  are invisible to the loader, so they never affect comparison.
+- New `program_config_key_labels` config option maps internal config key names
+  to human readable names in config mismatch warnings.
+- New `dir_config_fingerprint()` helper hashes the parsed, canonicalized values
+  of per-directory config files below a tree root. Fold it into a
+  `program_config` so per-directory config edits invalidate their tree. Comment,
+  whitespace, and key-order edits do not change the digest; option value edits,
+  adds, removes, and renames do.
+- New `GrovestampsConfig.tree_config_factory` builds a `TreestampsConfig` per
+  top path, so each tree can record its own resolved program config. Returning
+  `None` skips that tree entirely: no store and no stamp file.
+- **The `treestamps_config` yaml block is no longer written or compared.** It
+  duplicated `ignore` and `symlinks`, which programs whose file selection
+  depends on them already record in `program_config`. The tag is still popped
+  when loading, so files written by earlier versions load normally. A program
+  that relied on it must add those keys to `program_config_keys`.
 - `TreestampsConfig.get_config_dict()` is removed.
-- `GrovestampsConfig` gained fields, which shifts the position of `paths`
-  for positional construction. Construct configs with keyword arguments.
+- `GrovestampsConfig` gained fields, which shifts the position of `paths` for
+  positional construction. Construct configs with keyword arguments.
 
 ### ♻️ Changed
 
-- Upgrading invalidates nothing: the removed block is ignored, and the
-  `config` block is unchanged.
-- Trees processed alternately by 5.0.0 and older versions re-optimize once
-  per version switch, because older versions compare a block 5.0.0 no longer
-  writes. Pin one version per shared tree, or run once with
-  `check_config=False`.
+- Upgrading invalidates nothing: the removed block is ignored, and the `config`
+  block is unchanged.
+- Trees processed alternately by 5.0.0 and older versions re-optimize once per
+  version switch, because older versions compare a block 5.0.0 no longer writes.
+  Pin one version per shared tree, or run once with `check_config=False`.
 
 ## v4.1.1
 
 ### 🐛 Fixed
 
-- Stamps discarded because of a `check_config` mismatch now log a warning
-  naming the stamp file and the specific differing config keys, instead of
-  being silently dropped.
+- Stamps discarded because of a `check_config` mismatch now log a warning naming
+  the stamp file and the specific differing config keys, instead of being
+  silently dropped.
 
 ## v4.1.0
 
@@ -102,19 +100,18 @@
 ### 🐛 Fixed
 
 - Fix WAL data loss: `dumps()` and `dump_dict()` closed the WAL, so the next
-  `set()` truncated the on-disk WAL, destroying entries not yet in a
-  snapshot.
-- Fix `Grovestamps` created with relative paths: trees are now keyed by
-  their absolute root dir, so relative and absolute lookups both work.
+  `set()` truncated the on-disk WAL, destroying entries not yet in a snapshot.
+- Fix `Grovestamps` created with relative paths: trees are now keyed by their
+  absolute root dir, so relative and absolute lookups both work.
 - Fix `Grovestamps.load()` with nested top paths: yaml now loads into the
   deepest matching tree instead of the first.
-- Fix `Grovestamps.loadf()`, which tried to parse the file's parent
-  directory instead of the file.
+- Fix `Grovestamps.loadf()`, which tried to parse the file's parent directory
+  instead of the file.
 - Fix crash on `Grovestamps` construction and dump when `program_config`
   contains nested dicts, lists, or tuples.
-- Load and WAL errors are now reported through the `treestamps` logger
-  instead of `verbose`-gated prints. The `verbose` config field remains but
-  no longer gates output.
+- Load and WAL errors are now reported through the `treestamps` logger instead
+  of `verbose`-gated prints. The `verbose` config field remains but no longer
+  gates output.
 - Trees rooted at a file no longer consume (and delete on dump) stamp files
   found in subdirectories of the file's parent.
 
@@ -122,11 +119,11 @@
 
 ### 🐛 Fixed
 
-- Fix `dumpf` crash when a parent-of-root yaml contains an entry pointing at
-  the parent directory itself. Such entries are now clamped to `root_dir` on
-  load (matching the v3 semantic: a timestamp on an ancestor of the tree
-  applies to the tree as a whole), instead of being stored above-root and
-  crashing `_serialize_timestamps`.
+- Fix `dumpf` crash when a parent-of-root yaml contains an entry pointing at the
+  parent directory itself. Such entries are now clamped to `root_dir` on load
+  (matching the v3 semantic: a timestamp on an ancestor of the tree applies to
+  the tree as a whole), instead of being stored above-root and crashing
+  `_serialize_timestamps`.
 
 ## v4.0.1
 
@@ -138,8 +135,8 @@
 
 ### ✨ Added
 
-- API - loadf(), loads(), and dumpf() return booleans to help with any
-  logging users might want to do.
+- API - loadf(), loads(), and dumpf() return booleans to help with any logging
+  users might want to do.
 - Added `bin/bench-treestamps` benchmark script and
   `tests/unit/test_wal_quote.py` for the new WAL key quoter.
 
@@ -150,8 +147,8 @@
     - Cold load ~3.0× faster (1.40s → 459ms)
     - `set()` ~4.1× faster (8.5k → 35k ops/s)
     - WAL replay ~2.7× faster (1.71s → 627ms)
-    - `get()` unchanged (parent-of-root timestamps are loaded into the cache
-      so `get()` must still walk to the filesystem root).
+    - `get()` unchanged (parent-of-root timestamps are loaded into the cache so
+      `get()` must still walk to the filesystem root).
 
 ### 🔥 Removed
 
@@ -166,20 +163,19 @@
 - Load path uses ruamel safe-mode YAML instead of round-trip.
 - WAL line append uses a hand-formatter for the common case, falling back to
   safe-mode YAML for keys with control characters.
-- Child-tree walk uses `os.scandir` (cached d\_type, no extra `stat` per
-  entry) instead of `Path.iterdir`.
+- Child-tree walk uses `os.scandir` (cached d\_type, no extra `stat` per entry)
+  instead of `Path.iterdir`.
 - `_load_timestamp_entry` uses an exact-key dict lookup instead of the
   ancestor-walking public `get()` (also fixes a latent merge bug where
   parent-dir stamps could shadow newer file-level entries on load).
 - `_get_absolute_path` fast-paths relative inputs (the load case) to skip an
   `os.getcwd()` per entry.
-- `set()` skips the WAL write and `_changed` flip when the supplied mtime is
-  not newer than the cached one.
+- `set()` skips the WAL write and `_changed` flip when the supplied mtime is not
+  newer than the cached one.
 - `dumpf()` writes via temp file + `os.replace` for atomic snapshots.
-- Ignore globs are precompiled. Single-segment globs (the common case:
-  `*.tmp`, `__pycache__`) compile to a regex matched against `path.name`
-  directly, ~12× faster than the old per-call `Path.match()` glob
-  re-compilation.
+- Ignore globs are precompiled. Single-segment globs (the common case: `*.tmp`,
+  `__pycache__`) compile to a regex matched against `path.name` directly, ~12×
+  faster than the old per-call `Path.match()` glob re-compilation.
 
 ## v3.0.3
 
@@ -198,8 +194,8 @@
 
 ### ♻️ Changed
 
-- Setting timestamps on dirs doesn't count for determining change as to when
-  to actually dumpf() if there are changes.
+- Setting timestamps on dirs doesn't count for determining change as to when to
+  actually dumpf() if there are changes.
 
 ## v3.0.0
 
@@ -262,8 +258,7 @@
 
 ### 🐛 Fixed
 
-- Fix tree.dumpf() was counting the root wallfile as a consumed child
-  timestamp.
+- Fix tree.dumpf() was counting the root wallfile as a consumed child timestamp.
 
 ## v2.4.1
 
@@ -278,8 +273,8 @@
 
 ### ✨ Added
 
-- Add skip\_top\_paths to grove.dumpf() to skip writing timestamps if
-  nothing changed.
+- Add skip\_top\_paths to grove.dumpf() to skip writing timestamps if nothing
+  changed.
 
 ## v2.3.1
 
@@ -292,8 +287,8 @@
 
 ### ♻️ Changed
 
-- Represent frozensets as yaml sets instead of mappings. Represent any
-  Mapping type as mappings.
+- Represent frozensets as yaml sets instead of mappings. Represent any Mapping
+  type as mappings.
 
 ## v2.2.7
 
@@ -340,15 +335,15 @@
 
 ### ♻️ Changed
 
-- Config elements that were MappingProxyTypes are now dicts. MPTs don't
-  pickle, which seems unfriendly.
+- Config elements that were MappingProxyTypes are now dicts. MPTs don't pickle,
+  which seems unfriendly.
 
 ## v2.2.0
 
 ### ✨ Added
 
-- Grovestamps.loads(), .loadf(), .load\_map(), .dump\_dict(), .dumps(),
-  .dumpf() methods
+- Grovestamps.loads(), .loadf(), .load\_map(), .dump\_dict(), .dumps(), .dumpf()
+  methods
 - Treestamps.loads(), .loadf(), .load\_map(), .loadf\_tree(), .dump\_dict(),
   .dumps(), .dumpf() methods.
 - Grovestamps.filename and Grovestamps.wal\_filename properties
@@ -373,16 +368,15 @@
 
 ### ✨ Added
 
-- Add dumpf() and dumps() methods. Old dump() method is an alias for
-  dumpf(). dumpf() calls cleanup\_old\_timestamps() automatically. dumps()
-  must call it manually.
+- Add dumpf() and dumps() methods. Old dump() method is an alias for dumpf().
+  dumpf() calls cleanup\_old\_timestamps() automatically. dumps() must call it
+  manually.
 
 ## v2.0.0
 
 ### 💥 Breaking Changes
 
-- Config elements are now converted to MappingProxyTypes, Tuples and
-  frozensets
+- Config elements are now converted to MappingProxyTypes, Tuples and frozensets
 - Represent config id sets as sets in yaml
 
 ### 🐛 Fixed
