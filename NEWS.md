@@ -1,5 +1,11 @@
 # 📰 Treestamps News
 
+## v5.2.1
+
+### ♻️ Changed
+
+- Only import typing extensions on Python < 3.12
+
 ## v5.2.0
 
 ### ✨ Added
