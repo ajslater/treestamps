@@ -1,12 +1,17 @@
 """Treestamps Config methods."""
 
+import sys
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any
 
 from ruamel.yaml.comments import CommentedMap, CommentedSet
-from typing_extensions import override
+
+if sys.version_info >= (3, 12):
+    from typing import override  # pyright: ignore[reportUnreachable]
+else:
+    from typing_extensions import override
 
 # Characters that would end a yaml comment line and inject content.
 _NOTE_FORBIDDEN_CHARS = ("\n", "\r", "\x85", "\u2028", "\u2029")

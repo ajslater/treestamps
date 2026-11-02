@@ -1,17 +1,21 @@
 """A Mapping of Treestamps."""
 
+import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, assert_never
-
-from typing_extensions import override
 
 from treestamps.base import TreestampsBase
 from treestamps.config import CommonConfig
 from treestamps.tree import Treestamps
 from treestamps.tree.config import TreestampsConfig
 from treestamps.tree.report import TreestampsReport
+
+if sys.version_info >= (3, 12):
+    from typing import override  # pyright: ignore[reportUnreachable]
+else:
+    from typing_extensions import override
 
 
 @dataclass

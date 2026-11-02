@@ -6,9 +6,12 @@ classifiers = [
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
-  "Topic :: Software Development :: Libraries :: Python Modules"
+  "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = ["ruamel.yaml>=0.19,<=1.0", "typing-extensions~=4.13"]
+dependencies = [
+  "ruamel.yaml>=0.19,<=1.0",
+  "typing-extensions~=4.13; python_version < '3.12'",
+]
 description = "Create timestamp records for recursive operations on directory trees."
 keywords = ["directory", "library", "recursive", "timestamps"]
 readme = "README.md"
@@ -16,7 +19,7 @@ requires-python = ">=3.11"
 license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 name = "treestamps"
-version = "5.2.0"
+version = "5.2.1"
 
 [[project.authors]]
 name = "AJ Slater"
@@ -36,31 +39,27 @@ dev = [
   "neovim~=0.3",
   "pyclean~=3.1",
   "pypi-cleanup~=0.1.10",
-  "semver~=3.1.0",
   "toml-cli~=0.7",
-  "tomlkit~=0.14"
 ]
 build = []
 lint = [
   "basedpyright~=1.38",
   "codespell~=2.4",
-  "complexipy~=8.0.1",
+  "complexipy~=8.2",
   "djlint~=1.3.dev0",
   "icecream~=2.1",
-  "mbake~=1.4.5",
   "pathspec~=1.1.0",
   "radon~=6.0",
-  "ruff~=0.16",
-  "types-python-dateutil~=2.9",
+  "ruff~=0.17",
   "ty~=0.0.17",
-  "vulture~=2.3"
+  "vulture~=2.3",
 ]
 test = ["coverage~=7.0", "pytest-asyncio~=1.0", "pytest-cov~=7.0"]
 docs = ["mkapi~=4.4", "mkdocs-minify-plugin~=0.8", "mkdocs~=1.6"]
 ci = ["requests~=2.32"]
 
 [build-system]
-requires = ["uv_build~=0.12.0"]
+requires = ["uv_build~=0.13"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
@@ -94,7 +93,7 @@ source-include = [
   "package.json",
   "tests/**",
   "uv.lock",
-  "vulture_ignorelist.py"
+  "vulture_ignorelist.py",
 ]
 source-exclude = ["**/*\\~", "**/.DS_Store", "frontend/node_modules"]
 wheel-exclude = ["**/*\\~", "**/.DS_Store"]
@@ -106,7 +105,7 @@ exclude = [
   "site",
   "test-results",
   "typings",
-  "vulture_ignorelist.py"
+  "vulture_ignorelist.py",
 ]
 pythonVersion = "3.11"
 failOnWarnings = false
@@ -130,7 +129,7 @@ reportUnusedParameter = false
 [tool.codespell]
 builtin = "clear,code,rare"
 ignore-words-list = "coverd,crate,deque,falsy,iff,ro,searchd,thead,versio,wan,warmup,ws"
-skip = "*.pdf,*.svg,*~,./package-lock.json,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,tasks,test-results,typings,uv.lock"
+skip = "*.pdf,*.svg,*~,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,tasks,test-results,typings,uv.lock"
 
 [tool.complexipy]
 failed = true
@@ -150,7 +149,7 @@ omit = [
   "site/*",
   "test-results/*",
   "typings/*",
-  "vulture_ignorelist.py"
+  "vulture_ignorelist.py",
 ]
 
 [tool.pytest]
@@ -163,7 +162,7 @@ addopts = [
   "--junit-xml=test-results/pytest/results.xml",
   "--strict-config",
   "--strict-markers",
-  "-ra"
+  "-ra",
 ]
 junit_family = "xunit2"
 strict = true
@@ -182,7 +181,7 @@ extend-exclude = [
   "site",
   "test-results",
   "typings",
-  "vulture_ignorelist.py"
+  "vulture_ignorelist.py",
 ]
 show-fixes = true
 target-version = "py311"
@@ -203,7 +202,7 @@ extend-ignore = [
   "PERF203",
   "PLC0415",
   "S101",
-  "W191"
+  "W191",
 ]
 extend-select = [
   "A",
@@ -262,7 +261,7 @@ extend-select = [
   "TRY",
   "UP",
   "W",
-  "YTT"
+  "YTT",
 ]
 external = ["V101"]
 task-tags = ["FIXME", "HACK", "TODO", "XXX", "http"]
@@ -297,7 +296,7 @@ exclude = [
   "site",
   "test-results",
   "typings",
-  "vulture_ignorelist.py"
+  "vulture_ignorelist.py",
 ]
 
 [tool.vulture]
@@ -308,7 +307,7 @@ exclude = [
   "*/node_modules/*",
   "*/site/*",
   "*/test-results/*",
-  "*/typings/*"
+  "*/typings/*",
 ]
 min_confidence = 61
 sort_by_size = true
