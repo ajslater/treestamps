@@ -8,7 +8,10 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = ["ruamel.yaml>=0.19,<=1.0", "typing-extensions~=4.13"]
+dependencies = [
+  "ruamel.yaml>=0.19,<=1.0",
+  "typing-extensions~=4.13; python_version < '3.12'",
+]
 description = "Create timestamp records for recursive operations on directory trees."
 keywords = ["directory", "library", "recursive", "timestamps"]
 readme = "README.md"

@@ -1678,7 +1678,7 @@ version = "5.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "ruamel-yaml" },
-    { name = "typing-extensions" },
+    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
 ]
 
 [package.dev-dependencies]
@@ -1719,7 +1719,7 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "ruamel-yaml", specifier = ">=0.19,<=1.0" },
-    { name = "typing-extensions", specifier = "~=4.13" },
+    { name = "typing-extensions", marker = "python_full_version < '3.12'", specifier = "~=4.13" },
 ]
 
 [package.metadata.requires-dev]
