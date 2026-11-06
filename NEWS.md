@@ -1,5 +1,11 @@
 # 📰 Treestamps News
 
+## v5.2.2
+
+### ♻️ Changed
+
+- Change docs to use Zensical instead of mkDocs.
+
 ## v5.2.1
 
 ### ♻️ Changed
