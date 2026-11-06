@@ -388,8 +388,11 @@
 
 ### 💥 Breaking Changes
 
-- Config elements are now converted to MappingProxyTypes, Tuples and frozensets
-- Represent config id sets as sets in yaml
+> [!WARNING]
+>
+> - Config elements are now converted to MappingProxyTypes, Tuples and
+>   frozensets
+> - Represent config id sets as sets in yaml
 
 ### 🐛 Fixed
 
