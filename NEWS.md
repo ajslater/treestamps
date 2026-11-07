@@ -1,5 +1,11 @@
 # 📰 Treestamps News
 
+## v5.2.3
+
+### ♻️ Changed
+
+- Docs formatting only.
+
 ## v5.2.2
 
 ### ♻️ Changed
@@ -388,7 +394,7 @@
 
 ### 💥 Breaking Changes
 
-> [!WARNING]
+> \[!WARNING]
 >
 > - Config elements are now converted to MappingProxyTypes, Tuples and
 >   frozensets
