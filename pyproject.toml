@@ -19,7 +19,7 @@ requires-python = ">=3.11"
 license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 name = "treestamps"
-version = "5.2.2"
+version = "5.2.3"
 
 [[project.authors]]
 name = "AJ Slater"
@@ -125,7 +125,7 @@ reportUnusedParameter = false
 [tool.codespell]
 builtin = "clear,code,rare"
 ignore-words-list = "coverd,crate,deque,falsy,iff,ro,searchd,thead,versio,wan,warmup,ws"
-skip = "*.pdf,*.svg,*~,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,tasks,test-results,typings,uv.lock"
+skip = "*.pdf,*.svg,*~,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,tasks,test-results,typings,uv.lock,site"
 
 [tool.complexipy]
 failed = true

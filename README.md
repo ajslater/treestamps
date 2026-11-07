@@ -219,8 +219,10 @@ writes
 
 ## 🧩 Configuration (`GrovestampsConfig`)
 
-Construct configs with keyword arguments: fields are added between releases,
-which shifts positional order.
+> [!TIP]
+>
+> Construct configs with keyword arguments: fields are added between releases,
+> which shifts positional order.
 
 ```python
 GrovestampsConfig(
@@ -242,8 +244,8 @@ GrovestampsConfig(
 
 - Used in filenames:
 
-    ```sh
-    . < program_name > _treestamps.yaml
+    ```text
+    .<program_name>_treestamps.yaml
     ```
 
 #### `paths`
@@ -257,9 +259,11 @@ GrovestampsConfig(
 - Recorded in the stamp file and compared on load
 - Changing a recorded value invalidates that tree's timestamps
 
-Record every option your file selection depends on, including the treestamps
-`ignore` and `symlinks` options if they affect it: treestamps does not record
-them itself.
+> [!WARNING]
+>
+> Record every option your file selection depends on, including the treestamps
+> `ignore` and `symlinks` options if they affect it: treestamps does not record
+> them itself.
 
 #### `program_config_keys`
 
@@ -340,9 +344,11 @@ The `config` key holds the program config (the keys selected by
 timestamps are discarded (unless `check_config=False`). All remaining keys are
 path-to-mtime timestamp entries.
 
-Files written before 5.0.0 also carry a `treestamps_config` block recording
-`ignore` and `symlinks`. It is no longer written or compared, but it is still
-popped when loading, so old files load normally.
+> [!NOTE]
+>
+> Files written before 5.0.0 also carry a `treestamps_config` block recording
+> `ignore` and `symlinks`. It is no longer written or compared, but it is still
+> popped when loading, so old files load normally.
 
 ### WAL file
 
@@ -377,7 +383,6 @@ In picopt:
 - Skip entire archives if contents are unchanged
 - Handle millions of files efficiently
 - Handle config changes (e.g. compression settings) by invalidating stamps
-  (\[New Releases]\[1])
 
 ### 🎬 Media cleanup (nudebomb)
 
