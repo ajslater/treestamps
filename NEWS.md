@@ -1,5 +1,12 @@
 # 📰 Treestamps News
 
+## v5.2.4
+
+### 🐛 Fixed
+
+- The NEWS page's breaking-changes callout for v2.0.0 renders as a warning box
+  again. A stray backslash had escaped it.
+
 ## v5.2.3
 
 ### ♻️ Changed
@@ -394,7 +401,7 @@
 
 ### 💥 Breaking Changes
 
-> \[!WARNING]
+> [!WARNING]
 >
 > - Config elements are now converted to MappingProxyTypes, Tuples and
 >   frozensets
