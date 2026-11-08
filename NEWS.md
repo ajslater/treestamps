@@ -394,7 +394,7 @@
 
 ### 💥 Breaking Changes
 
-> \[!WARNING]
+> [!WARNING]
 >
 > - Config elements are now converted to MappingProxyTypes, Tuples and
 >   frozensets
