@@ -37,15 +37,17 @@
 
 ## v5.1.0
 
+### 💥 Breaking Changes
+
+> [!WARNING]
+>
+> - Require Python 3.11.
+
 ### 🐛 Fixed
 
 - `Grovestamps.load()` now raises `AssertionError` when passed a `yaml` argument
   that is not a `Mapping`, `str`, `bytes`, or `Path`. Previously it was silently
   ignored.
-
-### 🧑‍💻 Developer
-
-- Require Python 3.11.
 
 ## v5.0.1
 
@@ -264,7 +266,9 @@
 
 ### 🗑️ Deprecated
 
-- Params to dumpf() deprecated
+> [!NOTE]
+>
+> - Params to dumpf() deprecated
 
 ## v2.4.3
 
@@ -368,9 +372,11 @@
 
 ### 🗑️ Deprecated
 
-- Grovestamps.dump(), use .dumpf()
-- Treestamps.load(), use .loadf\_tree()
-- Treestamps.dump(), use .dumpf()
+> [!NOTE]
+>
+> - Grovestamps.dump(), use .dumpf()
+> - Treestamps.load(), use .loadf\_tree()
+> - Treestamps.dump(), use .dumpf()
 
 ## v2.1.1
 
@@ -424,9 +430,11 @@
 
 ## v1.0.0
 
-### 🧑‍💻 Developer
+### 💥 Breaking Changes
 
-- Require Python 3.10
+> [!WARNING]
+>
+> - Require Python 3.10
 
 ## v0.4.4
 
