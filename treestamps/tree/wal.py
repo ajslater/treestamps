@@ -3,7 +3,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, TextIO
 
 from ruamel.yaml import StringIO
 
@@ -102,8 +102,8 @@ class TreestampsWal(TreestampsInit):
             self._wal.close()
         self._wal = None
 
-    def _dumpf_init_wal(self) -> None:
-        """Write current state to a new WAL file on disk."""
+    def _dumpf_init_wal(self) -> TextIO:
+        """Write current state to a new WAL file on disk and return its stream."""
         yaml = self._serialize_program_config()
         with self._wal_path.open("w") as stream:
             self._write_header(stream)
@@ -114,6 +114,7 @@ class TreestampsWal(TreestampsInit):
         self._consumed_paths.add(self._wal_path)
         self._wal = self._wal_path.open("a", buffering=1, errors="backslashreplace")
         self._wal.write(self._WAL_HEADER)
+        return self._wal
 
     def _create_wal_entry(self, abs_path: Path, mtime: float) -> str:
         """Create a yaml dictionary as a list element entry line."""
@@ -132,10 +133,9 @@ class TreestampsWal(TreestampsInit):
 
     def write_ahead_log(self, abs_path: Path, mtime: float) -> None:
         """Write an entry to the WAL."""
-        if not self._wal:
-            self._dumpf_init_wal()
+        wal = self._wal or self._dumpf_init_wal()
         wal_entry = self._create_wal_entry(abs_path, mtime)
-        self._wal.write(wal_entry)  # pyright: ignore[reportOptionalMemberAccess], #ty: ignore[unresolved-attribute]
+        wal.write(wal_entry)
 
     def _pop_wal(
         self, yaml_dict: dict
